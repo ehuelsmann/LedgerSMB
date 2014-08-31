@@ -520,7 +520,7 @@ sub save {
 				            (id, parts_id, qty, bom, adj)
 				     VALUES (?, ?, ?, ?, ?)|;
             $sth = $dbh->prepare($query);
-            for $i ( 1 .. $form->{assembly_rows} ) {
+            for $i ( 1 .. $form->{assembly_rows} - 1) {
                 $form->{"qty_$i"} =
                   $form->parse_amount( $myconfig, $form->{"qty_$i"} );
                 if ( !$form->{"bom_$i"} ) {
@@ -802,10 +802,16 @@ sub retrieve_assemblies {
 sub restock_assemblies {
     my ( $self, $myconfig, $form ) = @_;
 
-    my $sth = $form->{dbh}->prepare('SELECT assembly__stock(?, ?)');
-    for ( 1 .. $form->{rowcount} ){
-       $form->dberror(' stored procedure: assembly__stock ') if $sth->err;
+    my $sth;
+    for my $loop ( 1 .. $form->{rowcount} ){
+       my ($id, $qty) = ($form->{"id_$loop"}, $form->{"qty_$loop"});
+       $sth = $form->{dbh}->prepare('SELECT assembly__stock(?, ?)');
+       if ($qty){
+           $sth->execute($id, $qty);
+           $form->dberror() if $form->{dbh}->err;
+       }
     }
+    $form->{dbh}->commit;
 
     1;
 
