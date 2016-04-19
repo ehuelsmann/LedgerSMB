@@ -123,7 +123,7 @@ sub call_script {
             $trace = Devel::StackTrace::WithLexicals->new(
                 indent => 1, message => _munge_error($_[0], [ caller ]),
                 unsafe_ref_capture => 1,    # warning: can cause memory leak
-                frame_filter => sub {
+                frame_filter => sub { return 1;
                     my %args = %{ $_[0] };
                     my $caller = $args{caller}[3];
                     return not ($caller =~ m/Devel::StackTrace::new\b/ ||
