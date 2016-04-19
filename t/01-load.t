@@ -55,6 +55,7 @@ my @exception_modules =
 my @modules =
     (
           'LedgerSMB::App_State',
+          'LedgerSMB::AsHTML',
           'LedgerSMB::DBH', 'LedgerSMB::DBTest', 'LedgerSMB::I18N',
           'LedgerSMB::Locale', 'LedgerSMB::Mailer', 'LedgerSMB::Session',
           'LedgerSMB::User', 'LedgerSMB::Entity',

@@ -206,12 +206,12 @@ $form->{dbh}->disconnect()
 
 sub _error {
 
-    my ( $self, $msg ) = @_;
+    my ( $self, $msg, $trace ) = @_;
     my $error;
     if (eval { $msg->isa('LedgerSMB::Request::Error') }){
         $error = $msg;
     } else {
-        $error = LedgerSMB::Request::Error->new(msg => "$msg");
+        $error = LedgerSMB::Request::Error->new(msg => "$msg", trace => $trace);
     }
 
     if ( $ENV{GATEWAY_INTERFACE} ) {

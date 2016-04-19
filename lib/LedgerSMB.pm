@@ -496,7 +496,7 @@ sub error {
 
 sub _error {
 
-    my ( $self, $msg, $status ) = @_;
+    my ( $self, $msg, $status, $trace ) = @_;
     my $error;
     $status = 500 if ! defined $status;
     local ($@); # pre-5.14, do not die() in this block
@@ -504,7 +504,8 @@ sub _error {
         $error = $msg;
     } else {
         $error = LedgerSMB::Request::Error->new(msg => $msg,
-                                                status => $status );
+                                                status => $status,
+                                                trace => $trace );
     }
 
     if ( $ENV{GATEWAY_INTERFACE} ) {
