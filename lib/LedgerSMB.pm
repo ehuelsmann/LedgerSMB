@@ -504,13 +504,12 @@ sub _error {
         $error = $msg;
     } else {
         $error = LedgerSMB::Request::Error->new(msg => $msg,
-                                                status => $status,
-                                                trace => \$trace );
+                                                status => $status);
     }
     if ( $ENV{GATEWAY_INTERFACE} ) {
 
         delete $self->{pre};
-        print $error->http_response("<p>dbversion: $self->{dbversion}, company: $self->{company}</p>");
+        print $error->http_response("<p>dbversion: $self->{dbversion}, company: $self->{company}</p>", $trace);
 
     }
     else {
