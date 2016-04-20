@@ -101,7 +101,7 @@ before BUILDARGS => sub {
 };
 
 around BUILDARGS => sub {
-    my ($class, %args) = @_;
+    my ($class, $name, %args) = @_;
     use Devel::StackTrace::WithLexicals;
     use lib qw(lib/LedgerSMB);
     require AsHTML;
