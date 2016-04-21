@@ -1,0 +1,63 @@
+##
+# LedgerSMB server configuration
+#
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        #Set to LSMB installed directory
+        root [ROOT];
+
+        index login.pl;
+
+        #Adjust to your liking
+        #server_name ubuntu-vm;
+
+	#Try the asked file directly, pass to Plack if not found
+        location / {
+            try_files $uri @plack;
+        }
+
+        location @plack {
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Host $http_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_pass http://localhost:6011; # Adjust to Plack service
+        }
+
+        #Uncomment the next lines for monitoring
+        #access_log /var/log/nginx/ledgersmb.access.log main;
+        #error_log /var/log/nginx/ledgersmb.error.log error;
+
+        #Uncomment & adjust the next 4 lines for access control
+        #allow 127.0.0.1;
+        #allow ::1;
+        #allow 192.168.30.0/24;
+        #deny all;
+
+        # Deny external access to configuration and other nasty places.
+        location ~ \.conf$ { deny all; }
+        location ~ users { deny all; }
+        location ~ bin { deny all; }
+        location ~ blib { deny all; }
+        location ~ lib { deny all; }
+        location ~ tools { deny all; }
+        location ~ utils { deny all; }
+        location ~ spool { deny all; }
+        location ~ templates { deny all; }
+
+        #On Debian/Ubuntu 1.4 packages, css was on user control outside of lsmb directory
+        #location ~ lsmbcss {
+        #    alias /var/lib/ledgersmb/css/;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        location ~ /\.ht {
+            deny all;
+        }
+}
+
+

@@ -1,0 +1,60 @@
+# This file must be edited to substitute the current path with WORKING_DIR
+
+Alias /lsmbcss /var/lib/master/css/
+
+<VirtualHost *:80>
+
+  ServerName [SERVERNAME]:80
+  DocumentRoot WORKING_DIR
+
+  <Proxy *>
+    Order Allow,Deny
+    Allow from All
+  </Proxy>
+
+  LogLevel Warn
+
+  <FilesMatch ...>
+    SetHandler  "proxy:pl://localhost:5001"
+  </FilesMatch>
+
+  ProxyRequests     Off
+  ProxyPreserveHost On
+  ProxyVia          On
+  ProxyPass        / http://localhost:5001/
+  ProxyPassReverse / http://localhost:5001/
+
+</VirtualHost>
+
+# The rest of this file just tightens up security.
+<LocationMatch "/ledgersmb/.+\.conf$">
+  Require all denied
+</LocationMatch>
+
+<LocationMatch /ledgersmb/bin>
+  Require all denied
+</LocationMatch>
+
+<LocationMatch /ledgersmb/utils>
+  Require all denied
+</LocationMatch>
+
+<LocationMatch /ledgersmb/spool>
+  Require all denied
+</LocationMatch>
+
+<Directory /var/share/master/templates>
+  Require all denied
+</Directory>
+
+<LocationMatch /ledgersmb/master>
+  Require all denied
+</LocationMatch>
+
+<LocationMatch /lsmbcss>
+  Order Deny,Allow
+  Allow from 127.0.0.1
+  Allow from localhost
+  Require ip 192.168.30.0/24
+  Deny from All
+</LocationMatch>
