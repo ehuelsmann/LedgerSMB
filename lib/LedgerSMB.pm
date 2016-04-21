@@ -496,7 +496,7 @@ sub error {
 
 sub _error {
 
-    my ( $self, $msg, $status, $trace ) = @_;
+    my ( $self, $msg, $status ) = @_;
     my $error;
     $status = 500 if ! defined $status;
     local ($@); # pre-5.14, do not die() in this block
@@ -509,7 +509,7 @@ sub _error {
     if ( $ENV{GATEWAY_INTERFACE} ) {
 
         delete $self->{pre};
-        print $error->http_response("<p>dbversion: $self->{dbversion}, company: $self->{company}</p>", $trace);
+        print $error->http_response("<p>dbversion: $self->{dbversion}, company: $self->{company}</p>");
 
     }
     else {

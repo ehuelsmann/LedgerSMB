@@ -59,9 +59,8 @@ our $cookie_name = "LedgerSMB-1.3";
 # spool directory for batch printing
 our $spool = "spool";
 
-our $screen_logging = 0;
-
 our $cache_templates = 0;
+
 # path to user configuration files
 our $userspath = "users";
 
@@ -110,7 +109,7 @@ for my $var (
     qw(pathsep log_level cssdir DBI_TRACE check_max_invoices language auth
     db_autoupdate force_username_case max_post_size cookie_name
     return_accno no_db_str tempdir cache_templates fs_cssdir dojo_theme
-    dojo_built screen_logging)
+    dojo_built)
   )
 {
     no strict 'refs';

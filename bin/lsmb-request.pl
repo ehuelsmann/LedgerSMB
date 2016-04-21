@@ -67,19 +67,6 @@ sub request_instantiate {
     return $request;
 }
 
-if ($LedgerSMB::Sysconfig::screen_logging){
-    sub _munge_error {
-        my($err, $caller) = @_;
-        return $err if ref $err;
-
-        # Ugly hack to remove " at ... line ..." automatically appended by perl
-        # If there's a proper way to do this, please let me know.
-        $err =~ s/ at \Q$caller->[1]\E line $caller->[2]\.\n$//;
-
-        return $err;
-    }
-}
-
 #   warn $script, $requestl
 
 sub call_script {
@@ -117,33 +104,7 @@ sub call_script {
     $script->can($request->{action})
       || die $locale->text("Action Not Defined: ") . $request->{action};
 
-    if ($LedgerSMB::Sysconfig::screen_logging){
-        require Devel::StackTrace::WithLexicals;
-        local $SIG{__DIE__} = sub {
-            $trace = Devel::StackTrace::WithLexicals->new(
-                indent => 1, message => _munge_error($_[0], [ caller ]),
-                unsafe_ref_capture => 1,    # warning: can cause memory leak
-                frame_filter => sub { return 1;
-                    my %args = %{ $_[0] };
-                    my $caller = $args{caller}[3];
-                    return not ($caller =~ m/Devel::StackTrace::new\b/ ||
-                                $caller =~ m/LedgerSMB::(CallStack|_error)\b/ ||
-                                $caller =~ m/LedgerSMB::PSGI(::[a-zA-Z_:]+)?\b/ ||
-                                $caller =~ m/Plack(::[a-zA-Z_:]+)?\b/ ||
-                                $caller =~ m/Net::Server(::[a-zA-Z_:]+)?\b/ ||
-                                $caller =~ m/CGI::Emulate::PSGI(::[a-zA-Z_:]+)?\b/ ||
-                                $caller =~ m/Starman::Server(::[a-zA-Z_:]+)?\b/ ||
-                                $caller =~ m/Try::Tiny(::[a-zA-Z_:]+)?\b/
-                                );
-                }
-            );
-            die @_;
-        };
-        # Duplicated here to make sure that local $SIG is enabled.
-        $script->can( $request->{action} )->($request);
-    } else {
-        $script->can( $request->{action} )->($request);
-    }
+    $script->can( $request->{action} )->($request);
     $request->{dbh}->commit if defined $request->{dbh};
     LedgerSMB::App_State->cleanup();
   }
@@ -154,7 +115,7 @@ sub call_script {
       # -- CT
      $LedgerSMB::App_State::DBH->rollback if ($LedgerSMB::App_State::DBH and $_ eq 'Died');
      LedgerSMB::App_State->cleanup();
-     $request->_error($_,500,$trace) unless $_ =~ /^Died at/;
+     $request->_error($_) unless $_ =~ /^Died at/;
   };
 }
 
