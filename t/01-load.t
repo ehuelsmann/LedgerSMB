@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 209;
+use Test::More tests => 208;
 use File::Find;
 
 my @on_disk;
@@ -55,7 +55,6 @@ my @exception_modules =
 my @modules =
     (
           'LedgerSMB::App_State',
-          'LedgerSMB::AsHTML',
           'LedgerSMB::DBH', 'LedgerSMB::DBTest', 'LedgerSMB::I18N',
           'LedgerSMB::Locale', 'LedgerSMB::Mailer', 'LedgerSMB::Session',
           'LedgerSMB::User', 'LedgerSMB::Entity',
