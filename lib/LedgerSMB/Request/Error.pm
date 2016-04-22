@@ -32,11 +32,11 @@ String to send as error message
 
 =cut
 
-has msg => (is => 'ro', isa => 'Object', required => 1);
+has msg => (is => 'ro', isa => 'Str', required => 1);
 
 =head1 METHODS
 
-=head2 http_response($additional_html,$trace)
+=head2 http_response($additional_html)
 
 Generates full http response based on error.  Does NOT exit
 
@@ -45,7 +45,6 @@ Generates full http response based on error.  Does NOT exit
 sub http_response {
     my ($self, $additional_html) = @_;
     my $status = $self->status;
-	warn $status;
     my $msg = $self->msg;
     $msg ||= '';
     $msg =~ s#\n#<br \/>\n#g;
