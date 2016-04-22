@@ -10,7 +10,7 @@ WorkingDirectory=WORKING_DIR
 #
 ExecStart=/usr/bin/plackup                      \
     --host ubuntu-vm                            \
-    --port 6011                                 \
+    --port 5000                                 \
     --daemonize                                 \
     --workers 5                                 \
     --access-log /var/log/plackup_ledgersmb.log \
