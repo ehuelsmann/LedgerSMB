@@ -1,4 +1,3 @@
-# Place this in /etc/systemd/system/plackup_ledgersmb.service; enable & start
 [Unit]
 Description=LedgerSMB Plack
 After=network.target
@@ -7,27 +6,27 @@ After=network.target
 Restart=always
 User=www-data
 WorkingDirectory=WORKING_DIR
+Environment="LOG=/var/log/plackup_ledgersmb.log"
 #
-ExecStart=/usr/bin/plackup                      \
-    --host ubuntu-vm                            \
-    --port 5000                                 \
-    --daemonize                                 \
-    --workers 5                                 \
-    --access-log /var/log/plackup_ledgersmb.log \
-    -I lib                                      \
-    -E development                              \
-    --server HTTP::Server::PSGI                 \
-    -R bin,lib,lib/LedgerSMB/Request            \
+ExecStartPre=rm $LOG
+ExecStartPre=touch $LOG
+ExecStartPre=chmod 666 $LOG
+#
+ExecStart=/usr/bin/plackup           \
+    --host localhost                 \
+    --port 5000                      \
+    --daemonize                      \
+    --workers 5                      \
+    --access-log $LOG                \
+    --server Gazelle                 \
+    -I lib                           \
+    -R bin,lib,lib/LedgerSMB/Request \
     tools/starman.psgi
 #
-# Select the desired ssrver and adjust the server line in the above configuration
-#
-# Development
-#    --server HTTP::Server::PSGI                \
-# Production, optimized for speed on Linux
-#    --server Gazelle                           \
+# Production optimized
+#    --server Gazelle                \
 # Production server
-#    --server Starman                           \
+#    --server Starman                \
 
 [Install]
 WantedBy=multi-user.target
