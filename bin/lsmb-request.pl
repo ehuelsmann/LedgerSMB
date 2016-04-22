@@ -1,5 +1,4 @@
 
-
 sub get_script {
     my ($locale, $request) = @_;
 
@@ -41,7 +40,6 @@ my $script = $1;
 $script = '' unless defined $script;
 
 
-
 sub app_initialize {
     LedgerSMB::App_State->cleanup();
 
@@ -74,8 +72,6 @@ sub call_script {
   my $request = shift @_;
   my $locale = shift @_;
 
-  my $trace = ();
-
   try {
     $request->{script} = $script;
     $script =~ s/\.pl$//;
@@ -103,7 +99,6 @@ sub call_script {
 
     $script->can($request->{action})
       || die $locale->text("Action Not Defined: ") . $request->{action};
-
     $script->can( $request->{action} )->($request);
     $request->{dbh}->commit if defined $request->{dbh};
     LedgerSMB::App_State->cleanup();
