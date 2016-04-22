@@ -16,15 +16,15 @@ Alias /lsmbcss /var/lib/master/css/
 
   <FilesMatch ...>
     # Since Apache 2.4.10, SetHandler can filter too.
-    # The syntax below says proxy 'Perl PL files' to localhost:5001
-    SetHandler  "proxy:pl://localhost:5001"
+    # The syntax below says proxy 'Perl PL files' to localhost:5000
+    SetHandler  "proxy:pl://localhost:5000"
   </FilesMatch>
 
   ProxyRequests     Off
   ProxyPreserveHost On
   ProxyVia          On
-  ProxyPass        / http://localhost:5001/
-  ProxyPassReverse / http://localhost:5001/
+  ProxyPass        / http://localhost:5000/
+  ProxyPassReverse / http://localhost:5000/
 
 </VirtualHost>
 
