@@ -7,7 +7,7 @@ PROCESS "elements.html";
 
 PROCESS "dynatable.html";
 
-LINK = 'http://' _ ENVARS.SERVER_NAME _ ENVARS.SCRIPT_NAME
+LINK = 'http://' _ ENVARS.HTTP_HOST _ ENVARS.SCRIPT_NAME
            _ '?' _ ENVARS.QUERY_STRING _ '&company=' _ DBNAME;
 
 ?>
