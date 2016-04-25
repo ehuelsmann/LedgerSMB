@@ -1,6 +1,8 @@
 
 begin;
 
+SET client_min_messages TO WARNING;
+
 -- Base sections for modules and roles
 
 CREATE TABLE lsmb_group (

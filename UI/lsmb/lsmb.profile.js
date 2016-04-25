@@ -77,7 +77,9 @@ var profile = (function(){
                 boot: true
             },
             "lsmb/main": {
-                include: [ "lsmb/DateTextBox",
+                include: [
+                    "lsmb/ComparisonSelection",
+                    "lsmb/DateTextBox",
                     "lsmb/Form",
                     "lsmb/Invoice",
                     "lsmb/InvoiceLine",

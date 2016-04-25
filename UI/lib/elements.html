@@ -71,12 +71,12 @@
 <?lsmb BLOCK input ?>
   <?lsmb IF label_pos != 1 and label_pos != -1; label_pos = -1; END ?>
   <?lsmb IF element_data;  # Only process element if one exists.
-              IF !element_data.title.defined();
-                  element_data.title = element_data.label;
-              END;
-	      IF !element_data.type.defined();
-	          element_data.type = "text";
-	      END;
+         IF !element_data.title.defined();
+             element_data.title = element_data.label;
+         END;
+	     IF !element_data.type.defined();
+	         element_data.type = "text";
+	     END;
          IF 'date' == element_data.class && 'text' == element_data.type;
              # In the old days, text INPUTs had a class of 'date'
              # to signal the requirement for conversion to date widget
@@ -101,7 +101,7 @@
 	        input_defaults = checkbox_defaults;
 	      CASE ['radio'];
 	        input_type_keys = input_keys.merge(['checked']);
-				input_defaults = radiobutton_defaults;
+            input_defaults = radiobutton_defaults;
 	      CASE ['password'];
 	        input_type_keys = input_keys;
 	        input_defaults = password_defaults;
@@ -109,11 +109,11 @@
 	        input_type_keys = input_keys.merge(['maxlength', 'readonly']);
 	        input_defaults = text_defaults;
 	      CASE 'currency';
-				input_type_keys = input_keys;
-				input_defaults = currency_defaults;
+            input_type_keys = input_keys;
+            input_defaults = currency_defaults;
  	      CASE 'date';
 	        input_type_keys = input_keys;
-		input_defaults = date_defaults;
+            input_defaults = date_defaults;
 	      CASE;
 	        input_type_keys = input_keys;
 	    END;
@@ -126,13 +126,13 @@
 	  <?lsmb PROCESS custom_attributes  # Process custom attributes.
 	    custom_attribute_data=element_data.attributes
 	  ?>
-          <?lsmb IF label_pos == -1 ?>
-	  <?lsmb PROCESS auto_label  # Process element label. ?>
-          <?lsmb END ?>
+      <?lsmb IF label_pos == -1 ?>
+        <?lsmb PROCESS auto_label  # Process element label. ?>
+      <?lsmb END ?>
 	  <input<?lsmb all_attributes ?><?lsmb all_custom_attributes ?> />
-          <?lsmb IF label_pos == 1 ?>
-	  <?lsmb PROCESS auto_label  # Process element label. ?>
-          <?lsmb END ?>
+      <?lsmb IF label_pos == 1 ?>
+        <?lsmb PROCESS auto_label  # Process element label. ?>
+      <?lsmb END ?>
   <?lsmb END ?>
 <?lsmb END ?>
 
