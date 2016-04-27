@@ -197,8 +197,8 @@
       return q
     }
     var b = a.require;
-    b || (b = function(f, l, c) {
-      return wa(f, l, c, a, b)
+    b || (b = function(f, l, r) {
+      return wa(f, l, r, a, b)
     }, a.require = f(b, q), b.module = a, b.toUrl = function(f) {
       return xa(f, a)
     }, b.toAbsMid = function(f) {
@@ -235,7 +235,7 @@
   }, ea = function(a, f, b, l) {
     return{pid:a, mid:f, pack:b, url:l, executed:0, def:0}
   }, Aa = function(f, b, l, c, d, h, s, u, p) {
-    var v, e, q, t;
+    var v, q, e, t;
     t = /^\./.test(f);
     if(/(^\/)|(\:)|(\.js$)/.test(f) || t && !b) {
       return ea(0, f, 0, f)
@@ -244,10 +244,10 @@
     if(/^\./.test(f)) {
       throw r("irrationalPath", f);
     }
-    b && (q = oa(b.mid, h));
-    (q = (q = q || h.star) && oa(f, q[1])) && (f = q[1] + f.substring(q[3]));
+    b && (e = oa(b.mid, h));
+    (e = (e = e || h.star) && oa(f, e[1])) && (f = e[1] + f.substring(e[3]));
     b = ($ = f.match(/^([^\/]+)(\/(.+))?$/)) ? $[1] : "";
-    (v = l[b]) ? f = b + "/" + (e = $[3] || v.main) : b = "";
+    (v = l[b]) ? f = b + "/" + (q = $[3] || v.main) : b = "";
     var w = 0;
     a(u, function(a) {
       var b = f.match(a[0]);
@@ -259,7 +259,7 @@
     if(l = c[f]) {
       return p ? ea(l.pid, l.mid, l.pack, l.url) : c[f]
     }
-    c = (q = oa(f, s)) ? q[1] + f.substring(q[3]) : b ? v.location + "/" + e : f;
+    c = (e = oa(f, s)) ? e[1] + f.substring(e[3]) : b ? v.location + "/" + q : f;
     /(^\/)|(\:)/.test(c) || (c = d + c);
     return ea(b, f, v, za(c + ".js"))
   }, ba = function(a, f, b) {
@@ -919,7 +919,7 @@ require({cache:{"dojo/request/xhr":function() {
           if(!h.ownerDocument || h.ownerDocument == (c || document)) {
             return h
           }
-        }catch(p) {
+        }catch(e) {
         }
         k.destroy(h)
       }
@@ -6905,22 +6905,6 @@ require({cache:{"dojo/request/xhr":function() {
       return c.getComputedStyle(e)
     };
     return c
-  })
-}, "lsmb/ComparisonSelection":function() {
-  define(["dojo/_base/declare", "dojo/on", "dojo/topic", "dijit/form/RadioButton"], function(e, m, k, n) {
-    return e("lsmb/ComparisonSelection", [n], {topic:"", showValues:null, hideValues:null, show:function() {
-      style.set(this.domNode, "display", "block")
-    }, hide:function() {
-      style.set(this.domNode, "display", "none")
-    }, update:function(c) {
-      this.showValues && -1 != this.showValues.indexOf(c) ? this.show() : this.hideValues && -1 != this.hideValues.indexOf(c) ? this.hide() : this.showValues ? this.hideValues || this.hide() : this.show()
-    }, postCreate:function() {
-      var c = this;
-      this.inherited(arguments);
-      this.own(k.subscribe(c.topic, function(d) {
-        c.update(d)
-      }))
-    }})
   })
 }, "dojo/dom-construct":function() {
   define("exports ./_base/kernel ./sniff ./_base/window ./dom ./dom-attr".split(" "), function(e, m, k, n, c, d) {

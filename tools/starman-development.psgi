@@ -35,9 +35,9 @@ builder {
 #      startup_image => 'loading.png',
 #      icon => 'icon.png';
 
-    enable "LighttpdScriptNameFix";
-    enable "ConditionalGET";
-    enable "Plack::Middleware::ETag", file_etag => "inode", cache_control => [ 'must-revalidate', 'max-age=3600' ];
+#    enable "LighttpdScriptNameFix";
+#    enable "ConditionalGET";
+#    enable "Plack::Middleware::ETag", file_etag => "inode", cache_control => [ 'must-revalidate', 'max-age=3600' ];
   
     enable 'StackTrace', unsafe_ref_capture => 1;
     enable 'InteractiveDebugger';

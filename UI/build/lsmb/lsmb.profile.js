@@ -78,7 +78,6 @@ var profile = (function(){
             },
             "lsmb/main": {
                 include: [
-                    "lsmb/ComparisonSelection",
                     "lsmb/DateTextBox",
                     "lsmb/Form",
                     "lsmb/Invoice",

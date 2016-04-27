@@ -148,8 +148,8 @@ default_values = [USER.language]
                    value = 'by_periods'
                       id = 'comparison_by_periods'
                    label = text('Periods'),
-                 checked = ($comparison_type == 'by_periods') ? "checked" : undef
-                    type = 'radio'
+                 checked = (($comparison_type == 'by_periods') ? "checked" : undef)
+                    type = "radio"
         "data-dojo-type" = "lsmb/ComparisonSelection"
        "data-dojo-props" = "topic:'ui/report/comparison-selection'"
                 } ?>
@@ -161,7 +161,7 @@ default_values = [USER.language]
                       id = 'comparison_by_dates',
                    label = text('Dates'),
                  checked = ($comparison_type == 'by_dates') ? "checked" : undef
-                    type = 'radio'
+                    type = "radio"
         "data-dojo-type" = "lsmb/ComparisonSelection"
        "data-dojo-props" = "topic:'ui/report/comparison-selection'"
                 } ?>
@@ -195,8 +195,7 @@ PROCESS date_from_date_div;
 
 <div id="comparison-selection" 
         data-dojo-type="lsmb/ComparisonSelection"
-        data-dojo-props="topic:'ui/report/comparison-selection'"
-        style="display:none">
+        data-dojo-props="topic:'ui/report/comparison-selection'">
    <h3><?lsmb text('Enter up to ')?> <span id="comparison_periods_text"><?lsmb comparison_periods ?></span><?lsmb text(' date ranges for comparison') ?></h3>
    <div class="input_row">
        <?lsmb FOREACH c IN [1 .. 9]; ?>

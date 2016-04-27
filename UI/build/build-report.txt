@@ -1,4 +1,4 @@
-Build started: Tue Apr 26 2016 22:25:34 GMT-0400 (EDT)
+Build started: Wed Apr 27 2016 11:55:07 GMT-0400 (EDT)
 Build application version: 1.10.4 (37e1249)
 Messages:
 info(102) Optimizing module
@@ -1408,7 +1408,6 @@ dojo/dojo:
 	dijit/_Contained
 	dijit/form/CheckBox
 	dojo/dom-style
-	lsmb/ComparisonSelection
 	dojo/dom-construct
 	dijit/_Container
 	dojo/when
@@ -1562,7 +1561,6 @@ lsmb/main:
 	dijit/_Contained
 	dijit/form/CheckBox
 	dojo/dom-style
-	lsmb/ComparisonSelection
 	dojo/dom-construct
 	dijit/_Container
 	dojo/when
@@ -1616,4 +1614,4 @@ lsmb/main:
 Process finished normally
 	errors: 0
 	warnings: 36
-	build time: 113.803 seconds
+	build time: 106.894 seconds

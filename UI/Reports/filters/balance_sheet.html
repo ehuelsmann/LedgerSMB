@@ -97,22 +97,22 @@ END;
 <div class="inputrow">
 <?lsmb
     PROCESS input element_data={
-        type = 'radio',
-        name = 'comparison_type',
-          id = 'comparison_by_periods',
-       value = 'by_periods',
-       label = text('Periods'),
-     checked = $comparison_type == 'by_periods' ? "checked" : undef,
+        name = 'comparison_type' 
+          id = 'comparison_by_periods' 
+       value = 'by_periods' 
+       label = text('Periods') 
+     checked = $comparison_type == 'by_periods' ? "checked" : undef 
+        type = "radio"
         "data-dojo-type" = "lsmb/ComparisonSelection"
         "data-dojo-props" = "topic:'ui/report/comparison-selection'"
     };
     PROCESS input element_data={
-        type = 'radio',
-        name = 'comparison_type',
-          id = 'comparison_by_dates',
-       value = 'by_dates',
-       label = text('Dates'),
+        name = 'comparison_type'
+          id = 'comparison_by_dates'
+       value = 'by_dates'
+       label = text('Dates')
      checked = $comparison_type == 'by_dates' ? "checked" : undef
+        type = "radio"
         "data-dojo-type" = "lsmb/ComparisonSelection"
         "data-dojo-props" = "topic:'ui/report/comparison-selection'"
     };
@@ -133,8 +133,7 @@ PROCESS date_period_div;
 </div>
 <div id="comparison-selection" 
         data-dojo-type="lsmb/ComparisonSelection"
-        data-dojo-props="topic:'ui/report/comparison-selection'"
-        style="display:none">
+        data-dojo-props="topic:'ui/report/comparison-selection'">
    <h3><?lsmb text('Enter up to ')?> <span id="comparison_periods_text"><?lsmb comparison_periods ?></span><?lsmb text(' date ranges for comparison') ?></h3>
    <div class="inputrow">
        <?lsmb FOREACH c IN [1 .. 9]; ?>
