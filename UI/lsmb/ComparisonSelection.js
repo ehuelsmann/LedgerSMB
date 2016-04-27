@@ -1,7 +1,7 @@
 define(['dojo/_base/declare',
         'dojo/on',
         'dojo/topic',
-        'dijit/form/RadioButton'],
+        'lsmb/PublishRadioButton'],
        function(declare, on, topic, RadioButton) {
            return declare('lsmb/ComparisonSelection', [RadioButton], {
                topic: "",
@@ -9,9 +9,11 @@ define(['dojo/_base/declare',
                hideValues: null,
                show: function() {
                    style.set(this.domNode,'display','block');
+                   alert('show called');
                },
                hide: function() {
                    style.set(this.domNode,'display','none');
+                   alert('hide called');
                },
                update: function(targetValue) {
                    if (       this.showValues && this.showValues.indexOf(targetValue) != -1) { this.show(); }
@@ -19,6 +21,7 @@ define(['dojo/_base/declare',
                    else if ( !this.showValues)                                               { this.show(); }
                    else if ( !this.hideValues)                                               { this.hide(); }
                                                                                      // otherwise, do nothing
+                   alert('update called');
                },
                postCreate: function() {
                    var self = this;
@@ -29,6 +32,7 @@ define(['dojo/_base/declare',
                            self.update(targetValue);
                        })
                    );
+                   alert('postCreate called');
                }
            });
        });
