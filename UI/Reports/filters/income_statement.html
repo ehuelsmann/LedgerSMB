@@ -137,36 +137,36 @@ default_values = [USER.language]
 </div>
 
 <div class="subsection">
-<div class="labelledinput">
-	<div class="label">
-		<?lsmb text('Comparison selection by') ?>
-	</div>
-	<div class="input_group">
-		<?lsmb
-		IF comparison_type != 'by_dates';
-		  YES="CHECKED";
-		  NO=undef;
-		ELSE;
-		  NO="CHECKED";
-		  YES=undef;
-		END;
-		PROCESS input element_data={
-			type = 'radio',
-			name = 'comparison_type',
-			  id = 'comparison_by_periods',
-		   value = 'by_periods',
-		   label = text('Periods'),
-		 checked = YES,
-		};
-		PROCESS input element_data={
-			type = 'radio',
-			name = 'comparison_type',
-			  id = 'comparison_by_dates',
-		   value = 'by_dates',
-		   label = text('Dates'),
-		 checked = NO
-		};
-		?>
+    <div class="labelledinput">
+        <div class="label">
+            <?lsmb text('Comparison selection by') ?>
+        </div>
+        <div class="details_select">
+            <div class="input">
+                <?lsmb INCLUDE input element_data = {
+                    name = 'comparison_type'
+                   value = 'by_periods'
+                      id = 'comparison_by_periods'
+                   label = text('Periods'),
+                 checked = ($comparison_type == 'by_periods') ? "checked" : undef
+                    type = 'radio'
+        "data-dojo-type" = "lsmb/ComparisonSelection"
+       "data-dojo-props" = "topic:'ui/report/comparison-selection'"
+                } ?>
+            </div>
+            <div class="input">
+                <?lsmb INCLUDE input element_data = {
+                    name = 'comparison_type'
+                   value = 'by_dates'
+                      id = 'comparison_by_dates',
+                   label = text('Dates'),
+                 checked = ($comparison_type == 'by_dates') ? "checked" : undef
+                    type = 'radio'
+        "data-dojo-type" = "lsmb/ComparisonSelection"
+       "data-dojo-props" = "topic:'ui/report/comparison-selection'"
+                } ?>
+            </div>
+        </div>
 	</div>
 </div>
 
@@ -193,17 +193,18 @@ PROCESS date_from_date_div;
    <?lsmb PROCESS date_period_div; ?>
 </div>
 
-<div  data-dojo-type = 'lsmb/ComparisonSelection'>
-   <div id="comparison_dates" style="display:none">
-       <h3><?lsmb text('Enter up to ')?> <span id="comparison_periods_text"><?lsmb comparison_periods ?></span><?lsmb text(' date ranges for comparison') ?></h3>
-       <div class="input_row">
-		   <?lsmb FOREACH c IN [1 .. 9]; ?>
-			  <div id="comparison_dates_<?lsmb c ?>" style="<?lsmb c <= comparison_periods ? '' : 'display:none'?>">
-					  <?lsmb PROCESS date_from_date_div SUFFIX='_' _ c; ?>
-					  <?lsmb PROCESS date_to_date_div SUFFIX='_' _ c; ?>
-			  </div>
-		   <?lsmb END ?>
-       </div>
+<div id="comparison-selection" 
+        data-dojo-type="lsmb/ComparisonSelection"
+        data-dojo-props="topic:'ui/report/comparison-selection'"
+        style="display:none">
+   <h3><?lsmb text('Enter up to ')?> <span id="comparison_periods_text"><?lsmb comparison_periods ?></span><?lsmb text(' date ranges for comparison') ?></h3>
+   <div class="input_row">
+       <?lsmb FOREACH c IN [1 .. 9]; ?>
+          <div id="comparison_dates_<?lsmb c ?>" style="<?lsmb c <= comparison_periods ? '' : 'display:none'?>">
+                  <?lsmb PROCESS date_from_date_div SUFFIX='_' _ c; ?>
+                  <?lsmb PROCESS date_to_date_div SUFFIX='_' _ c; ?>
+          </div>
+       <?lsmb END ?>
    </div>
 </div>
 </div>

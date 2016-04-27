@@ -197,8 +197,8 @@
       return q
     }
     var b = a.require;
-    b || (b = function(f, l, r) {
-      return wa(f, l, r, a, b)
+    b || (b = function(f, l, c) {
+      return wa(f, l, c, a, b)
     }, a.require = f(b, q), b.module = a, b.toUrl = function(f) {
       return xa(f, a)
     }, b.toAbsMid = function(f) {
@@ -2534,7 +2534,7 @@ require({cache:{"dojo/request/xhr":function() {
       !b && a && a.rootNode ? (b = a, f = b.rootNode) : a && k.isObject(a) && !("nodeType" in a) ? b = a : f = a;
       f = f ? d.byId(f) : g.body();
       b = b || {};
-      var c = b.template ? {template:!0} : {}, l = [], h = this, r = this._scanAmd(f, b).then(function() {
+      var c = b.template ? {template:!0} : {}, l = [], h = this, e = this._scanAmd(f, b).then(function() {
         return h.scan(f, b)
       }).then(function(a) {
         return h._instantiate(a, c, b, !0)
@@ -2544,7 +2544,7 @@ require({cache:{"dojo/request/xhr":function() {
         console.error("dojo/parser::parse() error", a);
         throw a;
       });
-      k.mixin(l, r);
+      k.mixin(l, e);
       return l
     }};
     m.parser = z;
@@ -6907,16 +6907,19 @@ require({cache:{"dojo/request/xhr":function() {
     return c
   })
 }, "lsmb/ComparisonSelection":function() {
-  define("dojo/_base/declare dojo/dom dojo/dom-style dojo/on dojo/topic dijit/_WidgetBase".split(" "), function(e, m, k, n, c, d) {
-    return e("lsmb/ComparisonSelection", [d], {topic:"", showValues:null, hideValues:null, show:function() {
-      k.set(this.domNode, "display", "block")
+  define(["dojo/_base/declare", "dojo/on", "dojo/topic", "dijit/form/RadioButton"], function(e, m, k, n) {
+    return e("lsmb/ComparisonSelection", [n], {topic:"", showValues:null, hideValues:null, show:function() {
+      style.set(this.domNode, "display", "block")
     }, hide:function() {
-      k.set(this.domNode, "display", "none")
+      style.set(this.domNode, "display", "none")
     }, update:function(c) {
       this.showValues && -1 != this.showValues.indexOf(c) ? this.show() : this.hideValues && -1 != this.hideValues.indexOf(c) ? this.hide() : this.showValues ? this.hideValues || this.hide() : this.show()
     }, postCreate:function() {
+      var c = this;
       this.inherited(arguments);
-      this.own()
+      this.own(k.subscribe(c.topic, function(d) {
+        c.update(d)
+      }))
     }})
   })
 }, "dojo/dom-construct":function() {

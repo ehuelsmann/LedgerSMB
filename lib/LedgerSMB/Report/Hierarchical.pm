@@ -93,8 +93,6 @@ retrieved values.
 
 has sorted_col_ids => (is => 'rw');
 
-
-
 =head1 STATIC METHODS
 
 =over
@@ -121,6 +119,7 @@ sub header_lines {
     return [];
 }
 
+=back
 
 =head2 _init_comparison($request, $c_per)
 
@@ -139,8 +138,6 @@ sub _init_comparison{
         $request->{"interval_$c_per"} = $request->{interval};
     }
 }
-
-=back
 
 =head1 SEMI-PUBLIC METHODS
 

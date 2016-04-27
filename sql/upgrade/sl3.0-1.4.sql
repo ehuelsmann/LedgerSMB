@@ -382,6 +382,47 @@ UPDATE defaults
  WHERE setting_key IN (select fldvalue FROM sl30.defaults
                         where );
 */
+/* May have to move this downward*/
+UPDATE defaults SET value = (SELECT fldvalue FROM sl30.defaults WHERE fldname = 'businessnumber') WHERE setting_key = 'businessnumber';
+INSERT INTO defaults(setting_key,value) SELECT 'company_name',fldvalue FROM sl30.defaults WHERE fldname = 'company';
+INSERT INTO defaults(setting_key,value) SELECT 'company_address',fldvalue FROM sl30.defaults WHERE fldname = 'address';
+INSERT INTO defaults(setting_key,value) SELECT 'company_fax',fldvalue FROM sl30.defaults WHERE fldname = 'fax';
+INSERT INTO defaults(setting_key,value) SELECT 'company_phone',fldvalue FROM sl30.defaults WHERE fldname = 'tel';
+INSERT INTO defaults(setting_key,value) SELECT 'weightunit',fldvalue FROM sl30.defaults WHERE fldname = 'weightunit';
+INSERT INTO defaults(setting_key,value) SELECT 'curr',curr FROM sl30.curr WHERE rn=1;
+INSERT INTO defaults(setting_key,value)
+SELECT 'inventory_accno_id',id from account
+	where account.accno in (
+	select accno from sl30.chart
+	where id = ( select cast(fldvalue as int) from sl30.defaults where fldname = 'inventory_accno_id' )
+);
+INSERT INTO defaults(setting_key,value)
+SELECT 'income_accno_id',id from account
+	where account.accno in (
+	select accno from sl30.chart
+	where id = ( select cast(fldvalue as int) from sl30.defaults where fldname = 'income_accno_id' )
+);
+INSERT INTO defaults(setting_key,value)
+SELECT 'expense_accno_id',id from account
+	where account.accno in (
+	select accno from sl30.chart
+	where id = ( select cast(fldvalue as int) from sl30.defaults where fldname = 'expense_accno_id' )
+);
+INSERT INTO defaults(setting_key,value)
+SELECT 'fxgain_accno_id',id from account
+	where account.accno in (
+	select accno from sl30.chart
+	where id = ( select cast(fldvalue as int) from sl30.defaults where fldname = 'fxgain_accno_id' )
+);
+INSERT INTO defaults(setting_key,value)
+SELECT 'fxloss_accno_id',id from account
+	where account.accno in (
+	select accno from sl30.chart
+	where id = ( select cast(fldvalue as int) from sl30.defaults where fldname = 'fxloss_accno_id' )
+);
+-- = "sl30.cashovershort_accno_id" ?
+-- "earn_id" = ?
+
 
 INSERT INTO assembly (id, parts_id, qty, bom, adj)
 SELECT id, parts_id, qty, bom, adj  FROM sl30.assembly;
@@ -440,8 +481,7 @@ insert into ap
 	on_hold, approved, reverse, terms, description)
 SELECT 
 	vendor.credit_id,
-	(select entity_id from sl30.employee 
-		WHERE id = ap.employee_id),
+	(select entity_id from sl30.employee WHERE id = ap.employee_id),
 	ap.id, invnumber, transdate, ap.taxincluded, amount, netamount, paid, 
 	datepaid, duedate, invoice, ordnumber, ap.curr, ap.notes, quonumber, 
 	intnotes,
@@ -491,7 +531,7 @@ SELECT ac.entry_id, 2, slac.project_id+1000
  WHERE project_id > 0;
 
 
- INSERT INTO invoice (id, trans_id, parts_id, description, qty, allocated,
+INSERT INTO invoice (id, trans_id, parts_id, description, qty, allocated,
             sellprice, fxsellprice, discount, assemblyitem, unit,
             deliverydate, serialnumber)
     SELECT  id, trans_id, parts_id, description, qty, allocated,
@@ -510,9 +550,6 @@ SELECT inv.id, 1, gl.department_id
 INSERT INTO business_unit_inv (entry_id, class_id, bu_id)
 SELECT id, 2, project_id + 1000 FROM sl30.invoice 
  WHERE project_id > 0 and  project_id in (select id from sl30.project);
-
-
-
 
 INSERT INTO partstax (parts_id, chart_id)
      SELECT parts_id, a.id
@@ -541,8 +578,6 @@ INSERT INTO eca_tax (eca_id, chart_id)
    FROM sl30.vendortax vt
    JOIN sl30.vendor v
      ON vt.vendor_id = v.id;
-
-
 
 INSERT 
   INTO oe(id, ordnumber, transdate, amount, netamount, reqdate, taxincluded,
@@ -580,9 +615,7 @@ INSERT INTO business_unit_oitem (entry_id, class_id, bu_id)
 SELECT id, 2, project_id + 1000 FROM sl30.orderitems
  WHERE project_id > 0  and  project_id in (select id from sl30.project);
 
-
 INSERT INTO exchangerate select * from sl30.exchangerate;
-
 
 INSERT INTO status SELECT * FROM sl30.status; -- may need to comment this one out sometimes
 
@@ -618,9 +651,9 @@ INSERT INTO partscustomer(parts_id, credit_id, pricegroup_id, pricebreak,
       WHERE pv.pricegroup_id <> 0;
 
 INSERT INTO language
-SELECT * FROM sl30.language sllang
+SELECT OVERLAY(code PLACING LOWER(SUBSTRING(code FROM '^..')) FROM 1 FOR 2 ) AS code,description FROM sl30.language sllang
  WHERE NOT EXISTS (SELECT 1
-                     FROM language l WHERE l.code = sllang.code);
+                     FROM language l WHERE l.code = OVERLAY(sllang.code PLACING LOWER(SUBSTRING(sllang.code FROM '^..')) FROM 1 FOR 2 ));
 
 INSERT INTO audittrail(trans_id, tablename, reference, formname, action,
             transdate, person_id)

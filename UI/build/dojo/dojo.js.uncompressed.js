@@ -24162,13 +24162,11 @@ define(["./sniff", "./dom"], function(has, dom){
 },
 'lsmb/ComparisonSelection':function(){
 define(['dojo/_base/declare',
-        'dojo/dom',
-        'dojo/dom-style',
         'dojo/on',
         'dojo/topic',
-        'dijit/_WidgetBase'],
-       function(declare, dom, style, on, topic, _WidgetBase) {
-           return declare('lsmb/ComparisonSelection', [_WidgetBase], {
+        'dijit/form/RadioButton'],
+       function(declare, on, topic, RadioButton) {
+           return declare('lsmb/ComparisonSelection', [RadioButton], {
                topic: "",
                showValues: null,
                hideValues: null,
@@ -24179,27 +24177,20 @@ define(['dojo/_base/declare',
                    style.set(this.domNode,'display','none');
                },
                update: function(targetValue) {
-                   if (this.showValues &&
-                       -1 != this.showValues.indexOf(targetValue)) {
-                       this.show();
-                   } else if (this.hideValues &&
-                              -1 != this.hideValues.indexOf(targetValue)) {
-                       this.hide();
-                   } else if (! this.showValues) {
-                       this.show();
-                   } else if (! this.hideValues) {
-                       this.hide();
-                   }
-                   // otherwise, do nothing
+                   if (       this.showValues && this.showValues.indexOf(targetValue) != -1) { this.show(); }
+                   else if (  this.hideValues && this.hideValues.indexOf(targetValue) != -1) { this.hide(); }
+                   else if ( !this.showValues)                                               { this.show(); }
+                   else if ( !this.hideValues)                                               { this.hide(); }
+                                                                                     // otherwise, do nothing
                },
                postCreate: function() {
                    var self = this;
                    this.inherited(arguments);
 
                    this.own(
-//                       topic.subscribe(self.topic,function(targetValue) {
-//                           self.update(targetValue);
-//                       })
+                       topic.subscribe(self.topic,function(targetValue) {
+                           self.update(targetValue);
+                       })
                    );
                }
            });
