@@ -60,6 +60,7 @@ our $cookie_name = "LedgerSMB-1.3";
 our $spool = "spool";
 
 our $cache_templates = 0;
+
 # path to user configuration files
 our $userspath = "users";
 

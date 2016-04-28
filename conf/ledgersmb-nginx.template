@@ -1,0 +1,55 @@
+##
+# LedgerSMB server configuration
+#
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        #Set to LSMB installed directory
+        root [ROOT];
+
+        #Adjust to your liking
+        #server_name ubuntu-vm;
+
+        #Try the asked file directly, pass to Plack if not found
+        location / {
+
+            index login.pl;
+
+            # Hardened version. Deny access to everything
+            deny all;
+
+            # But grant localhost
+            allow 127.0.0.1;
+            allow ::1;
+
+            #Uncomment & adjust the next line for localnet access control
+            #allow 192.168.30.0/24;
+
+            # Whitelist explictly what we allow, i.e. Perl & static files
+            location ~* (^/.+\.pl(\?.+)?)|(.*\.(html|js|css|gif|jpg|png|svg))$ {
+                allow all;
+                try_files $uri @plack-development;
+            }
+        }
+
+        location @plack-development {
+            proxy_http_version 1.1;
+            proxy_redirect off;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Host $http_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_pass http://localhost:5001;
+        }
+        #Uncomment the next lines for monitoring
+        #access_log /var/log/nginx/ledgersmb.access.log main;
+        #error_log /var/log/nginx/ledgersmb.error.log error;
+
+        #Uncomment & adjust the next 4 lines for access control
+        #allow 127.0.0.1;
+        #allow ::1;
+        #allow 192.168.30.0/24;
+        #deny all;
+}
+

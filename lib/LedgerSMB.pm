@@ -504,9 +504,8 @@ sub _error {
         $error = $msg;
     } else {
         $error = LedgerSMB::Request::Error->new(msg => $msg,
-                                                status => $status );
+                                                status => $status);
     }
-
     if ( $ENV{GATEWAY_INTERFACE} ) {
 
         delete $self->{pre};

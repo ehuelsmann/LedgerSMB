@@ -1,0 +1,27 @@
+# This file must be edited to substitute the current path with WORKING_DIR
+
+<VirtualHost *:80>
+
+  ServerName [SERVERNAME]:80
+  DocumentRoot WORKING_DIR
+
+  LogLevel Warn
+
+  <FilesMatch ".+\.pl(\?.*)?$>
+    # Since Apache 2.4.10, SetHandler can filter too.
+    # The syntax below says proxy 'Perl PL files' to localhost:5000
+    SetHandler  "proxy:pl://localhost:5000"
+  </FilesMatch>
+
+  <LocationMatch ".+\.(js|css|gif|jpg|eps)$">
+    # Serve directly
+    ProxyPass !
+  </LocationMatch>
+
+  ProxyRequests     Off
+  ProxyPreserveHost On
+  ProxyVia          On
+  ProxyPass        / http://localhost:5000/
+  ProxyPassReverse / http://localhost:5000/
+
+</VirtualHost>
