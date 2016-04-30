@@ -63,6 +63,8 @@ feature 'Standalone Server w/Starman',
     'CGI::Emulate::PSGI' => 0,
     'Plack::Builder' => 0,
     'Plack::Middleware::Static' => 0;
+    'Plack::Middleware::ReverseProxy' => 0;
+    'Plack::Middleware::ReverseProxyPath' => 0;
 
 
 feature 'Size detection for images for embedding in LaTeX templates',
