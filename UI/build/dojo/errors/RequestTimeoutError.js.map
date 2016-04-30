@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"RequestTimeoutError.js",
-"lineCount":2,
-"mappings":"A;AAAAA,MAAA,iEAA0E,QAAA,CAASC,CAAT,CAAiBC,CAAjB,QAWlED,EAAA,4BAAoCC,CAApC,sBAXkE,CAA1E;",
+"lineCount":4,
+"mappings":"A;AAAAA,MAAA,oEAA0E,QAAA,CAASC,CAAT,EAAiBC,CAAjB;QAWlED,EAAA,8BAAoCC,CAApC,uBAXkE;CAA1E;",
 "sources":["RequestTimeoutError.js.uncompressed.js"],
 "names":["define","create","RequestError"]
 }

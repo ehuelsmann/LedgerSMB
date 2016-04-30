@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"window.js",
-"lineCount":2,
-"mappings":"A;AAAAA,MAAA,gDAGG,QAAA,CAASC,CAAT,CAAsBC,CAAtB,EAWFA,CAAAC,kBAXE,CAWwBC,QAAAA,CAASC,CAATD,QAClBH,EAAAK,IAAA,CAAgBD,CAAhB,CADkBD,CAXxB,CAHH;",
+"lineCount":6,
+"mappings":"A;AAAAA,MAAA,mDAGG,QAAA,CAASC,CAAT,EAAsBC,CAAtB;AAWFA,GAAAC,kBAXE,GAWwBC,QAAAA,CAASC,CAATD;UAClBH,EAAAK,IAAA,CAAgBD,CAAhB,CADkBD;GAXxB;CAHH;",
 "sources":["window.js.uncompressed.js"],
 "names":["define","windowUtils","dijit","getDocumentWindow","dijit.getDocumentWindow","doc","get"]
 }

@@ -2,7 +2,7 @@
 "version":3,
 "file":"colors.js",
 "lineCount":9,
-"mappings":"A;AAAAA,MAAA;;;;;;oTAgKA,OAhKA,0DA0KA,OA1KA;;",
+"mappings":"A;AAAAA,MAAA;;;;;;gcAgKA,OAhKA;qBA0KA,OA1KA;",
 "sources":["colors.js.uncompressed.js"],
 "names":["define"]
 }

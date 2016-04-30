@@ -2,7 +2,7 @@
 "version":3,
 "file":"number.js",
 "lineCount":3,
-"mappings":"A;AAAAA,MAAA,sDAKC,6CALD,mGAWC,iDAXD,aAYC,qBAZD,QAaC,6CAbD,iCAgBC,gDAhBD,aAiBC,8CAjBD;mDAsBC,oBAtBD,8CAyBC,8CAzBD,qEAqCC,OArCD,sBAyCC,OAzCD,0DAmDC,OAnDD,oDA4DC,SA5DD,IA6DC,OA7DD,IA8DC,OA9DD;",
+"mappings":"A;AAAAA,MAAA,wDAKC,6CALD,yGAWC,iDAXD,cAYC,qBAZD,SAaC,6CAbD,oCAgBC,gDAhBD,cAiBC,8CAjBD;6FAsBC,oBAtBD,iDAyBC,8CAzBD,8EAqCC,OArCD,0BAyCC,OAzCD,oEAmDC,OAnDD,6DA4DC,SA5DD,KA6DC,OA7DD,KA8DC,OA9DD;",
 "sources":["number.js.uncompressed.js"],
 "names":["define"]
 }

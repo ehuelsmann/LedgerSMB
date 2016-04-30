@@ -14,11 +14,11 @@ define([
 		return typeof XMLHttpRequest !== 'undefined';
 	});
 	has.add('dojo-force-activex-xhr', function(){
-		return has('activex') && !document.addEventListener && window.location.protocol === 'file:';
+		return has('activex') && window.location.protocol === 'file:';
 	});
 
 	has.add('native-xhr2', function(){
-		if(!has('native-xhr')){ return; }
+		if(!has('native-xhr') || has('dojo-force-activex-xhr')){ return; }
 		var x = new XMLHttpRequest();
 		return typeof x['addEventListener'] !== 'undefined' &&
 			(typeof opera === 'undefined' || typeof x['upload'] !== 'undefined');
@@ -73,15 +73,31 @@ define([
 				error = e;
 			}
 		}
-
+		var handleError;
 		if(error){
 			this.reject(error);
-		}else if(util.checkStatus(_xhr.status)){
-			this.resolve(response);
 		}else{
-			error = new RequestError('Unable to load ' + response.url + ' status: ' + _xhr.status, response);
-
-			this.reject(error);
+			try{
+				handlers(response);
+			}catch(e){
+				handleError = e;
+			}
+			if(util.checkStatus(_xhr.status)){
+				if(!handleError){
+					this.resolve(response);
+				}else{
+					this.reject(handleError);
+				}
+			}else{
+				if(!handleError){
+					error = new RequestError('Unable to load ' + response.url + ' status: ' + _xhr.status, response);
+					this.reject(error);
+				}else{
+					error = new RequestError('Unable to load ' + response.url + ' status: ' + _xhr.status +
+						' and an error in handleAs: transformation of response', response);
+    				this.reject(error);
+				}
+			}
 		}
 	}
 
@@ -117,7 +133,7 @@ define([
 					response.total = evt.total;
 					dfd.progress(response);
 				} else if(response.xhr.readyState === 3){
-					response.loaded = evt.position;
+					response.loaded = ('loaded' in evt) ? evt.loaded : evt.position;
 					dfd.progress(response);
 				}
 			}
@@ -966,50 +982,14 @@ define(["./sniff", "./_base/window","./dom", "./dom-style"],
 				{x: geom.fixIeBiDiScrollLeft(node.scrollLeft || 0, doc), y: node.scrollTop || 0 };
 	};
 
-	if(has("ie")){
-		geom.getIeDocumentElementOffset = function getIeDocumentElementOffset(/*Document?*/ doc){
-			// summary:
-			//		returns the offset in x and y from the document body to the
-			//		visual edge of the page for IE
-			// doc: Document?
-			//		Optional document to query.   If unspecified, use win.doc.
-			// description:
-			//		The following values in IE contain an offset:
-			//	|		event.clientX
-			//	|		event.clientY
-			//	|		node.getBoundingClientRect().left
-			//	|		node.getBoundingClientRect().top
-			//		But other position related values do not contain this offset,
-			//		such as node.offsetLeft, node.offsetTop, node.style.left and
-			//		node.style.top. The offset is always (2, 2) in LTR direction.
-			//		When the body is in RTL direction, the offset counts the width
-			//		of left scroll bar's width.  This function computes the actual
-			//		offset.
-
-			//NOTE: assumes we're being called in an IE browser
-
-			doc = doc || win.doc;
-			var de = doc.documentElement; // only deal with HTML element here, position() handles body/quirks
-
-			if(has("ie") < 8){
-				var r = de.getBoundingClientRect(), // works well for IE6+
-					l = r.left, t = r.top;
-				if(has("ie") < 7){
-					l += de.clientLeft;	// scrollbar size in strict/RTL, or,
-					t += de.clientTop;	// HTML border size in strict
-				}
-				return {
-					x: l < 0 ? 0 : l, // FRAME element border size can lead to inaccurate negative values
-					y: t < 0 ? 0 : t
-				};
-			}else{
-				return {
-					x: 0,
-					y: 0
-				};
-			}
+	geom.getIeDocumentElementOffset = function(/*Document?*/ doc){
+		// summary:
+		//		Deprecated method previously used for IE6-IE7.  Now, just returns `{x:0, y:0}`.
+		return {
+			x: 0,
+			y: 0
 		};
-	}
+	};
 
 	geom.fixIeBiDiScrollLeft = function fixIeBiDiScrollLeft(/*Integer*/ scrollLeft, /*Document?*/ doc){
 		// summary:
@@ -1065,12 +1045,9 @@ define(["./sniff", "./_base/window","./dom", "./dom-style"],
 		ret = {x: ret.left, y: ret.top, w: ret.right - ret.left, h: ret.bottom - ret.top};
 
 		if(has("ie") < 9){
-			// On IE<9 there's a 2px offset that we need to adjust for, see dojo.getIeDocumentElementOffset()
-			var offset = geom.getIeDocumentElementOffset(node.ownerDocument);
-
 			// fixes the position in IE, quirks mode
-			ret.x -= offset.x + (has("quirks") ? db.clientLeft + db.offsetLeft : 0);
-			ret.y -= offset.y + (has("quirks") ? db.clientTop + db.offsetTop : 0);
+			ret.x -= (has("quirks") ? db.clientLeft + db.offsetLeft : 0);
+			ret.y -= (has("quirks") ? db.clientTop + db.offsetTop : 0);
 		}
 
 		// account for document scrolling
@@ -1118,8 +1095,8 @@ define(["./sniff", "./_base/window","./dom", "./dom-style"],
 			event.layerX = event.offsetX;
 			event.layerY = event.offsetY;
 		}
-		if(!has("dom-addeventlistener")){
-			// old IE version
+
+		if(!("pageX" in event)){
 			// FIXME: scroll position query is duped from dojo/_base/html to
 			// avoid dependency on that entire module. Now that HTML is in
 			// Base, we should convert back to something similar there.
@@ -1128,9 +1105,8 @@ define(["./sniff", "./_base/window","./dom", "./dom-style"],
 			// DO NOT replace the following to use dojo/_base/window.body(), in IE, document.documentElement should be used
 			// here rather than document.body
 			var docBody = has("quirks") ? doc.body : doc.documentElement;
-			var offset = geom.getIeDocumentElementOffset(doc);
-			event.pageX = event.clientX + geom.fixIeBiDiScrollLeft(docBody.scrollLeft || 0, doc) - offset.x;
-			event.pageY = event.clientY + (docBody.scrollTop || 0) - offset.y;
+			event.pageX = event.clientX + geom.fixIeBiDiScrollLeft(docBody.scrollLeft || 0, doc);
+			event.pageY = event.clientY + (docBody.scrollTop || 0);
 		}
 	};
 
@@ -2597,6 +2573,7 @@ define([
 				var resizeArgs = {
 					w: dropDown.domNode.offsetWidth + widthAdjust
 				};
+				this._origStyle = ddNode.style.cssText;
 				if(lang.isFunction(dropDown.resize)){
 					dropDown.resize(resizeArgs);
 				}else{
@@ -2646,8 +2623,12 @@ define([
 				popup.close(this.dropDown);
 				this._opened = false;
 			}
-		}
 
+			if(this._origStyle){
+				this.dropDown.domNode.style.cssText = this._origStyle;
+				delete this._origStyle;
+			}
+		}
 	});
 });
 
@@ -3161,7 +3142,7 @@ define(["exports", "./_base/kernel", "./sniff", "./_base/lang", "./dom", "./dom-
 	// =============================
 
 	// helper to connect events
-	var _evtHdlrMap = {}, _ctr = 0, _attrId = dojo._scopeName + "attrid";
+	var _evtHdlrMap = {}, _ctr = 1, _attrId = dojo._scopeName + "attrid";
 	has.add('dom-textContent', function (global, doc, element) { return 'textContent' in element; });
 
 	exports.names = {
@@ -3477,8 +3458,8 @@ define([
 
 			if(result && has("dom-qsa2.1") && !result.querySelectorAll && has("dom-parser")){
 				// http://bugs.dojotoolkit.org/ticket/15631
-				// IE9 supports a CSS3 querySelectorAll implementation, but the DOM implementation 
-				// returned by IE9 xhr.responseXML does not. Manually create the XML DOM to gain 
+				// IE9 supports a CSS3 querySelectorAll implementation, but the DOM implementation
+				// returned by IE9 xhr.responseXML does not. Manually create the XML DOM to gain
 				// the fuller-featured implementation and avoid bugs caused by the inconsistency
 				result = new DOMParser().parseFromString(xhr.responseText, "application/xml");
 			}
@@ -3690,7 +3671,7 @@ define([
 			//IE requires going through getAttributeNode instead of just getAttribute in some form cases,
 			//so use it for all. See #2844
 			var actnNode = form.getAttributeNode("action");
-			ioArgs.url = ioArgs.url || (actnNode ? actnNode.value : null);
+			ioArgs.url = ioArgs.url || (actnNode ? actnNode.value : (dojo.doc ? dojo.doc.URL : null));
 			formObject = domForm.toObject(form);
 		}
 
@@ -4738,10 +4719,6 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 			});
 		};
 
-	if(has("dojo-unit-tests")){
-		var unitTests = thisModule.unitTests = [];
-	}
-
 	if(has("dojo-preload-i18n-Api") ||  1 ){
 		var normalizeLocale = thisModule.normalizeLocale = function(locale){
 				var result = locale ? locale.toLowerCase() : dojo.locale;
@@ -4829,7 +4806,7 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 											bundlePath = match[1] + "/";
 
 										// backcompat
-										bundle._localized = bundle._localized || {};
+										if(!bundle._localized){continue;}
 
 										var localized;
 										if(loc === "ROOT"){
@@ -4874,7 +4851,10 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 												if(requiredBundles.length){
 													preloadingAddLock();
 													contextRequire(requiredBundles, function(){
-														for(var i = 0; i < requiredBundles.length; i++){
+														// requiredBundles was constructed by forEachLocale so it contains locales from 
+														// less specific to most specific. 
+														// the loop starts with the most specific locale, the last one.
+														for(var i = requiredBundles.length - 1; i >= 0 ; i--){
 															bundle = lang.mixin(lang.clone(bundle), arguments[i]);
 															cache[cacheIds[i]] = bundle;
 														}
@@ -4983,13 +4963,15 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 						results.push(cache[url]);
 					}else{
 						var bundle = require.syncLoadNls(mid);
-						// don't need to check for legacy since syncLoadNls returns a module if the module
-						// (1) was already loaded, or (2) was in the cache. In case 1, if syncRequire is called
-						// from getLocalization --> load, then load will have called checkForLegacyModules() before
-						// calling syncRequire; if syncRequire is called from preloadLocalizations, then we
-						// don't care about checkForLegacyModules() because that will be done when a particular
-						// bundle is actually demanded. In case 2, checkForLegacyModules() is never relevant
-						// because cached modules are always v1.7+ built modules.
+						// need to check for legacy module here because there might be a legacy module for a
+						// less specific locale (which was not looked up during the first checkForLegacyModules
+						// call in load()).
+						// Also need to reverse the locale and the module name in the mid because syncRequire
+						// deps parameters uses the AMD style package/nls/locale/module while legacy code uses
+						// package/nls/module/locale.
+						if(!bundle){
+							bundle = checkForLegacyModules(mid.replace(/nls\/([^\/]*)\/([^\/]*)$/, "nls/$2/$1"));
+						}
 						if(bundle){
 							results.push(bundle);
 						}else{
@@ -5046,35 +5028,6 @@ define(["./_base/kernel", "require", "./has", "./_base/array", "./_base/config",
 			);
 			return result;
 		};
-
-		if(has("dojo-unit-tests")){
-			unitTests.push(function(doh){
-				doh.register("tests.i18n.unit", function(t){
-					var check;
-
-					check = evalBundle("{prop:1}", checkForLegacyModules, "nonsense", amdValue);
-					t.is({prop:1}, check); t.is(undefined, check[1]);
-
-					check = evalBundle("({prop:1})", checkForLegacyModules, "nonsense", amdValue);
-					t.is({prop:1}, check); t.is(undefined, check[1]);
-
-					check = evalBundle("{'prop-x':1}", checkForLegacyModules, "nonsense", amdValue);
-					t.is({'prop-x':1}, check); t.is(undefined, check[1]);
-
-					check = evalBundle("({'prop-x':1})", checkForLegacyModules, "nonsense", amdValue);
-					t.is({'prop-x':1}, check); t.is(undefined, check[1]);
-
-					check = evalBundle("define({'prop-x':1})", checkForLegacyModules, "nonsense", amdValue);
-					t.is(amdValue, check); t.is({'prop-x':1}, amdValue.result);
-
-					check = evalBundle("define('some/module', {'prop-x':1})", checkForLegacyModules, "nonsense", amdValue);
-					t.is(amdValue, check); t.is({'prop-x':1}, amdValue.result);
-
-					check = evalBundle("this is total nonsense and should throw an error", checkForLegacyModules, "nonsense", amdValue);
-					t.is(check instanceof Error, true);
-				});
-			});
-		}
 	}
 
 	return lang.mixin(thisModule, {
@@ -5155,29 +5108,35 @@ define([
 		return map;
 	}
 
-	// Map from widget name or list of widget names(ex: "dijit/form/Button,acme/MyMixin") to a constructor.
-	var _ctorMap = {};
-
 	function getCtor(/*String[]*/ types, /*Function?*/ contextRequire){
 		// summary:
 		//		Retrieves a constructor.  If the types array contains more than one class/MID then the
 		//		subsequent classes will be mixed into the first class and a unique constructor will be
 		//		returned for that array.
 
+		if(!contextRequire){
+			contextRequire = require;
+		}
+
+		// Map from widget name or list of widget names(ex: "dijit/form/Button,acme/MyMixin") to a constructor.
+		// Keep separate map for each requireContext to avoid false matches (ex: "./Foo" can mean different things
+		// depending on context.)
+		var ctorMap = contextRequire._dojoParserCtorMap || (contextRequire._dojoParserCtorMap = {});
+
 		var ts = types.join();
-		if(!_ctorMap[ts]){
+		if(!ctorMap[ts]){
 			var mixins = [];
 			for(var i = 0, l = types.length; i < l; i++){
 				var t = types[i];
 				// TODO: Consider swapping getObject and require in the future
-				mixins[mixins.length] = (_ctorMap[t] = _ctorMap[t] || (dlang.getObject(t) || (~t.indexOf('/') &&
-					(contextRequire ? contextRequire(t) : require(t)))));
+				mixins[mixins.length] = (ctorMap[t] = ctorMap[t] || (dlang.getObject(t) || (~t.indexOf('/') &&
+					contextRequire(t))));
 			}
 			var ctor = mixins.shift();
-			_ctorMap[ts] = mixins.length ? (ctor.createSubclass ? ctor.createSubclass(mixins) : ctor.extend.apply(ctor, mixins)) : ctor;
+			ctorMap[ts] = mixins.length ? (ctor.createSubclass ? ctor.createSubclass(mixins) : ctor.extend.apply(ctor, mixins)) : ctor;
 		}
 
-		return _ctorMap[ts];
+		return ctorMap[ts];
 	}
 
 	var parser = {
@@ -5393,7 +5352,7 @@ define([
 				hash[attrData + "props"] = "data-dojo-props";
 				hash[attrData + "type"] = "data-dojo-type";
 				hash[attrData + "mixins"] = "data-dojo-mixins";
-				hash[scope + "type"] = "dojoType";
+				hash[scope + "type"] = "dojotype";
 				hash[attrData + "id"] = "data-dojo-id";
 			}
 
@@ -5977,17 +5936,12 @@ define([
 			//	|		parser.parse({ noStart:true, rootNode: someNode });
 
 			// determine the root node and options based on the passed arguments.
-			var root;
-			if(!options && rootNode && rootNode.rootNode){
+			if(rootNode && typeof rootNode != "string" && !("nodeType" in rootNode)){
+				// If called as parse(options) rather than parse(), parse(rootNode), or parse(rootNode, options)...
 				options = rootNode;
-				root = options.rootNode;
-			}else if(rootNode && dlang.isObject(rootNode) && !("nodeType" in rootNode)){
-				options = rootNode;
-			}else{
-				root = rootNode;
+				rootNode = options.rootNode;
 			}
-			root = root ? dom.byId(root) : dwindow.body();
-
+			var root = rootNode ? dom.byId(rootNode) : dwindow.body();
 			options = options || {};
 
 			var mixin = options.template ? { template: true } : {},
@@ -6752,7 +6706,7 @@ define([
 	"dojo/_base/array", // array.forEach
 	"dojo/_base/declare", // declare
 	"dojo/dom", // dom.byId
-	"dojo/has",
+	"dojo/sniff",	// has("ie"), has("dojo-bidi")
 	"dojo/keys", // keys.ALT keys.CAPS_LOCK keys.CTRL keys.META keys.SHIFT
 	"dojo/_base/lang", // lang.mixin
 	"dojo/on", // on
@@ -6946,34 +6900,41 @@ define([
 			//		protected
 		},
 
-		 onInput: function(/*===== event =====*/){
+		 onInput: function(/*Event*/ /*===== evt =====*/){
 			 // summary:
 			 //		Connect to this function to receive notifications of various user data-input events.
 			 //		Return false to cancel the event and prevent it from being processed.
+			 //		Note that although for historical reasons this method is called `onInput()`, it doesn't
+			 //		correspond to the standard DOM "input" event, because it occurs before the input has been processed.
 			 // event:
-			 //		keydown | keypress | cut | paste | input
+			 //		keydown | keypress | cut | paste | compositionend
 			 // tags:
 			 //		callback
 		 },
 
-		__skipInputEvent: false,
 		_onInput: function(/*Event*/ evt){
 			// summary:
-			//		Called AFTER the input event has happened
+			//		Called AFTER the input event has happened and this.textbox.value has new value.
 
-			this._processInput(evt);
+			this._lastInputEventValue = this.textbox.value;
+
+			// For Combobox, this needs to be called w/the keydown/keypress event that was passed to onInput().
+			// As a backup, use the "input" event itself.
+			this._processInput(this._lastInputProducingEvent || evt);
+			delete this._lastInputProducingEvent;
 
 			if(this.intermediateChanges){
-				// allow the key to post to the widget input box
-				this.defer(function(){
-					this._handleOnChange(this.get('value'), false);
-				});
+				this._handleOnChange(this.get('value'), false);
 			}
 		},
 
-		_processInput: function(/*Event*/ evt){
+		_processInput: function(/*Event*/ /*===== evt =====*/){
 			// summary:
-			//		Default action handler for user input events
+			//		Default action handler for user input events.
+			//		Called after the "input" event (i.e. after this.textbox.value has been updated),
+			//		but `evt` is the keydown/keypress/etc. event that triggered the "input" event.
+			// tags:
+			//		protected
 
 			this._refreshState();
 
@@ -6989,14 +6950,16 @@ define([
 			this.inherited(arguments);
 
 			// normalize input events to reduce spurious event processing
-			//	onkeydown: do not forward modifier keys
+			//	keydown: do not forward modifier keys
 			//		       set charOrCode to numeric keycode
-			//	onkeypress: do not forward numeric charOrCode keys (already sent through onkeydown)
-			//	onpaste & oncut: set charOrCode to 229 (IME)
-			//	oninput: if primary event not already processed, set charOrCode to 229 (IME), else do not forward
+			//	keypress: do not forward numeric charOrCode keys (already sent through onkeydown)
+			//	paste, cut, compositionend: set charOrCode to 229 (IME)
 			function handleEvent(e){
 				var charOrCode;
-				if(e.type == "keydown"){
+
+				// Filter out keydown events that will be followed by keypress events.  Note that chrome/android
+				// w/word suggestion has keydown/229 events on typing with no corresponding keypress events.
+				if(e.type == "keydown" && e.keyCode != 229){
 					charOrCode = e.keyCode;
 					switch(charOrCode){ // ignore state keys
 						case keys.SHIFT:
@@ -7043,6 +7006,7 @@ define([
 						} // only allow named ones through
 					}
 				}
+
 				charOrCode = e.charCode >= 32 ? String.fromCharCode(e.charCode) : e.charCode;
 				if(!charOrCode){
 					charOrCode = (e.keyCode >= 65 && e.keyCode <= 90) || (e.keyCode >= 48 && e.keyCode <= 57) || e.keyCode == keys.SPACE ? String.fromCharCode(e.keyCode) : e.keyCode;
@@ -7060,14 +7024,7 @@ define([
 						} // can only be stopped reliably in keydown
 					}
 				}
-				if(e.type == "input"){
-					if(this.__skipInputEvent){ // duplicate event
-						this.__skipInputEvent = false;
-						return;
-					}
-				}else{
-					this.__skipInputEvent = true;
-				}
+
 				// create fake event to set charOrCode and to know if preventDefault() was called
 				var faux = { faux: true }, attr;
 				for(attr in e){
@@ -7089,7 +7046,11 @@ define([
 						e.stopPropagation();
 					}
 				});
-				// give web page author a chance to consume the event
+
+				this._lastInputProducingEvent = faux;
+
+				// Give web page author a chance to consume the event.  Note that onInput() may be called multiple times
+				// for same keystroke: once for keypress event and once for input event.
 				//console.log(faux.type + ', charOrCode = (' + (typeof charOrCode) + ') ' + charOrCode + ', ctrl ' + !!faux.ctrlKey + ', alt ' + !!faux.altKey + ', meta ' + !!faux.metaKey + ', shift ' + !!faux.shiftKey);
 				if(this.onInput(faux) === false){ // return false means stop
 					faux.preventDefault();
@@ -7098,12 +7059,37 @@ define([
 				if(faux._wasConsumed){
 					return;
 				} // if preventDefault was called
-				this.defer(function(){
-					this._onInput(faux);
-				}); // widget notification after key has posted
+
+				// IE8 doesn't emit the "input" event at all, and IE9 doesn't emit it for backspace, delete, cut, etc.
+				// Since the code below (and perhaps user code) depends on that event, emit it synthetically.
+				// See http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html.
+				if(has("ie") <= 9){
+					switch(e.keyCode){
+					case keys.TAB:
+					case keys.ESCAPE:
+					case keys.DOWN_ARROW:
+					case keys.UP_ARROW:
+					case keys.LEFT_ARROW:
+					case keys.RIGHT_ARROW:
+						// These keys may alter the <input>'s value indirectly, but we don't want to emit an "input"
+						// event.  For example, the up/down arrows in TimeTextBox or ComboBox will cause the next
+						// dropdown item's value to be copied to the <input>.
+						break;
+					default:
+						if(e.keyCode == keys.ENTER && this.textbox.tagName.toLowerCase() != "textarea"){
+							break;
+						}
+						this.defer(function(){
+							if(this.textbox.value !== this._lastInputEventValue){
+								on.emit(this.textbox, "input", {bubbles: true});
+							}
+						});
+					}
+				}
 			}
 			this.own(
-				on(this.textbox, "keydown, keypress, paste, cut, input, compositionend", lang.hitch(this, handleEvent)),
+				on(this.textbox, "keydown, keypress, paste, cut, compositionend", lang.hitch(this, handleEvent)),
+				on(this.textbox, "input", lang.hitch(this, "_onInput")),
 
 				// Allow keypress to bubble to this.domNode, so that TextBox.on("keypress", ...) works,
 				// but prevent it from further propagating, so that typing into a TextBox inside a Toolbar doesn't
@@ -7330,22 +7316,25 @@ define([
 	has.add("highcontrast", function(){
 		// note: if multiple documents, doesn't matter which one we use
 		var div = win.doc.createElement("div");
-		div.style.cssText = "border: 1px solid; border-color:red green; position: absolute; height: 5px; top: -999px;" +
-			"background-image: url(\"" + (config.blankGif || require.toUrl("./resources/blank.gif")) + "\");";
-		win.body().appendChild(div);
+		try{
+			div.style.cssText = "border: 1px solid; border-color:red green; position: absolute; height: 5px; top: -999px;" +
+				"background-image: url(\"" + (config.blankGif || require.toUrl("./resources/blank.gif")) + "\");";
+			win.body().appendChild(div);
 
-		var cs = domStyle.getComputedStyle(div),
-			bkImg = cs.backgroundImage,
-			hc = (cs.borderTopColor == cs.borderRightColor) ||
+			var cs = domStyle.getComputedStyle(div),
+				bkImg = cs.backgroundImage;
+			return cs.borderTopColor == cs.borderRightColor ||
 				(bkImg && (bkImg == "none" || bkImg == "url(invalid-url:)" ));
-
-		if(has("ie") <= 8){
-			div.outerHTML = "";		// prevent mixed-content warning, see http://support.microsoft.com/kb/925014
-		}else{
-			win.body().removeChild(div);
+		}catch(e){
+			console.warn("hccss: exception detecting high-contrast mode, document is likely hidden: " + e.toString());
+			return false;
+		}finally{
+			if(has("ie") <= 8){
+				div.outerHTML = "";		// prevent mixed-content warning, see http://support.microsoft.com/kb/925014
+			}else{
+				win.body().removeChild(div);
+			}
 		}
-
-		return hc;
 	});
 
 	domReady(function(){
@@ -7408,7 +7397,7 @@ define([], function(){
 	//		dojo/aspect
 
 	"use strict";
-	var undefined, nextId = 0;
+	var undefined;
 	function advise(dispatcher, type, advice, receiveArguments){
 		var previous = dispatcher[type];
 		var around = type == "around";
@@ -7453,7 +7442,7 @@ define([], function(){
 						dispatcher = advice = signal.advice = null;
 					}
 				},
-				id: nextId++,
+				id: dispatcher.nextId++,
 				advice: advice,
 				receiveArguments: receiveArguments
 			};
@@ -7483,12 +7472,14 @@ define([], function(){
 			if(!existing || existing.target != target){
 				// no dispatcher in place
 				target[methodName] = dispatcher = function(){
-					var executionId = nextId;
+					var executionId = dispatcher.nextId;
 					// before advice
 					var args = arguments;
 					var before = dispatcher.before;
 					while(before){
-						args = before.advice.apply(this, args) || args;
+						if(before.advice){
+							args = before.advice.apply(this, args) || args;
+						}
 						before = before.next;
 					}
 					// around advice
@@ -7498,12 +7489,14 @@ define([], function(){
 					// after advice
 					var after = dispatcher.after;
 					while(after && after.id < executionId){
-						if(after.receiveArguments){
-							var newResults = after.advice.apply(this, args);
-							// change the return value only if a new value was returned
-							results = newResults === undefined ? results : newResults;
-						}else{
-							results = after.advice.call(this, results, args);
+						if(after.advice){
+							if(after.receiveArguments){
+								var newResults = after.advice.apply(this, args);
+								// change the return value only if a new value was returned
+								results = newResults === undefined ? results : newResults;
+							}else{
+								results = after.advice.call(this, results, args);
+							}
 						}
 						after = after.next;
 					}
@@ -7515,6 +7508,7 @@ define([], function(){
 					}};
 				}
 				dispatcher.target = target;
+				dispatcher.nextId = dispatcher.nextId || 0;
 			}
 			var results = advise((dispatcher || existing), type, advice, receiveArguments);
 			advice = null;
@@ -8395,6 +8389,7 @@ define([
 				e.preventDefault();
 				return false;
 			}
+
 			if(this.readOnly){ // ignored by some browsers so we have to resync the DOM elements with widget values
 				e.stopPropagation();
 				e.preventDefault();
@@ -8403,7 +8398,44 @@ define([
 				}));
 				return false;
 			}
-			return this.inherited(arguments);
+
+			// RadioButton has some unique logic since it must enforce only a single button being checked at once
+			// For this reason the "_onClick" method does not call this.inherited
+
+			var canceled = false;
+			var previouslyCheckedButton;
+
+			array.some(this._getRelatedWidgets(), function(radioButton){
+				if(radioButton.checked){
+					previouslyCheckedButton = radioButton;
+					return true;
+				}
+				return false;
+			});
+
+			// We want to set the post-click values correctly for any event handlers, but since
+			// the event handlers could revert them, we don't want to fully update the widget state
+			// yet and trigger notifications
+			this.checked = true;
+			previouslyCheckedButton && (previouslyCheckedButton.checked = false);
+
+			// Call event handlers
+			// If event handler prevents it, the clicked radio button will not be checked
+			if(this.onClick(e) === false || e.defaultPrevented){
+				canceled = true;
+			}
+
+			// Reset internal state to how it was before the click
+			this.checked = false;
+			previouslyCheckedButton && (previouslyCheckedButton.checked = true);
+
+			if(canceled){
+				e.preventDefault();
+			}else{
+				this.set('checked', true);
+			}
+
+			return !canceled;
 		}
 	});
 });
@@ -8529,7 +8561,7 @@ define(["./_base/lang", "./_base/array", "./dom"], function(lang, array, dom){
 			//		A string class name to look for.
 			// example:
 			//		Do something if a node with id="someNode" has class="aSillyClassName" present
-			//	|	if(dojo.hasClass("someNode","aSillyClassName")){ ... }
+			//	|	if(domClass.contains("someNode","aSillyClassName")){ ... }
 
 			return ((" " + dom.byId(node)[className] + " ").indexOf(" " + classStr + " ") >= 0); // Boolean
 		},
@@ -8647,7 +8679,7 @@ define(["./_base/lang", "./_base/array", "./dom"], function(lang, array, dom){
 		replace: function replaceClass(/*DomNode|String*/ node, /*String|Array*/ addClassStr, /*String|Array?*/ removeClassStr){
 			// summary:
 			//		Replaces one or more classes on a node if not present.
-			//		Operates more quickly than calling dojo.removeClass and dojo.addClass
+			//		Operates more quickly than calling domClass.remove and domClass.add
 			//
 			// node: String|DOMNode
 			//		String ID or DomNode reference to remove the class from.
@@ -8701,7 +8733,7 @@ define(["./_base/lang", "./_base/array", "./dom"], function(lang, array, dom){
 			//
 			// condition:
 			//		If passed, true means to add the class, false means to remove.
-			//		Otherwise dojo.hasClass(node, classStr) is used to detect the class presence.
+			//		Otherwise domClass.contains(node, classStr) is used to detect the class presence.
 			//
 			// example:
 			//	|	require(["dojo/dom-class"], function(domClass){
@@ -9317,7 +9349,7 @@ define([
 		return freeze(response);
 	}
 	function dataHandler (response) {
-		return response.data || response.text;
+		return response.data !== undefined ? response.data : response.text;
 	}
 
 	exports.deferred = function deferred(response, cancel, isValid, isReady, handleResponse, last){
@@ -9508,6 +9540,421 @@ define([
 		});
 		return deferred.promise;	// dojo/promise/Promise
 	};
+});
+
+},
+'dijit/form/NumberTextBox':function(){
+define([
+	"dojo/_base/declare", // declare
+	"dojo/_base/lang", // lang.hitch lang.mixin
+	"dojo/i18n", // i18n.normalizeLocale, i18n.getLocalization
+	"dojo/string", // string.rep
+	"dojo/number", // number._realNumberRegexp number.format number.parse number.regexp
+	"./RangeBoundTextBox"
+], function(declare, lang, i18n, string, number, RangeBoundTextBox){
+
+	// module:
+	//		dijit/form/NumberTextBox
+
+	// A private helper function to determine decimal information
+	// Returns an object with "sep" and "places" properties
+	var getDecimalInfo = function(constraints){
+		var constraints = constraints || {},
+			bundle = i18n.getLocalization("dojo.cldr", "number", i18n.normalizeLocale(constraints.locale)),
+			pattern = constraints.pattern ? constraints.pattern : bundle[(constraints.type || "decimal")+"Format"];
+
+		// The number of places in the constraint can be specified in several ways,
+		// the resolution order is:
+		//
+		// 1. If constraints.places is a number, use that
+		// 2. If constraints.places is a string, which specifies a range, use the range max (e.g. 0,4)
+		// 3. If a pattern is specified, use the implicit number of places in the pattern.
+		// 4. If neither constraints.pattern or constraints.places is specified, use the locale default pattern
+		var places;
+		if(typeof constraints.places == "number"){
+			places = constraints.places;
+		}else if(typeof constraints.places === "string" && constraints.places.length > 0){
+			places = constraints.places.replace(/.*,/, "");
+		}else{
+			places = (pattern.indexOf(".") != -1 ? pattern.split(".")[1].replace(/[^#0]/g, "").length : 0);
+		}
+
+		return { sep: bundle.decimal, places: places };
+	};
+
+	var NumberTextBoxMixin = declare("dijit.form.NumberTextBoxMixin", null, {
+		// summary:
+		//		A mixin for all number textboxes
+		// tags:
+		//		protected
+
+		// Override ValidationTextBox.pattern.... we use a reg-ex generating function rather
+		// than a straight regexp to deal with locale (plus formatting options too?)
+		pattern: function(constraints){
+			// if focused, accept either currency data or NumberTextBox format
+			return '(' + (this.focused && this.editOptions ? this._regExpGenerator(lang.delegate(constraints, this.editOptions)) + '|' : '')
+				+ this._regExpGenerator(constraints) + ')';
+		},
+
+		/*=====
+		// constraints: NumberTextBox.__Constraints
+		//		Despite the name, this parameter specifies both constraints on the input
+		//		(including minimum/maximum allowed values) as well as
+		//		formatting options like places (the number of digits to display after
+		//		the decimal point).
+		constraints: {},
+		======*/
+
+		// value: Number
+		//		The value of this NumberTextBox as a Javascript Number (i.e., not a String).
+		//		If the displayed value is blank, the value is NaN, and if the user types in
+		//		an gibberish value (like "hello world"), the value is undefined
+		//		(i.e. get('value') returns undefined).
+		//
+		//		Symmetrically, set('value', NaN) will clear the displayed value,
+		//		whereas set('value', undefined) will have no effect.
+		value: NaN,
+
+		// editOptions: [protected] Object
+		//		Properties to mix into constraints when the value is being edited.
+		//		This is here because we edit the number in the format "12345", which is
+		//		different than the display value (ex: "12,345")
+		editOptions: { pattern: '#.######' },
+
+		/*=====
+		_formatter: function(value, options){
+			// summary:
+			//		_formatter() is called by format().  It's the base routine for formatting a number,
+			//		as a string, for example converting 12345 into "12,345".
+			// value: Number
+			//		The number to be converted into a string.
+			// options: number.__FormatOptions?
+			//		Formatting options
+			// tags:
+			//		protected extension
+
+			return "12345";		// String
+		},
+		 =====*/
+		_formatter: number.format,
+
+		/*=====
+		_regExpGenerator: function(constraints){
+			// summary:
+			//		Generate a localized regular expression as a string, according to constraints.
+			// constraints: number.__ParseOptions
+			//		Formatting options
+			// tags:
+			//		protected
+
+			return "(\d*).(\d*)";	// string
+		},
+		=====*/
+		_regExpGenerator: number.regexp,
+
+		// _decimalInfo: Object
+		// summary:
+		//		An object containing decimal related properties relevant to this TextBox.
+		// tags:
+		//		private
+		_decimalInfo: getDecimalInfo(),
+
+		postMixInProperties: function(){
+			this.inherited(arguments);
+			this._set("type", "text"); // in case type="number" was specified which messes up parse/format
+		},
+
+		_setConstraintsAttr: function(/*Object*/ constraints){
+			var places = typeof constraints.places == "number"? constraints.places : 0;
+			if(places){ places++; } // decimal rounding errors take away another digit of precision
+			if(typeof constraints.max != "number"){
+				constraints.max = 9 * Math.pow(10, 15-places);
+			}
+			if(typeof constraints.min != "number"){
+				constraints.min = -9 * Math.pow(10, 15-places);
+			}
+			this.inherited(arguments, [ constraints ]);
+			if(this.focusNode && this.focusNode.value && !isNaN(this.value)){
+				this.set('value', this.value);
+			}
+			// Capture decimal information based on the constraint locale and pattern.
+			this._decimalInfo = getDecimalInfo(constraints);
+		},
+
+		_onFocus: function(){
+			if(this.disabled || this.readOnly){ return; }
+			var val = this.get('value');
+			if(typeof val == "number" && !isNaN(val)){
+				var formattedValue = this.format(val, this.constraints);
+				if(formattedValue !== undefined){
+					this.textbox.value = formattedValue;
+				}
+			}
+			this.inherited(arguments);
+		},
+
+		format: function(/*Number*/ value, /*number.__FormatOptions*/ constraints){
+			// summary:
+			//		Formats the value as a Number, according to constraints.
+			// tags:
+			//		protected
+
+			var formattedValue = String(value);
+			if(typeof value != "number"){ return formattedValue; }
+			if(isNaN(value)){ return ""; }
+			// check for exponential notation that dojo/number.format() chokes on
+			if(!("rangeCheck" in this && this.rangeCheck(value, constraints)) && constraints.exponent !== false && /\de[-+]?\d/i.test(formattedValue)){
+				return formattedValue;
+			}
+			if(this.editOptions && this.focused){
+				constraints = lang.mixin({}, constraints, this.editOptions);
+			}
+			return this._formatter(value, constraints);
+		},
+
+		/*=====
+		_parser: function(value, constraints){
+			// summary:
+			//		Parses the string value as a Number, according to constraints.
+			// value: String
+			//		String representing a number
+			// constraints: number.__ParseOptions
+			//		Formatting options
+			// tags:
+			//		protected
+
+			return 123.45;		// Number
+		},
+		=====*/
+		_parser: number.parse,
+
+		parse: function(/*String*/ value, /*number.__FormatOptions*/ constraints){
+			// summary:
+			//		Replaceable function to convert a formatted string to a number value
+			// tags:
+			//		protected extension
+			var parserOptions = lang.mixin({}, constraints, (this.editOptions && this.focused) ? this.editOptions : {})
+			if(this.focused && parserOptions.places != null /* or undefined */){
+				var places = parserOptions.places;
+				var maxPlaces = typeof places === "number" ? places : Number(places.split(",").pop()); // handle number and range
+				parserOptions.places = "0," + maxPlaces;
+			}
+			var v = this._parser(value, parserOptions);
+			if(this.editOptions && this.focused && isNaN(v)){
+				v = this._parser(value, constraints); // parse w/o editOptions: not technically needed but is nice for the user
+			}
+			return v;
+		},
+
+		_getDisplayedValueAttr: function(){
+			var v = this.inherited(arguments);
+			return isNaN(v) ? this.textbox.value : v;
+		},
+
+		filter: function(/*Number*/ value){
+			// summary:
+			//		This is called with both the display value (string), and the actual value (a number).
+			//		When called with the actual value it does corrections so that '' etc. are represented as NaN.
+			//		Otherwise it dispatches to the superclass's filter() method.
+			//
+			//		See `dijit/form/TextBox.filter()` for more details.
+			if(value == null  /* or undefined */ || typeof value == "string" && value ==''){
+				return NaN;
+			}else if(typeof value == "number" && !isNaN(value) && value != 0){
+				value = number.round(value, this._decimalInfo.places);
+			}
+			return this.inherited(arguments, [value]);
+		},
+
+		serialize: function(/*Number*/ value, /*Object?*/ options){
+			// summary:
+			//		Convert value (a Number) into a canonical string (ie, how the number literal is written in javascript/java/C/etc.)
+			// tags:
+			//		protected
+			return (typeof value != "number" || isNaN(value)) ? '' : this.inherited(arguments);
+		},
+
+		_setBlurValue: function(){
+			var val = lang.hitch(lang.delegate(this, { focused: true }), "get")('value'); // parse with editOptions
+			this._setValueAttr(val, true);
+		},
+
+		_setValueAttr: function(/*Number*/ value, /*Boolean?*/ priorityChange, /*String?*/ formattedValue){
+			// summary:
+			//		Hook so set('value', ...) works.
+			if(value !== undefined && formattedValue === undefined){
+				formattedValue = String(value);
+				if(typeof value == "number"){
+					if(isNaN(value)){ formattedValue = '' }
+					// check for exponential notation that number.format chokes on
+					else if(("rangeCheck" in this && this.rangeCheck(value, this.constraints)) || this.constraints.exponent === false || !/\de[-+]?\d/i.test(formattedValue)){
+						formattedValue = undefined; // lets format compute a real string value
+					}
+				}else if(!value){ // 0 processed in if branch above, ''|null|undefined flows through here
+					formattedValue = '';
+					value = NaN;
+				}else{ // non-numeric values
+					value = undefined;
+				}
+			}
+			this.inherited(arguments, [value, priorityChange, formattedValue]);
+		},
+
+		_getValueAttr: function(){
+			// summary:
+			//		Hook so get('value') works.
+			//		Returns Number, NaN for '', or undefined for unparseable text
+			var v = this.inherited(arguments); // returns Number for all values accepted by parse() or NaN for all other displayed values
+
+			// If the displayed value of the textbox is gibberish (ex: "hello world"), this.inherited() above
+			// returns NaN; this if() branch converts the return value to undefined.
+			// Returning undefined prevents user text from being overwritten when doing _setValueAttr(_getValueAttr()).
+			// A blank displayed value is still returned as NaN.
+			if(isNaN(v) && this.textbox.value !== ''){
+				if(this.constraints.exponent !== false && /\de[-+]?\d/i.test(this.textbox.value) && (new RegExp("^"+number._realNumberRegexp(lang.delegate(this.constraints))+"$").test(this.textbox.value))){	// check for exponential notation that parse() rejected (erroneously?)
+					var n = Number(this.textbox.value);
+					return isNaN(n) ? undefined : n; // return exponential Number or undefined for random text (may not be possible to do with the above RegExp check)
+				}else{
+					return undefined; // gibberish
+				}
+			}else{
+				return v; // Number or NaN for ''
+			}
+		},
+
+		isValid: function(/*Boolean*/ isFocused){
+			// Overrides dijit/form/RangeBoundTextBox.isValid() to check that the editing-mode value is valid since
+			// it may not be formatted according to the regExp validation rules
+			if(!this.focused || this._isEmpty(this.textbox.value)){
+				return this.inherited(arguments);
+			}else{
+				var v = this.get('value');
+				if(!isNaN(v) && this.rangeCheck(v, this.constraints)){
+					if(this.constraints.exponent !== false && /\de[-+]?\d/i.test(this.textbox.value)){ // exponential, parse doesn't like it
+						return true; // valid exponential number in range
+					}else{
+						return this.inherited(arguments);
+					}
+				}else{
+					return false;
+				}
+			}
+		},
+
+		_isValidSubset: function(){
+			// Overrides dijit/form/ValidationTextBox._isValidSubset()
+			//
+			// The inherited method only checks that the computed regex pattern is valid, which doesn't
+			// take into account that numbers are a special case. Specifically:
+			//
+			//  (1) An arbitrary amount of leading or trailing zero's can be ignored.
+			//  (2) Since numeric input always occurs in the order of most significant to least significant
+			//      digits, the maximum and minimum possible values for partially inputted numbers can easily
+			//      be determined by using the number of remaining digit spaces available.
+			//
+			// For example, if an input has a maxLength of 5, and a min value of greater than 100, then the subset
+			// is invalid if there are 3 leading 0s. It remains valid for the first two.
+			//
+			// Another example is if the min value is 1.1. Once a value of 1.0 is entered, no additional trailing digits
+			// could possibly satisify the min requirement.
+			//
+			// See ticket #17923
+			var hasMinConstraint = (typeof this.constraints.min == "number"),
+				hasMaxConstraint = (typeof this.constraints.max == "number"),
+				curVal = this.get('value');
+
+			// If there is no parsable number, or there are no min or max bounds, then we can safely
+			// skip all remaining checks
+			if(isNaN(curVal) || (!hasMinConstraint && !hasMaxConstraint)){
+				return this.inherited(arguments);
+			}
+
+			// This block picks apart the values in the text box to be used later to compute the min and max possible
+			// values based on the current value and the remaining available digits.
+			//
+			// Warning: The use of a "num|0" expression, can be confusing. See the link below
+			// for an explanation.
+			//
+			// http://stackoverflow.com/questions/12125421/why-does-a-shift-by-0-truncate-the-decimal
+			var integerDigits = curVal|0,
+				valNegative = curVal < 0,
+				// Check if the current number has a decimal based on its locale
+				hasDecimal = this.textbox.value.indexOf(this._decimalInfo.sep) != -1,
+				// Determine the max digits based on the textbox length. If no length is
+				// specified, chose a huge number to account for crazy formatting.
+				maxDigits = this.maxLength || 20,
+				// Determine the remaining digits, based on the max digits
+				remainingDigitsCount = maxDigits - this.textbox.value.length,
+				// avoid approximation issues by capturing the decimal portion of the value as the user-entered string
+				fractionalDigitStr = hasDecimal ? this.textbox.value.split(this._decimalInfo.sep)[1].replace(/[^0-9]/g, "") : "";
+
+			// Create a normalized value string in the form of #.###
+			var normalizedValueStr = hasDecimal ? integerDigits+"."+fractionalDigitStr : integerDigits+"";
+
+			// The min and max values for the field can be determined using the following
+			// logic:
+			//
+			//  If the number is positive:
+			//      min value = the current value
+			//      max value = the current value with 9s appended for all remaining possible digits
+			//  else
+			//      min value = the current value with 9s appended for all remaining possible digits
+			//      max value = the current value
+			//
+			var ninePaddingStr = string.rep("9", remainingDigitsCount),
+			    minPossibleValue = curVal,
+			    maxPossibleValue = curVal;
+			if (valNegative){
+				minPossibleValue = Number(normalizedValueStr+ninePaddingStr);
+			} else{
+				maxPossibleValue = Number(normalizedValueStr+ninePaddingStr);
+			}
+
+			return !((hasMinConstraint && maxPossibleValue < this.constraints.min)
+					|| (hasMaxConstraint && minPossibleValue > this.constraints.max));
+		}
+	});
+
+	var NumberTextBox = declare("dijit.form.NumberTextBox", [RangeBoundTextBox, NumberTextBoxMixin], {
+		// summary:
+		//		A TextBox for entering numbers, with formatting and range checking
+		// description:
+		//		NumberTextBox is a textbox for entering and displaying numbers, supporting
+		//		the following main features:
+		//
+		//		1. Enforce minimum/maximum allowed values (as well as enforcing that the user types
+		//			a number rather than a random string)
+		//		2. NLS support (altering roles of comma and dot as "thousands-separator" and "decimal-point"
+		//			depending on locale).
+		//		3. Separate modes for editing the value and displaying it, specifically that
+		//			the thousands separator character (typically comma) disappears when editing
+		//			but reappears after the field is blurred.
+		//		4. Formatting and constraints regarding the number of places (digits after the decimal point)
+		//			allowed on input, and number of places displayed when blurred (see `constraints` parameter).
+
+		baseClass: "dijitTextBox dijitNumberTextBox"
+	});
+
+	NumberTextBox.Mixin = NumberTextBoxMixin;	// for monkey patching
+
+	/*=====
+	 NumberTextBox.__Constraints = declare([RangeBoundTextBox.__Constraints, number.__FormatOptions, number.__ParseOptions], {
+		 // summary:
+		 //		Specifies both the rules on valid/invalid values (minimum, maximum,
+		 //		number of required decimal places), and also formatting options for
+		 //		displaying the value when the field is not focused.
+		 // example:
+		 //		Minimum/maximum:
+		 //		To specify a field between 0 and 120:
+		 //	|		{min:0,max:120}
+		 //		To specify a field that must be an integer:
+		 //	|		{fractional:false}
+		 //		To specify a field where 0 to 3 decimal places are allowed on input:
+		 //	|		{places:'0,3'}
+	 });
+	 =====*/
+
+	return NumberTextBox;
 });
 
 },
@@ -9951,6 +10398,7 @@ define(["./dom-geometry", "./_base/lang", "./domReady", "./sniff", "./_base/wind
 	var
 		html = baseWindow.doc.documentElement,
 		ie = has("ie"),
+		trident = has("trident"),
 		opera = has("opera"),
 		maj = Math.floor,
 		ff = has("ff"),
@@ -9967,6 +10415,7 @@ define(["./dom-geometry", "./_base/lang", "./domReady", "./sniff", "./_base/wind
 			"dj_webkit": has("webkit"),
 			"dj_safari": has("safari"),
 			"dj_chrome": has("chrome"),
+			"dj_edge": has("edge"),
 
 			"dj_gecko": has("mozilla"),
 
@@ -9978,6 +10427,10 @@ define(["./dom-geometry", "./_base/lang", "./domReady", "./sniff", "./_base/wind
 		classes["dj_ie"] = true;
 		classes["dj_ie" + maj(ie)] = true;
 		classes["dj_iequirks"] = has("quirks");
+	}
+	if(trident){
+		classes["dj_trident"] = true;
+		classes["dj_trident" + maj(trident)] = true;
 	}
 	if(ff){
 		classes["dj_ff" + maj(ff)] = true;
@@ -10404,7 +10857,7 @@ define([
 			this._set("connectId", newId);
 		},
 
-		addTarget: function(/*OomNode|String*/ node){
+		addTarget: function(/*DomNode|String*/ node){
 			// summary:
 			//		Attach tooltip to specified node if it's not already connected
 
@@ -10709,6 +11162,7 @@ string.substitute = function(	/*String*/		template,
 	// template:
 	//		a string with expressions in the form `${key}` to be replaced or
 	//		`${key:format}` which specifies a format function. keys are case-sensitive.
+	//		The special sequence `${}` can be used escape `$`.
 	// map:
 	//		hash to search for substitutions
 	// transform:
@@ -10760,8 +11214,11 @@ string.substitute = function(	/*String*/		template,
 	transform = transform ?
 		lang.hitch(thisObject, transform) : function(v){ return v; };
 
-	return template.replace(/\$\{([^\s\:\}]+)(?:\:([^\s\:\}]+))?\}/g,
+	return template.replace(/\$\{([^\s\:\}]*)(?:\:([^\s\:\}]+))?\}/g,
 		function(match, key, format){
+			if (key == ''){
+				return '$';
+			}
 			var value = lang.getObject(key, false, map);
 			if(format){
 				value = lang.getObject(format, false, thisObject).call(thisObject, value, key);
@@ -10806,6 +11263,7 @@ string.trim = String.prototype.trim ?
 'dijit/form/DropDownButton':function(){
 define([
 	"dojo/_base/declare", // declare
+	"dojo/_base/kernel",
 	"dojo/_base/lang", // hitch
 	"dojo/query", // query
 	"../registry", // registry.byNode
@@ -10815,7 +11273,7 @@ define([
 	"../_HasDropDown",
 	"dojo/text!./templates/DropDownButton.html",
 	"../a11yclick"	// template uses ondijitclick
-], function(declare, lang, query, registry, popup, Button, _Container, _HasDropDown, template){
+], function(declare, kernel, lang, query, registry, popup, Button, _Container, _HasDropDown, template){
 
 	// module:
 	//		dijit/form/DropDownButton
@@ -10840,20 +11298,26 @@ define([
 		templateString: template,
 
 		_fillContent: function(){
-			// Overrides Button._fillContent().
-			//
-			// My inner HTML contains both the button contents and a drop down widget, like
+			// Overrides _TemplatedMixin#_fillContent().
+			// My inner HTML possibly contains both the button label and/or a drop down widget, like
 			// <DropDownButton>  <span>push me</span>  <Menu> ... </Menu> </DropDownButton>
-			// The first node is assumed to be the button content. The widget is the popup.
 
-			if(this.srcNodeRef){ // programatically created buttons might not define srcNodeRef
-				//FIXME: figure out how to filter out the widget and use all remaining nodes as button
-				//	content, not just nodes[0]
-				var nodes = query("*", this.srcNodeRef);
-				this.inherited(arguments, [nodes[0]]);
-
-				// save pointer to srcNode so we can grab the drop down widget after it's instantiated
-				this.dropDownContainer = this.srcNodeRef;
+			var source = this.srcNodeRef;
+			var dest = this.containerNode;
+			if(source && dest){
+				while(source.hasChildNodes()){
+					var child = source.firstChild;
+					if(child.hasAttribute && (child.hasAttribute("data-dojo-type") || child.hasAttribute("dojoType") ||
+							child.hasAttribute("data-" + kernel._scopeName + "-type") ||
+							child.hasAttribute(kernel._scopeName + "Type"))){
+						// The parser hasn't gotten to this node yet, so save it in a wrapper <div>
+						// and then grab the instantiated widget in startup().
+						this.dropDownContainer = this.ownerDocument.createElement("div");
+						this.dropDownContainer.appendChild(child);
+					}else{
+						dest.appendChild(child);
+					}
+				}
 			}
 		},
 
@@ -10865,10 +11329,7 @@ define([
 			// the child widget from srcNodeRef is the dropdown widget.  Insert it in the page DOM,
 			// make it invisible, and store a reference to pass to the popup code.
 			if(!this.dropDown && this.dropDownContainer){
-				var dropDownNode = query("[widgetId]", this.dropDownContainer)[0];
-				if(dropDownNode){
-					this.dropDown = registry.byNode(dropDownNode);
-				}
+				this.dropDown = registry.byNode(this.dropDownContainer.firstChild);
 				delete this.dropDownContainer;
 			}
 			if(this.dropDown){
@@ -11056,11 +11517,19 @@ define([
 
 		_setDisabledAttr: function(/*Boolean*/ value){
 			this._set("disabled", value);
-			domAttr.set(this.focusNode, 'disabled', value);
+
+			// Set disabled property if focusNode is an <input>, but aria-disabled attribute if focusNode is a <span>.
+			// Can't use "disabled" in this.focusNode as a test because on IE, that's true for all nodes.
+			if(/^(button|input|select|textarea|optgroup|option|fieldset)$/i.test(this.focusNode.tagName)){
+				domAttr.set(this.focusNode, 'disabled', value);
+			}else{
+				this.focusNode.setAttribute("aria-disabled", value ? "true" : "false");
+			}
+
+			// And also set disabled on the hidden <input> node
 			if(this.valueNode){
 				domAttr.set(this.valueNode, 'disabled', value);
 			}
-			this.focusNode.setAttribute("aria-disabled", value ? "true" : "false");
 
 			if(value){
 				// reset these, because after the domNode is disabled, we can no longer receive
@@ -13037,6 +13506,30 @@ define([
 });
 
 },
+'lsmb/PublishNumberTextBox':function(){
+define(['dojo/_base/declare',
+        'dojo/on',
+        'dojo/topic',
+        'dijit/form/NumberTextBox'],
+       function(declare, on, topic, NumberTextBox) {
+           return declare('lsmb/PublishNumberTextBox', NumberTextBox, {
+               topic: "",
+               publish: function(targetValue) {
+                   topic.publish(this.topic, targetValue);
+               },
+               postCreate: function() {
+                   var self = this;
+                   this.own(
+                       on(this, 'change',
+                          function(targetValue) {
+                              self.publish(targetValue);
+                          })
+                   );
+               }
+           });
+       });
+
+},
 'dojo/cldr/supplemental':function(){
 define(["../_base/lang", "../i18n"], function(lang, i18n){
 
@@ -13208,7 +13701,7 @@ define(["./_base/kernel", "require", "./_base/config", "./aspect", "./_base/lang
 		if(replace){
 			_replace(hash);
 		}else{
-			location.href = "#" + hash;
+			location.hash = "#" + hash;
 		}
 		return hash; // String
 	};
@@ -13251,7 +13744,8 @@ define(["./_base/kernel", "require", "./_base/config", "./aspect", "./_base/lang
 			_ieUriMonitor.iframe.location.replace(href.substring(0, index) + "?" + hash);
 			return;
 		}
-		location.replace("#"+hash);
+		var href = location.href.replace(/#.*/, "");
+		location.replace(href + "#" + hash);
 		!_connect && _pollLocation();
 	}
 
@@ -13636,7 +14130,8 @@ define([
 	"./place",
 	"./BackgroundIframe",
 	"./Viewport",
-	"./main"    // dijit (defining dijit.popup to match API doc)
+	"./main",    // dijit (defining dijit.popup to match API doc)
+	"dojo/touch"		// use of dojoClick
 ], function(array, aspect, declare, dom, domAttr, domConstruct, domGeometry, domStyle, has, keys, lang, on,
 			place, BackgroundIframe, Viewport, dijit){
 
@@ -13787,6 +14282,11 @@ define([
 						}
 					});
 				}
+
+				// Calling evt.preventDefault() suppresses the native click event on most browsers.  However, it doesn't
+				// suppress the synthetic click event emitted by dojo/touch.  In order for clicks in popups to work
+				// consistently, always use dojo/touch in popups.  See #18150.
+				wrapper.dojoClick = true;
 			}
 
 			return wrapper;
@@ -13831,9 +14331,9 @@ define([
 
 			domStyle.set(wrapper, {
 				display: "none",
-				height: "auto",		// Open may have limited the height to fit in the viewport
-				overflow: "visible",
-				border: ""			// Open() may have moved border from popup to wrapper.
+				height: "auto",			// Open() may have limited the height to fit in the viewport,
+				overflowY: "visible",	// and set overflowY to "auto".
+				border: ""				// Open() may have moved border from popup to wrapper.
 			});
 
 			// Open() may have moved border from popup to wrapper.  Move it back.
@@ -14319,16 +14819,18 @@ define([
 			}
 		},
 
-		_fillContent: function(/*DomNode*/ source){
-			// Overrides _Templated._fillContent().
-			// If button label is specified as srcNodeRef.innerHTML rather than
-			// this.params.label, handle it here.
-			// TODO: remove the method in 2.0, parser will do it all for me
-			if(source && (!this.params || !("label" in this.params))){
-				var sourceLabel = lang.trim(source.innerHTML);
-				if(sourceLabel){
-					this.label = sourceLabel; // _applyAttributes will be called after buildRendering completes to update the DOM
-				}
+		postCreate: function(){
+			this.inherited(arguments);
+			this._setLabelFromContainer();
+		},
+
+		_setLabelFromContainer: function(){
+			if(this.containerNode && !this.label){
+				// When markup was set as srcNodeRef.innerHTML, copy it to this.label, in case someone tries to
+				// reference that variable.  Alternately, could have a _getLabelAttr() method to return
+				// this.containerNode.innerHTML.
+				this.label = lang.trim(this.containerNode.innerHTML);
+				this.onLabelSet();		// set this.titleNode.title etc. according to label
 			}
 		},
 
@@ -14346,13 +14848,7 @@ define([
 			this.set("label", content);
 		},
 
-		_setLabelAttr: function(/*String*/ content){
-			// summary:
-			//		Hook for set('label', ...) to work.
-			// description:
-			//		Set the label (text) of the button; takes an HTML string.
-			//		If the label is hidden (showLabel=false) then and no title has
-			//		been specified, then label is also set as title attribute of icon.
+		onLabelSet: function(){
 			this.inherited(arguments);
 			if(!this.showLabel && !("title" in this.params)){
 				this.titleNode.title = lang.trim(this.containerNode.innerText || this.containerNode.textContent || '');
@@ -14362,7 +14858,7 @@ define([
 
 	if(has("dojo-bidi")){
 		Button = declare("dijit.form.Button", Button, {
-			_setLabelAttr: function(/*String*/ content){
+			onLabelSet: function(){
 				this.inherited(arguments);
 				if(this.titleNode.title){
 					this.applyTextDir(this.titleNode, this.titleNode.title);
@@ -14493,6 +14989,10 @@ define([
 		//		- DOM node CSS class
 		// |		_setMyClassAttr: { node: "domNode", type: "class" }
 		//		Maps this.myClass to this.domNode.className
+		//
+		//		- Toggle DOM node CSS class
+		// |		_setMyClassAttr: { node: "domNode", type: "toggleClass" }
+		//		Toggles myClass on this.domNode by this.myClass
 		//
 		//		If the value of _setXXXAttr is an array, then each element in the array matches one of the
 		//		formats of the above list.
@@ -14664,6 +15164,21 @@ define([
 		//		Used by `<img>` nodes in templates that really get their image via CSS background-image.
 		_blankGif: config.blankGif || require.toUrl("dojo/resources/blank.gif"),
 
+		// textDir: String
+		//		Bi-directional support,	the main variable which is responsible for the direction of the text.
+		//		The text direction can be different than the GUI direction by using this parameter in creation
+		//		of a widget.
+		//
+		//		This property is only effective when `has("dojo-bidi")` is defined to be true.
+		//
+		//		Allowed values:
+		//
+		//		1. "" - default value; text is same direction as widget
+		//		2. "ltr"
+		//		3. "rtl"
+		//		4. "auto" - contextual the direction of a text defined by first strong letter.
+		textDir: "",
+
 		//////////// INITIALIZATION METHODS ///////////////////////////////////////
 
 		/*=====
@@ -14766,7 +15281,7 @@ define([
 			this._supportingWidgets = [];
 
 			// this is here for back-compat, remove in 2.0 (but check NodeList-instantiate.html test)
-			if(this.srcNodeRef && (typeof this.srcNodeRef.id == "string")){
+			if(this.srcNodeRef && this.srcNodeRef.id  && (typeof this.srcNodeRef.id == "string")){
 				this.id = this.srcNodeRef.id;
 			}
 
@@ -15142,6 +15657,9 @@ define([
 						break;
 					case "class":
 						domClass.replace(mapNode, value, this[attr]);
+						break;
+					case "toggleClass":
+						domClass.toggle(mapNode, command.className || attr, value);
 						break;
 				}
 			}, this);
@@ -16213,7 +16731,7 @@ define([
 			var attachEvent = getAttrFunc(baseNode, "dojoAttachEvent") || getAttrFunc(baseNode, "data-dojo-attach-event");
 			if(attachEvent){
 				// NOTE: we want to support attributes that have the form
-				// "domEvent: nativeEvent; ..."
+				// "domEvent: nativeEvent, ..."
 				var event, events = attachEvent.split(/\s*,\s*/);
 				var trim = lang.trim;
 				while((event = events.shift())){
@@ -16845,7 +17363,6 @@ define([
 	"./_ContentPaneResizeMixin",
 	"dojo/string", // string.substitute
 	"dojo/html", // html._ContentSetter
-	"dojo/i18n!../nls/loading",
 	"dojo/_base/array", // array.forEach
 	"dojo/_base/declare", // declare
 	"dojo/_base/Deferred", // Deferred
@@ -16854,8 +17371,9 @@ define([
 	"dojo/dom-construct", // empty()
 	"dojo/_base/xhr", // xhr.get
 	"dojo/i18n", // i18n.getLocalization
-	"dojo/when"
-], function(kernel, lang, _Widget, _Container, _ContentPaneResizeMixin, string, html, nlsLoading, array, declare,
+	"dojo/when",
+	"dojo/i18n!../nls/loading"
+], function(kernel, lang, _Widget, _Container, _ContentPaneResizeMixin, string, html, array, declare,
 			Deferred, dom, domAttr, domConstruct, xhr, i18n, when){
 
 	// module:
@@ -17352,6 +17870,7 @@ define([
 			// returns:
 			//		Returns a Deferred promise that is resolved when the content is parsed.
 
+			cont = this.preprocessContent(cont);
 			// first get rid of child widgets
 			this.destroyDescendants();
 
@@ -17413,6 +17932,17 @@ define([
 					self._onLoadHandler(cont);
 				}
 			});
+		},
+
+		preprocessContent: function(/*String|DocumentFragment*/ content){
+			// summary:
+			//		Hook, called after content has loaded, before being processed.
+			// description:
+			//		A subclass should preprocess the content and return the preprocessed content.
+			//		See https://bugs.dojotoolkit.org/ticket/9622
+			// returns:
+			//		Returns preprocessed content, either a String or DocumentFragment
+			return content;
 		},
 
 		_onError: function(type, err, consoleText){
@@ -18479,11 +19009,8 @@ define([
 			//		Either "next" or "previous"
 			// tags:
 			//		private
-			var node = this.domNode;
-			do{
-				node = node[which+"Sibling"];
-			}while(node && node.nodeType != 1);
-			return node && registry.byNode(node);	// dijit/_WidgetBase
+			var p = this.getParent();
+			return (p && p._getSiblingOfChild && p._getSiblingOfChild(this, which == "previous" ? -1 : 1)) || null;	// dijit/_WidgetBase
 		},
 
 		getPreviousSibling: function(){
@@ -18840,19 +19367,20 @@ define(["./sniff", "./dom"], function(has, dom){
 	function _toStyleValue(node, type, value){
 		//TODO: should we really be doing string case conversion here? Should we cache it? Need to profile!
 		type = type.toLowerCase();
-		if(has("ie") || has("trident")){
-			if(value == "auto"){
-				if(type == "height"){ return node.offsetHeight; }
-				if(type == "width"){ return node.offsetWidth; }
-			}
-			if(type == "fontweight"){
-				switch(value){
-					case 700: return "bold";
-					case 400:
-					default: return "normal";
-				}
+
+		// Adjustments for IE and Edge
+		if(value == "auto"){
+			if(type == "height"){ return node.offsetHeight; }
+			if(type == "width"){ return node.offsetWidth; }
+		}
+		if(type == "fontweight"){
+			switch(value){
+				case 700: return "bold";
+				case 400:
+				default: return "normal";
 			}
 		}
+
 		if(!(type in _pixelNamesCache)){
 			_pixelNamesCache[type] = _pixelRegExp.test(type);
 		}
@@ -19446,7 +19974,6 @@ define([
 			//		if -1, get the previous sibling
 			// tags:
 			//		private
-			kernel.deprecated(this.declaredClass+"::_getSiblingOfChild() is deprecated. Use _KeyNavMixin::_getNext() instead.", "", "2.0");
 			var children = this.getChildren(),
 				idx = array.indexOf(children, child);	// int
 			return children[idx + dir];
@@ -19562,6 +20089,9 @@ define(["./_base/kernel", "./_base/lang", "./_base/array", "./_base/declare", ".
 			domConstruct.empty(node);
 
 			if(cont){
+				if(typeof cont == "number"){
+					cont = cont.toString();
+				}
 				if(typeof cont == "string"){
 					cont = domConstruct.toDom(cont, node.ownerDocument);
 				}
@@ -19648,6 +20178,9 @@ define(["./_base/kernel", "./_base/lang", "./_base/array", "./_base/declare", ".
 				//		If not provided, the object's content property will be used
 				if(undefined !== cont){
 					this.content = cont;
+				}
+				if(typeof cont == 'number'){
+					cont = cont.toString();
 				}
 				// in the re-use scenario, set needs to be able to mixin new configuration
 				if(params){
@@ -19872,6 +20405,9 @@ define(["./_base/kernel", "./_base/lang", "./_base/array", "./_base/declare", ".
 				console.warn("dojo.html.set: no cont argument provided, using empty string");
 				cont = "";
 			}
+			if (typeof cont == 'number'){
+				cont = cont.toString();
+			}
 			if(!params){
 				// simple and fast
 				return html._setNodeContent(node, cont, true);
@@ -19908,17 +20444,7 @@ define([
 	//		dijit/form/ValidationTextBox
 
 
-	/*=====
-	var __Constraints = {
-		// locale: String
-		//		locale used for validation, picks up value from this widget's lang attribute
-		// _flags_: anything
-		//		various flags passed to pattern function
-	};
-	=====*/
-
-	var ValidationTextBox;
-	return ValidationTextBox = declare("dijit.form.ValidationTextBox", TextBox, {
+	var ValidationTextBox = declare("dijit.form.ValidationTextBox", TextBox, {
 		// summary:
 		//		Base class for textbox widgets with the ability to validate content of various types and provide user feedback.
 
@@ -19955,9 +20481,10 @@ define([
 		//		displayed when the field is focused.
 		message: "",
 
-		// constraints: __Constraints
-		//		user-defined object needed to pass parameters to the validator functions
-		constraints: {},
+		// constraints: ValidationTextBox.__Constraints
+		//		Despite the name, this parameter specifies both constraints on the input as well as
+		//		formatting options.  See `dijit/form/ValidationTextBox.__Constraints` for details.
+		constraints:{},
 
 		// pattern: [extension protected] String|Function(constraints) returning a string.
 		//		This defines the regular expression used to validate the input.
@@ -20229,6 +20756,17 @@ define([
 			this.inherited(arguments);
 		}
 	});
+
+	/*=====
+	 ValidationTextBox.__Constraints = {
+		 // locale: String
+		 //		locale used for validation, picks up value from this widget's lang attribute
+		 // _flags_: anything
+		 //		various flags passed to pattern function
+	 };
+	 =====*/
+
+	return ValidationTextBox;
 });
 
 },
@@ -20365,11 +20903,12 @@ define(["./_base/lang", "./sniff", "./_base/window", "./dom", "./dom-geometry", 
 				var	doc = node.ownerDocument || baseWindow.doc,	// TODO: why baseWindow.doc?  Isn't node.ownerDocument always defined?
 					body = baseWindow.body(doc),
 					html = doc.documentElement || body.parentNode,
-					isIE = has("ie"),
+					isIE = has("ie") || has("trident"),
 					isWK = has("webkit");
 				// if an untested browser, then use the native method
 				if(node == body || node == html){ return; }
-				if(!(has("mozilla") || isIE || isWK || has("opera") || has("trident")) && ("scrollIntoView" in node)){
+				if(!(has("mozilla") || isIE || isWK || has("opera") || has("trident") || has("edge"))
+						&& ("scrollIntoView" in node)){
 					node.scrollIntoView(false); // short-circuit to native if possible
 					return;
 				}
@@ -20402,9 +20941,11 @@ define(["./_base/lang", "./sniff", "./_base/window", "./dom", "./dom-geometry", 
 
 					if(el == scrollRoot){
 						elPos.w = rootWidth; elPos.h = rootHeight;
-						if(scrollRoot == html && (isIE || has("trident")) && rtl){ elPos.x += scrollRoot.offsetWidth-elPos.w; } // IE workaround where scrollbar causes negative x
-						if(elPos.x < 0 || !isIE || isIE >= 9 || has("trident")){ elPos.x = 0; } // older IE can have values > 0
-						if(elPos.y < 0 || !isIE || isIE >= 9 || has("trident")){ elPos.y = 0; }
+						if(scrollRoot == html && (isIE || has("trident")) && rtl){
+							elPos.x += scrollRoot.offsetWidth-elPos.w;// IE workaround where scrollbar causes negative x
+						}
+						elPos.x = 0;
+						elPos.y = 0;
 					}else{
 						var pb = geom.getPadBorderExtents(el);
 						elPos.w -= pb.w; elPos.h -= pb.h; elPos.x += pb.l; elPos.y += pb.t;
@@ -20445,7 +20986,7 @@ define(["./_base/lang", "./sniff", "./_base/window", "./dom", "./dom-geometry", 
 					var s, old;
 					if(r * l > 0 && (!!el.scrollLeft || el == scrollRoot || el.scrollWidth > el.offsetHeight)){
 						s = Math[l < 0? "max" : "min"](l, r);
-						if(rtl && ((isIE == 8 && !backCompat) || isIE >= 9 || has("trident"))){ s = -s; }
+						if(rtl && ((isIE == 8 && !backCompat) || has("trident") >= 5)){ s = -s; }
 						old = el.scrollLeft;
 						scrollElementBy(el, s, 0);
 						s = el.scrollLeft - old;
@@ -20470,6 +21011,573 @@ define(["./_base/lang", "./sniff", "./_base/window", "./dom", "./dom-geometry", 
 	 1  && lang.setObject("dojo.window", window);
 
 	return window;
+});
+
+},
+'dojo/number':function(){
+define([/*===== "./_base/declare", =====*/ "./_base/lang", "./i18n", "./i18n!./cldr/nls/number", "./string", "./regexp"],
+	function(/*===== declare, =====*/ lang, i18n, nlsNumber, dstring, dregexp){
+
+// module:
+//		dojo/number
+
+var number = {
+	// summary:
+	//		localized formatting and parsing routines for Number
+};
+lang.setObject("dojo.number", number);
+
+/*=====
+number.__FormatOptions = declare(null, {
+	// pattern: String?
+	//		override [formatting pattern](http://www.unicode.org/reports/tr35/#Number_Format_Patterns)
+	//		with this string.  Default value is based on locale.  Overriding this property will defeat
+	//		localization.  Literal characters in patterns are not supported.
+	// type: String?
+	//		choose a format type based on the locale from the following:
+	//		decimal, scientific (not yet supported), percent, currency. decimal by default.
+	// places: Number?
+	//		fixed number of decimal places to show.  This overrides any
+	//		information in the provided pattern.
+	// round: Number?
+	//		5 rounds to nearest .5; 0 rounds to nearest whole (default). -1
+	//		means do not round.
+	// locale: String?
+	//		override the locale used to determine formatting rules
+	// fractional: Boolean?
+	//		If false, show no decimal places, overriding places and pattern settings.
+});
+=====*/
+
+number.format = function(/*Number*/ value, /*number.__FormatOptions?*/ options){
+	// summary:
+	//		Format a Number as a String, using locale-specific settings
+	// description:
+	//		Create a string from a Number using a known localized pattern.
+	//		Formatting patterns appropriate to the locale are chosen from the
+	//		[Common Locale Data Repository](http://unicode.org/cldr) as well as the appropriate symbols and
+	//		delimiters.
+	//		If value is Infinity, -Infinity, or is not a valid JavaScript number, return null.
+	// value:
+	//		the number to be formatted
+
+	options = lang.mixin({}, options || {});
+	var locale = i18n.normalizeLocale(options.locale),
+		bundle = i18n.getLocalization("dojo.cldr", "number", locale);
+	options.customs = bundle;
+	var pattern = options.pattern || bundle[(options.type || "decimal") + "Format"];
+	if(isNaN(value) || Math.abs(value) == Infinity){ return null; } // null
+	return number._applyPattern(value, pattern, options); // String
+};
+
+//number._numberPatternRE = /(?:[#0]*,?)*[#0](?:\.0*#*)?/; // not precise, but good enough
+number._numberPatternRE = /[#0,]*[#0](?:\.0*#*)?/; // not precise, but good enough
+
+number._applyPattern = function(/*Number*/ value, /*String*/ pattern, /*number.__FormatOptions?*/ options){
+	// summary:
+	//		Apply pattern to format value as a string using options. Gives no
+	//		consideration to local customs.
+	// value:
+	//		the number to be formatted.
+	// pattern:
+	//		a pattern string as described by
+	//		[unicode.org TR35](http://www.unicode.org/reports/tr35/#Number_Format_Patterns)
+	// options: number.__FormatOptions?
+	//		_applyPattern is usually called via `dojo/number.format()` which
+	//		populates an extra property in the options parameter, "customs".
+	//		The customs object specifies group and decimal parameters if set.
+
+	//TODO: support escapes
+	options = options || {};
+	var group = options.customs.group,
+		decimal = options.customs.decimal,
+		patternList = pattern.split(';'),
+		positivePattern = patternList[0];
+	pattern = patternList[(value < 0) ? 1 : 0] || ("-" + positivePattern);
+
+	//TODO: only test against unescaped
+	if(pattern.indexOf('%') != -1){
+		value *= 100;
+	}else if(pattern.indexOf('\u2030') != -1){
+		value *= 1000; // per mille
+	}else if(pattern.indexOf('\u00a4') != -1){
+		group = options.customs.currencyGroup || group;//mixins instead?
+		decimal = options.customs.currencyDecimal || decimal;// Should these be mixins instead?
+		pattern = pattern.replace(/([\s\xa0]*)(\u00a4{1,3})([\s\xa0]*)/, function(match, before, target, after){
+			var prop = ["symbol", "currency", "displayName"][target.length-1],
+				symbol = options[prop] || options.currency || "";
+			// if there is no symbol, also remove surrounding whitespaces
+			if(!symbol){
+				return "";
+			}
+			return before+symbol+after;
+		});
+	}else if(pattern.indexOf('E') != -1){
+		throw new Error("exponential notation not supported");
+	}
+
+	//TODO: support @ sig figs?
+	var numberPatternRE = number._numberPatternRE;
+	var numberPattern = positivePattern.match(numberPatternRE);
+	if(!numberPattern){
+		throw new Error("unable to find a number expression in pattern: "+pattern);
+	}
+	if(options.fractional === false){ options.places = 0; }
+	return pattern.replace(numberPatternRE,
+		number._formatAbsolute(value, numberPattern[0], {decimal: decimal, group: group, places: options.places, round: options.round}));
+};
+
+number.round = function(/*Number*/ value, /*Number?*/ places, /*Number?*/ increment){
+	// summary:
+	//		Rounds to the nearest value with the given number of decimal places, away from zero
+	// description:
+	//		Rounds to the nearest value with the given number of decimal places, away from zero if equal.
+	//		Similar to Number.toFixed(), but compensates for browser quirks. Rounding can be done by
+	//		fractional increments also, such as the nearest quarter.
+	//		NOTE: Subject to floating point errors.  See dojox/math/round for experimental workaround.
+	// value:
+	//		The number to round
+	// places:
+	//		The number of decimal places where rounding takes place.  Defaults to 0 for whole rounding.
+	//		Must be non-negative.
+	// increment:
+	//		Rounds next place to nearest value of increment/10.  10 by default.
+	// example:
+	// |	>>> number.round(-0.5)
+	// |	-1
+	// |	>>> number.round(162.295, 2)
+	// |	162.29  // note floating point error.  Should be 162.3
+	// |	>>> number.round(10.71, 0, 2.5)
+	// |	10.75
+	var factor = 10 / (increment || 10);
+	return (factor * +value).toFixed(places) / factor; // Number
+};
+
+if((0.9).toFixed() == 0){
+	// (isIE) toFixed() bug workaround: Rounding fails on IE when most significant digit
+	// is just after the rounding place and is >=5
+	var round = number.round;
+	number.round = function(v, p, m){
+		var d = Math.pow(10, -p || 0), a = Math.abs(v);
+		if(!v || a >= d){
+			d = 0;
+		}else{
+			a /= d;
+			if(a < 0.5 || a >= 0.95){
+				d = 0;
+			}
+		}
+		return round(v, p, m) + (v > 0 ? d : -d);
+	};
+
+	// Use "doc hint" so the doc parser ignores this new definition of round(), and uses the one above.
+	/*===== number.round = round; =====*/
+}
+
+/*=====
+number.__FormatAbsoluteOptions = declare(null, {
+	// decimal: String?
+	//		the decimal separator
+	// group: String?
+	//		the group separator
+	// places: Number|String?
+	//		number of decimal places.  the range "n,m" will format to m places.
+	// round: Number?
+	//		5 rounds to nearest .5; 0 rounds to nearest whole (default). -1
+	//		means don't round.
+});
+=====*/
+
+number._formatAbsolute = function(/*Number*/ value, /*String*/ pattern, /*number.__FormatAbsoluteOptions?*/ options){
+	// summary:
+	//		Apply numeric pattern to absolute value using options. Gives no
+	//		consideration to local customs.
+	// value:
+	//		the number to be formatted, ignores sign
+	// pattern:
+	//		the number portion of a pattern (e.g. `#,##0.00`)
+	options = options || {};
+	if(options.places === true){options.places=0;}
+	if(options.places === Infinity){options.places=6;} // avoid a loop; pick a limit
+
+	var patternParts = pattern.split("."),
+		comma = typeof options.places == "string" && options.places.indexOf(","),
+		maxPlaces = options.places;
+	if(comma){
+		maxPlaces = options.places.substring(comma + 1);
+	}else if(!(maxPlaces >= 0)){
+		maxPlaces = (patternParts[1] || []).length;
+	}
+	if(!(options.round < 0)){
+		value = number.round(value, maxPlaces, options.round);
+	}
+
+	var valueParts = String(Math.abs(value)).split("."),
+		fractional = valueParts[1] || "";
+	if(patternParts[1] || options.places){
+		if(comma){
+			options.places = options.places.substring(0, comma);
+		}
+		// Pad fractional with trailing zeros
+		var pad = options.places !== undefined ? options.places : (patternParts[1] && patternParts[1].lastIndexOf("0") + 1);
+		if(pad > fractional.length){
+			valueParts[1] = dstring.pad(fractional, pad, '0', true);
+		}
+
+		// Truncate fractional
+		if(maxPlaces < fractional.length){
+			valueParts[1] = fractional.substr(0, maxPlaces);
+		}
+	}else{
+		if(valueParts[1]){ valueParts.pop(); }
+	}
+
+	// Pad whole with leading zeros
+	var patternDigits = patternParts[0].replace(',', '');
+	pad = patternDigits.indexOf("0");
+	if(pad != -1){
+		pad = patternDigits.length - pad;
+		if(pad > valueParts[0].length){
+			valueParts[0] = dstring.pad(valueParts[0], pad);
+		}
+
+		// Truncate whole
+		if(patternDigits.indexOf("#") == -1){
+			valueParts[0] = valueParts[0].substr(valueParts[0].length - pad);
+		}
+	}
+
+	// Add group separators
+	var index = patternParts[0].lastIndexOf(','),
+		groupSize, groupSize2;
+	if(index != -1){
+		groupSize = patternParts[0].length - index - 1;
+		var remainder = patternParts[0].substr(0, index);
+		index = remainder.lastIndexOf(',');
+		if(index != -1){
+			groupSize2 = remainder.length - index - 1;
+		}
+	}
+	var pieces = [];
+	for(var whole = valueParts[0]; whole;){
+		var off = whole.length - groupSize;
+		pieces.push((off > 0) ? whole.substr(off) : whole);
+		whole = (off > 0) ? whole.slice(0, off) : "";
+		if(groupSize2){
+			groupSize = groupSize2;
+			delete groupSize2;
+		}
+	}
+	valueParts[0] = pieces.reverse().join(options.group || ",");
+
+	return valueParts.join(options.decimal || ".");
+};
+
+/*=====
+number.__RegexpOptions = declare(null, {
+	// pattern: String?
+	//		override [formatting pattern](http://www.unicode.org/reports/tr35/#Number_Format_Patterns)
+	//		with this string.  Default value is based on locale.  Overriding this property will defeat
+	//		localization.
+	// type: String?
+	//		choose a format type based on the locale from the following:
+	//		decimal, scientific (not yet supported), percent, currency. decimal by default.
+	// locale: String?
+	//		override the locale used to determine formatting rules
+	// strict: Boolean?
+	//		strict parsing, false by default.  Strict parsing requires input as produced by the format() method.
+	//		Non-strict is more permissive, e.g. flexible on white space, omitting thousands separators
+	// places: Number|String?
+	//		number of decimal places to accept: Infinity, a positive number, or
+	//		a range "n,m".  Defined by pattern or Infinity if pattern not provided.
+});
+=====*/
+number.regexp = function(/*number.__RegexpOptions?*/ options){
+	// summary:
+	//		Builds the regular needed to parse a number
+	// description:
+	//		Returns regular expression with positive and negative match, group
+	//		and decimal separators
+	return number._parseInfo(options).regexp; // String
+};
+
+number._parseInfo = function(/*Object?*/ options){
+	options = options || {};
+	var locale = i18n.normalizeLocale(options.locale),
+		bundle = i18n.getLocalization("dojo.cldr", "number", locale),
+		pattern = options.pattern || bundle[(options.type || "decimal") + "Format"],
+//TODO: memoize?
+		group = bundle.group,
+		decimal = bundle.decimal,
+		factor = 1;
+
+	if(pattern.indexOf('%') != -1){
+		factor /= 100;
+	}else if(pattern.indexOf('\u2030') != -1){
+		factor /= 1000; // per mille
+	}else{
+		var isCurrency = pattern.indexOf('\u00a4') != -1;
+		if(isCurrency){
+			group = bundle.currencyGroup || group;
+			decimal = bundle.currencyDecimal || decimal;
+		}
+	}
+
+	//TODO: handle quoted escapes
+	var patternList = pattern.split(';');
+	if(patternList.length == 1){
+		patternList.push("-" + patternList[0]);
+	}
+
+	var re = dregexp.buildGroupRE(patternList, function(pattern){
+		pattern = "(?:"+dregexp.escapeString(pattern, '.')+")";
+		return pattern.replace(number._numberPatternRE, function(format){
+			var flags = {
+				signed: false,
+				separator: options.strict ? group : [group,""],
+				fractional: options.fractional,
+				decimal: decimal,
+				exponent: false
+				},
+
+				parts = format.split('.'),
+				places = options.places;
+
+			// special condition for percent (factor != 1)
+			// allow decimal places even if not specified in pattern
+			if(parts.length == 1 && factor != 1){
+			    parts[1] = "###";
+			}
+			if(parts.length == 1 || places === 0){
+				flags.fractional = false;
+			}else{
+				if(places === undefined){ places = options.pattern ? parts[1].lastIndexOf('0') + 1 : Infinity; }
+				if(places && options.fractional == undefined){flags.fractional = true;} // required fractional, unless otherwise specified
+				if(!options.places && (places < parts[1].length)){ places += "," + parts[1].length; }
+				flags.places = places;
+			}
+			var groups = parts[0].split(',');
+			if(groups.length > 1){
+				flags.groupSize = groups.pop().length;
+				if(groups.length > 1){
+					flags.groupSize2 = groups.pop().length;
+				}
+			}
+			return "("+number._realNumberRegexp(flags)+")";
+		});
+	}, true);
+
+	if(isCurrency){
+		// substitute the currency symbol for the placeholder in the pattern
+		re = re.replace(/([\s\xa0]*)(\u00a4{1,3})([\s\xa0]*)/g, function(match, before, target, after){
+			var prop = ["symbol", "currency", "displayName"][target.length-1],
+				symbol = dregexp.escapeString(options[prop] || options.currency || "");
+
+			// if there is no symbol there is no need to take white-spaces into account.
+			if(!symbol){
+				return "";
+			}
+
+			before = before ? "[\\s\\xa0]" : "";
+			after = after ? "[\\s\\xa0]" : "";
+			if(!options.strict){
+				if(before){before += "*";}
+				if(after){after += "*";}
+				return "(?:"+before+symbol+after+")?";
+			}
+			return before+symbol+after;
+		});
+	}
+
+//TODO: substitute localized sign/percent/permille/etc.?
+
+	// normalize whitespace and return
+	return {regexp: re.replace(/[\xa0 ]/g, "[\\s\\xa0]"), group: group, decimal: decimal, factor: factor}; // Object
+};
+
+/*=====
+number.__ParseOptions = declare(null, {
+	// pattern: String?
+	//		override [formatting pattern](http://www.unicode.org/reports/tr35/#Number_Format_Patterns)
+	//		with this string.  Default value is based on locale.  Overriding this property will defeat
+	//		localization.  Literal characters in patterns are not supported.
+	// type: String?
+	//		choose a format type based on the locale from the following:
+	//		decimal, scientific (not yet supported), percent, currency. decimal by default.
+	// locale: String?
+	//		override the locale used to determine formatting rules
+	// strict: Boolean?
+	//		strict parsing, false by default.  Strict parsing requires input as produced by the format() method.
+	//		Non-strict is more permissive, e.g. flexible on white space, omitting thousands separators
+	// fractional: Boolean|Array?
+	//		Whether to include the fractional portion, where the number of decimal places are implied by pattern
+	//		or explicit 'places' parameter.  The value [true,false] makes the fractional portion optional.
+});
+=====*/
+number.parse = function(/*String*/ expression, /*number.__ParseOptions?*/ options){
+	// summary:
+	//		Convert a properly formatted string to a primitive Number, using
+	//		locale-specific settings.
+	// description:
+	//		Create a Number from a string using a known localized pattern.
+	//		Formatting patterns are chosen appropriate to the locale
+	//		and follow the syntax described by
+	//		[unicode.org TR35](http://www.unicode.org/reports/tr35/#Number_Format_Patterns)
+    	//		Note that literal characters in patterns are not supported.
+	// expression:
+	//		A string representation of a Number
+	var info = number._parseInfo(options),
+		results = (new RegExp("^"+info.regexp+"$")).exec(expression);
+	if(!results){
+		return NaN; //NaN
+	}
+	var absoluteMatch = results[1]; // match for the positive expression
+	if(!results[1]){
+		if(!results[2]){
+			return NaN; //NaN
+		}
+		// matched the negative pattern
+		absoluteMatch =results[2];
+		info.factor *= -1;
+	}
+
+	// Transform it to something Javascript can parse as a number.  Normalize
+	// decimal point and strip out group separators or alternate forms of whitespace
+	absoluteMatch = absoluteMatch.
+		replace(new RegExp("["+info.group + "\\s\\xa0"+"]", "g"), "").
+		replace(info.decimal, ".");
+	// Adjust for negative sign, percent, etc. as necessary
+	return absoluteMatch * info.factor; //Number
+};
+
+/*=====
+number.__RealNumberRegexpFlags = declare(null, {
+	// places: Number?
+	//		The integer number of decimal places or a range given as "n,m".  If
+	//		not given, the decimal part is optional and the number of places is
+	//		unlimited.
+	// decimal: String?
+	//		A string for the character used as the decimal point.  Default
+	//		is ".".
+	// fractional: Boolean|Array?
+	//		Whether decimal places are used.  Can be true, false, or [true,
+	//		false].  Default is [true, false] which means optional.
+	// exponent: Boolean|Array?
+	//		Express in exponential notation.  Can be true, false, or [true,
+	//		false]. Default is [true, false], (i.e. will match if the
+	//		exponential part is present are not).
+	// eSigned: Boolean|Array?
+	//		The leading plus-or-minus sign on the exponent.  Can be true,
+	//		false, or [true, false].  Default is [true, false], (i.e. will
+	//		match if it is signed or unsigned).  flags in regexp.integer can be
+	//		applied.
+});
+=====*/
+
+number._realNumberRegexp = function(/*__RealNumberRegexpFlags?*/ flags){
+	// summary:
+	//		Builds a regular expression to match a real number in exponential
+	//		notation
+
+	// assign default values to missing parameters
+	flags = flags || {};
+	//TODO: use mixin instead?
+	if(!("places" in flags)){ flags.places = Infinity; }
+	if(typeof flags.decimal != "string"){ flags.decimal = "."; }
+	if(!("fractional" in flags) || /^0/.test(flags.places)){ flags.fractional = [true, false]; }
+	if(!("exponent" in flags)){ flags.exponent = [true, false]; }
+	if(!("eSigned" in flags)){ flags.eSigned = [true, false]; }
+
+	var integerRE = number._integerRegexp(flags),
+		decimalRE = dregexp.buildGroupRE(flags.fractional,
+		function(q){
+			var re = "";
+			if(q && (flags.places!==0)){
+				re = "\\" + flags.decimal;
+				if(flags.places == Infinity){
+					re = "(?:" + re + "\\d+)?";
+				}else{
+					re += "\\d{" + flags.places + "}";
+				}
+			}
+			return re;
+		},
+		true
+	);
+
+	var exponentRE = dregexp.buildGroupRE(flags.exponent,
+		function(q){
+			if(q){ return "([eE]" + number._integerRegexp({ signed: flags.eSigned}) + ")"; }
+			return "";
+		}
+	);
+
+	var realRE = integerRE + decimalRE;
+	// allow for decimals without integers, e.g. .25
+	if(decimalRE){realRE = "(?:(?:"+ realRE + ")|(?:" + decimalRE + "))";}
+	return realRE + exponentRE; // String
+};
+
+/*=====
+number.__IntegerRegexpFlags = declare(null, {
+	// signed: Boolean?
+	//		The leading plus-or-minus sign. Can be true, false, or `[true,false]`.
+	//		Default is `[true, false]`, (i.e. will match if it is signed
+	//		or unsigned).
+	// separator: String?
+	//		The character used as the thousands separator. Default is no
+	//		separator. For more than one symbol use an array, e.g. `[",", ""]`,
+	//		makes ',' optional.
+	// groupSize: Number?
+	//		group size between separators
+	// groupSize2: Number?
+	//		second grouping, where separators 2..n have a different interval than the first separator (for India)
+});
+=====*/
+
+number._integerRegexp = function(/*number.__IntegerRegexpFlags?*/ flags){
+	// summary:
+	//		Builds a regular expression that matches an integer
+
+	// assign default values to missing parameters
+	flags = flags || {};
+	if(!("signed" in flags)){ flags.signed = [true, false]; }
+	if(!("separator" in flags)){
+		flags.separator = "";
+	}else if(!("groupSize" in flags)){
+		flags.groupSize = 3;
+	}
+
+	var signRE = dregexp.buildGroupRE(flags.signed,
+		function(q){ return q ? "[-+]" : ""; },
+		true
+	);
+
+	var numberRE = dregexp.buildGroupRE(flags.separator,
+		function(sep){
+			if(!sep){
+				return "(?:\\d+)";
+			}
+
+			sep = dregexp.escapeString(sep);
+			if(sep == " "){ sep = "\\s"; }
+			else if(sep == "\xa0"){ sep = "\\s\\xa0"; }
+
+			var grp = flags.groupSize, grp2 = flags.groupSize2;
+			//TODO: should we continue to enforce that numbers with separators begin with 1-9?  See #6933
+			if(grp2){
+				var grp2RE = "(?:0|[1-9]\\d{0," + (grp2-1) + "}(?:[" + sep + "]\\d{" + grp2 + "})*[" + sep + "]\\d{" + grp + "})";
+				return ((grp-grp2) > 0) ? "(?:" + grp2RE + "|(?:0|[1-9]\\d{0," + (grp-1) + "}))" : grp2RE;
+			}
+			return "(?:0|[1-9]\\d{0," + (grp-1) + "}(?:[" + sep + "]\\d{" + grp + "})*)";
+		},
+		true
+	);
+
+	return signRE + numberRE; // String
+};
+
+return number;
 });
 
 },
@@ -20567,18 +21675,16 @@ define([
 		//		'true' to re-enable to previous, arguably broken, behavior.
 		_earlyTemplatedStartup: false,
 
-		// widgetsInTemplate: [protected] Boolean
-		//		Should we parse the template to find widgets that might be
-		//		declared in markup inside it?  (Remove for 2.0 and assume true)
-		widgetsInTemplate: true,
-
 		// contextRequire: Function
 		//		Used to provide a context require to the dojo/parser in order to be
 		//		able to use relative MIDs (e.g. `./Widget`) in the widget's template.
 		contextRequire: null,
 
 		_beforeFillContent: function(){
-			if(this.widgetsInTemplate){
+			// Short circuit the parser when the template doesn't contain any widgets.  Note that checking against
+			// this.templateString is insufficient because the data-dojo-type=... may appear through a substitution
+			// variable, like in ConfirmDialog, where the widget is hidden inside of the ${!actionBarTemplate}.
+			if(/dojoType|data-dojo-type/i.test(this.domNode.innerHTML)){
 				// Before copying over content, instantiate widgets in template
 				var node = this.domNode;
 
@@ -20976,6 +22082,31 @@ define([
 
 	return Deferred;
 });
+
+},
+'lsmb/SubscribeNumberTextBox':function(){
+define(['dojo/_base/declare',
+        'dojo/on',
+        'dojo/topic',
+        'dijit/form/NumberTextBox'],
+       function(declare, on, topic, NumberTextBox) {
+           return declare('lsmb/SubscribeNumberTextBox', NumberTextBox, {
+               topic: "",
+               update: function(targetValue) {
+//                   this.set('checked', targetValue);
+               },
+               postCreate: function() {
+                   var self = this;
+                   this.inherited(arguments);
+
+                   this.own(
+                       topic.subscribe(self.topic,function(targetValue) {
+                           self.update(targetValue);
+                       })
+                   );
+               }
+           });
+       });
 
 },
 'dojo/_base/connect':function(){
@@ -21671,12 +22802,16 @@ define([
 			this._set("label", content);
 			var labelNode = this.containerNode || this.focusNode;
 			labelNode.innerHTML = content;
+			this.onLabelSet();
+		},
+
+		onLabelSet: function(){
 		}
 	});
 
 	if(has("dojo-bidi")){
 		ButtonMixin = declare("dijit.form._ButtonMixin", ButtonMixin, {
-			_setLabelAttr: function(){
+			onLabelSet: function(){
 				this.inherited(arguments);
 				var labelNode = this.containerNode || this.focusNode;
 				this.applyTextDir(labelNode);
@@ -22060,100 +23195,99 @@ define([
 'dojo/io-query':function(){
 define(["./_base/lang"], function(lang){
 
-// module:
-//		dojo/io-query
+	// module:
+	//		dojo/io-query
 
-var backstop = {};
+	var backstop = {};
 
-return {
-// summary:
-//		This module defines query string processing functions.
-
-	objectToQuery: function objectToQuery(/*Object*/ map){
+	return {
 		// summary:
-        //		takes a name/value mapping object and returns a string representing
-        //		a URL-encoded version of that object.
-        // example:
-        //		this object:
-        //
-        //	|	{
-        //	|		blah: "blah",
-        //	|		multi: [
-        //	|			"thud",
-        //	|			"thonk"
-        //	|		]
-        //	|	};
-        //
-        //		yields the following query string:
-        //
-        //	|	"blah=blah&multi=thud&multi=thonk"
+		//		This module defines query string processing functions.
 
-        // FIXME: need to implement encodeAscii!!
-        var enc = encodeURIComponent, pairs = [];
-        for(var name in map){
-            var value = map[name];
-            if(value != backstop[name]){
-                var assign = enc(name) + "=";
-                if(lang.isArray(value)){
-                    for(var i = 0, l = value.length; i < l; ++i){
-                        pairs.push(assign + enc(value[i]));
-                    }
-                }else{
-                    pairs.push(assign + enc(value));
-                }
-            }
-        }
-        return pairs.join("&"); // String
-    },
+		objectToQuery: function objectToQuery(/*Object*/ map){
+			// summary:
+			//		takes a name/value mapping object and returns a string representing
+			//		a URL-encoded version of that object.
+			// example:
+			//		this object:
+			//
+			//	|	{
+			//	|		blah: "blah",
+			//	|		multi: [
+			//	|			"thud",
+			//	|			"thonk"
+			//	|		]
+			//	|	};
+			//
+			//		yields the following query string:
+			//
+			//	|	"blah=blah&multi=thud&multi=thonk"
 
-	queryToObject: function queryToObject(/*String*/ str){
-        // summary:
-        //		Create an object representing a de-serialized query section of a
-        //		URL. Query keys with multiple values are returned in an array.
-        //
-        // example:
-        //		This string:
-        //
-        //	|		"foo=bar&foo=baz&thinger=%20spaces%20=blah&zonk=blarg&"
-        //
-        //		results in this object structure:
-        //
-        //	|		{
-        //	|			foo: [ "bar", "baz" ],
-        //	|			thinger: " spaces =blah",
-        //	|			zonk: "blarg"
-        //	|		}
-        //
-        //		Note that spaces and other urlencoded entities are correctly
-        //		handled.
+			// FIXME: need to implement encodeAscii!!
+			var enc = encodeURIComponent, pairs = [];
+			for(var name in map){
+				var value = map[name];
+				if(value != backstop[name]){
+					var assign = enc(name) + "=";
+					if(lang.isArray(value)){
+						for(var i = 0, l = value.length; i < l; ++i){
+							pairs.push(assign + enc(value[i]));
+						}
+					}else{
+						pairs.push(assign + enc(value));
+					}
+				}
+			}
+			return pairs.join("&"); // String
+		},
 
-        // FIXME: should we grab the URL string if we're not passed one?
-        var dec = decodeURIComponent, qp = str.split("&"), ret = {}, name, val;
-        for(var i = 0, l = qp.length, item; i < l; ++i){
-            item = qp[i];
-            if(item.length){
-                var s = item.indexOf("=");
-                if(s < 0){
-                    name = dec(item);
-                    val = "";
-                }else{
-                    name = dec(item.slice(0, s));
-                    val  = dec(item.slice(s + 1));
-                }
-                if(typeof ret[name] == "string"){ // inline'd type check
-                    ret[name] = [ret[name]];
-                }
+		queryToObject: function queryToObject(/*String*/ str){
+			// summary:
+			//		Create an object representing a de-serialized query section of a
+			//		URL. Query keys with multiple values are returned in an array.
+			//
+			// example:
+			//		This string:
+			//
+			//	|		"foo=bar&foo=baz&thinger=%20spaces%20=blah&zonk=blarg&"
+			//
+			//		results in this object structure:
+			//
+			//	|		{
+			//	|			foo: [ "bar", "baz" ],
+			//	|			thinger: " spaces =blah",
+			//	|			zonk: "blarg"
+			//	|		}
+			//
+			//		Note that spaces and other urlencoded entities are correctly
+			//		handled.
 
-                if(lang.isArray(ret[name])){
-                    ret[name].push(val);
-                }else{
-                    ret[name] = val;
-                }
-            }
-        }
-        return ret; // Object
-    }
-};
+        	var dec = decodeURIComponent, qp = str.split("&"), ret = {}, name, val;
+			for(var i = 0, l = qp.length, item; i < l; ++i){
+				item = qp[i];
+				if(item.length){
+					var s = item.indexOf("=");
+					if(s < 0){
+						name = dec(item);
+						val = "";
+					}else{
+						name = dec(item.slice(0, s));
+						val = dec(item.slice(s + 1));
+					}
+					if(typeof ret[name] == "string"){ // inline'd type check
+						ret[name] = [ret[name]];
+					}
+
+					if(lang.isArray(ret[name])){
+						ret[name].push(val);
+					}else{
+						ret[name] = val;
+					}
+				}
+			}
+			return ret; // Object
+		}
+	};
 });
 },
 'dojo/date/locale':function(){
@@ -22761,6 +23895,7 @@ function _buildDateTimeRE(tokens, bundle, options, pattern){
 }
 
 var _customFormats = [];
+var _cachedGregorianBundles = {};
 exports.addCustomFormats = function(/*String*/ packageName, /*String*/ bundleName){
 	// summary:
 	//		Add a reference to a bundle containing localized custom formats to be
@@ -22774,15 +23909,19 @@ exports.addCustomFormats = function(/*String*/ packageName, /*String*/ bundleNam
 	//		The resources must be loaded by dojo.requireLocalization() prior to use
 
 	_customFormats.push({pkg:packageName,name:bundleName});
+	_cachedGregorianBundles = {};
 };
 
 exports._getGregorianBundle = function(/*String*/ locale){
+	if(_cachedGregorianBundles[locale]){
+		return _cachedGregorianBundles[locale];
+	}
 	var gregorian = {};
 	array.forEach(_customFormats, function(desc){
 		var bundle = i18n.getLocalization(desc.pkg, desc.name, locale);
 		gregorian = lang.mixin(gregorian, bundle);
 	}, this);
-	return gregorian; /*Object*/
+	return _cachedGregorianBundles[locale] = gregorian; /*Object*/
 };
 
 exports.addCustomFormats(module.id.replace(/\/date\/locale$/, ".cldr"),"gregorian");
@@ -22999,7 +24138,7 @@ define([
 			if(valueOrIdx == null){
 				return opts; // __SelectOption[]
 			}
-			if(lang.isArray(valueOrIdx)){
+			if(lang.isArrayLike(valueOrIdx)){
 				return array.map(valueOrIdx, "return this.getOptions(item);", this); // __SelectOption[]
 			}
 			if(lang.isString(valueOrIdx)){
@@ -23033,7 +24172,7 @@ define([
 			//		of the option is empty or missing, a separator is created instead.
 			//		Passing in an array of options will yield slightly better performance
 			//		since the children are only loaded once.
-			array.forEach(lang.isArray(option) ? option : [option], function(i){
+			array.forEach(lang.isArrayLike(option) ? option : [option], function(i){
 				if(i && lang.isObject(i)){
 					this.options.push(i);
 				}
@@ -23050,7 +24189,7 @@ define([
 			//		You can also pass in an array of those values for a slightly
 			//		better performance since the children are only loaded once.
 			//		For numeric option values, specify {value: number} as the argument.
-			var oldOpts = this.getOptions(lang.isArray(valueOrIdx) ? valueOrIdx : [valueOrIdx]);
+			var oldOpts = this.getOptions(lang.isArrayLike(valueOrIdx) ? valueOrIdx : [valueOrIdx]);
 			array.forEach(oldOpts, function(option){
 				// We can get null back in our array - if our option was not found.  In
 				// that case, we don't want to blow up...
@@ -23070,7 +24209,7 @@ define([
 			//		is matched based on the value of the entered option.  Passing
 			//		in an array of new options will yield better performance since
 			//		the children will only be loaded once.
-			array.forEach(lang.isArray(newOption) ? newOption : [newOption], function(i){
+			array.forEach(lang.isArrayLike(newOption) ? newOption : [newOption], function(i){
 				var oldOpt = this.getOptions({ value: i.value }), k;
 				if(oldOpt){
 					for(k in i){
@@ -23264,10 +24403,10 @@ define([
 					}
 					this.onLoadDeferred.resolve(true);
 					this.onSetStore();
-				}), function(err){
+				}), lang.hitch(this, function(err){
 					console.error('dijit.form.Select: ' + err.toString());
 					this.onLoadDeferred.reject(err);
-				});
+				}));
 			}
 			return oStore;	// dojo/data/api/Identity
 		},
@@ -23288,7 +24427,7 @@ define([
 			if(newValue == null){
 				return;
 			}
-			if(lang.isArray(newValue)){
+			if(lang.isArrayLike(newValue)){
 				newValue = array.map(newValue, function(value){
 					return lang.isObject(value) ? value : { value: value };
 				}); // __SelectOption[]
@@ -23939,7 +25078,7 @@ define([
 			var lbl = (this.labelType === 'text' ? (newDisplay || '')
 					.replace(/&/g, '&amp;').replace(/</g, '&lt;') :
 					newDisplay) || this.emptyLabel;
-			this.containerNode.innerHTML = '<span role="option" class="dijitReset dijitInline ' + this.baseClass.replace(/\s+|$/g, "Label ") + '">' + lbl + '</span>';
+			this.containerNode.innerHTML = '<span role="option" aria-selected="true" class="dijitReset dijitInline ' + this.baseClass.replace(/\s+|$/g, "Label ") + '">' + lbl + '</span>';
 		},
 
 		validate: function(/*Boolean*/ isFocused){
@@ -24598,7 +25737,7 @@ define([
 							break;
 						}
 						currentItem = this._getNextFocusableChild(currentItem, 1);
-					}while(currentItem != stop);
+					}while(currentItem && currentItem != stop);
 					// commented out code block to search again if the multichar search fails after a smaller timeout
 					//if(!numMatches && (this._typingSlowly || searchLen == 1)){
 					//	this._searchString = '';
@@ -25216,6 +26355,12 @@ define([
 		//		Order fields are traversed when user hits the tab key
 		tabIndex: "0",
 
+		// dayOffset: Integer
+		//		(Optional) The first day of week override. By default the first day of week is determined
+		//		for the current locale (extracted from the CLDR).
+		//		Special value -1 (default value), means use locale dependent value.
+		dayOffset: -1,
+
 		// currentFocus: Date
 		//		Date object containing the currently focused date, or the date which would be focused
 		//		if the calendar itself was focused.   Also indicates which year and month to display,
@@ -25331,7 +26476,7 @@ define([
 				daysInMonth = this.dateModule.getDaysInMonth(month),
 				daysInPreviousMonth = this.dateModule.getDaysInMonth(this.dateModule.add(month, "month", -1)),
 				today = new this.dateClassObj(),
-				dayOffset = cldrSupplemental.getFirstDayOfWeek(this.lang);
+				dayOffset = this.dayOffset >= 0 ? this.dayOffset : cldrSupplemental.getFirstDayOfWeek(this.lang);
 			if(dayOffset > firstDay){
 				dayOffset -= 7;
 			}
@@ -25456,7 +26601,7 @@ define([
 			// Markup for days of the week (referenced from template)
 			var d = this.dowTemplateString,
 				dayNames = this.dateLocaleModule.getNames('days', this.dayWidth, 'standAlone', this.lang),
-				dayOffset = cldrSupplemental.getFirstDayOfWeek(this.lang);
+				dayOffset = this.dayOffset >= 0 ? this.dayOffset : cldrSupplemental.getFirstDayOfWeek(this.lang);
 			this.dayCellsHtml = string.substitute([d, d, d, d, d, d, d].join(""), {d: ""}, function(){
 				return dayNames[dayOffset++ % 7];
 			});
@@ -25874,7 +27019,13 @@ define(["./kernel", "../has", "./lang"], function(dojo, has, lang){
 	//		dojo/_base/declare
 
 	var mix = lang.mixin, op = Object.prototype, opts = op.toString,
-		xtor = new Function, counter = 0, cname = "constructor";
+		xtor, counter = 0, cname = "constructor";
+
+	if(!has("csp-restrictions")){
+		xtor = new Function;
+	}else{
+		xtor = function(){};
+	}
 
 	function err(msg, cls){ throw new Error("declare" + (cls ? " " + cls : "") + ": " + msg); }
 
@@ -26176,7 +27327,7 @@ define(["./kernel", "../has", "./lang"], function(dojo, has, lang){
 				target[name] = t;
 			}
 		}
-		if(has("bug-for-in-skips-shadowed")){
+		if(has("bug-for-in-skips-shadowed") && source){
 			for(var extraNames= lang._extraNames, i= extraNames.length; i;){
 				name = extraNames[--i];
 				t = source[name];
@@ -27181,7 +28332,10 @@ define([
 			if(this.value instanceof Date){
 				this.filterString = "";
 			}
-			if(this.dropDown){
+
+			// Set the dropdown's value to match, unless we are being updated due to the user navigating the TimeTextBox
+			// dropdown via up/down arrow keys.
+			if(priorityChange !== false && this.dropDown){
 				this.dropDown.set('value', value, false);
 			}
 		},
@@ -28415,7 +29569,7 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 			// so just use that regardless of hasTouch.
 			return function(node, listener){
 				return on(node, pointerType, listener);
-			}
+			};
 		}else if(hasTouch){
 			return function(node, listener){
 				var handle1 = on(node, touchType, function(evt){
@@ -28442,7 +29596,7 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 			// Avoid creating listeners for touch events on performance sensitive older browsers like IE6
 			return function(node, listener){
 				return on(node, mouseType, listener);
-			}
+			};
 		}
 	}
 
@@ -28453,7 +29607,7 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 			if(node.dojoClick !== undefined){ return node; }
 		}while(node = node.parentNode);
 	}
-	
+
 	function doClicks(e, moveType, endType){
 		// summary:
 		//		Setup touch listeners to generate synthetic clicks immediately (rather than waiting for the browser
@@ -28462,14 +29616,18 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 		//		its dojoClick property set to truthy. If a node receives synthetic clicks because one of its ancestors has its
 		//      dojoClick property set to truthy, you can disable synthetic clicks on this node by setting its own dojoClick property
 		//      to falsy.
-		
+
+		if(mouse.isRight(e)){
+			return;		// avoid spurious dojoclick event on IE10+; right click is just for context menu
+		}
+
 		var markedNode = marked(e.target);
 		clickTracker  = !e.target.disabled && markedNode && markedNode.dojoClick; // click threshold = true, number, x/y object, or "useTarget"
 		if(clickTracker){
 			useTarget = (clickTracker == "useTarget");
 			clickTarget = (useTarget?markedNode:e.target);
 			if(useTarget){
-				// We expect a click, so prevent any other 
+				// We expect a click, so prevent any other
 				// default action on "touchpress"
 				e.preventDefault();
 			}
@@ -28499,6 +29657,9 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 				}
 
 				win.doc.addEventListener(moveType, function(e){
+					if(mouse.isRight(e)){
+						return;		// avoid spurious dojoclick event on IE10+; right click is just for context menu
+					}
 					updateClickTracker(e);
 					if(useTarget){
 						// prevent native scroll event and ensure touchend is
@@ -28508,6 +29669,9 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 				}, true);
 
 				win.doc.addEventListener(endType, function(e){
+					if(mouse.isRight(e)){
+						return;		// avoid spurious dojoclick event on IE10+; right click is just for context menu
+					}
 					updateClickTracker(e);
 					if(clickTracker){
 						clickTime = (new Date()).getTime();
@@ -28519,27 +29683,36 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 						//some attributes can be on the Touch object, not on the Event:
 						//http://www.w3.org/TR/touch-events/#touch-interface
 						var src = (e.changedTouches) ? e.changedTouches[0] : e;
-						//create the synthetic event.
-						//http://www.w3.org/TR/DOM-Level-3-Events/#widl-MouseEvent-initMouseEvent
-						var clickEvt = document.createEvent("MouseEvents");
-						clickEvt._dojo_click = true;
-						clickEvt.initMouseEvent("click",
-							true, //bubbles
-							true, //cancelable
-							e.view,
-							e.detail,
-							src.screenX,
-							src.screenY,
-							src.clientX,
-							src.clientY,
-							e.ctrlKey,
-							e.altKey,
-							e.shiftKey,
-							e.metaKey,
-							0, //button
-							null //related target
-						);
+						function createMouseEvent(type){
+							//create the synthetic event.
+							//http://www.w3.org/TR/DOM-Level-3-Events/#widl-MouseEvent-initMouseEvent
+							var evt = document.createEvent("MouseEvents");
+							evt._dojo_click = true;
+							evt.initMouseEvent(type,
+								true, //bubbles
+								true, //cancelable
+								e.view,
+								e.detail,
+								src.screenX,
+								src.screenY,
+								src.clientX,
+								src.clientY,
+								e.ctrlKey,
+								e.altKey,
+								e.shiftKey,
+								e.metaKey,
+								0, //button
+								null //related target
+							);
+							return evt;
+						}
+						var mouseDownEvt = createMouseEvent("mousedown");
+						var mouseUpEvt = createMouseEvent("mouseup");
+						var clickEvt = createMouseEvent("click");
+
 						setTimeout(function(){
+							on.emit(target, "mousedown", mouseDownEvt);
+							on.emit(target, "mouseup", mouseUpEvt);
 							on.emit(target, "click", clickEvt);
 
 							// refresh clickTime in case app-defined click handler took a long time to run
@@ -28557,16 +29730,29 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 						// sent shortly after ours, similar to what is done in dualEvent.
 						// The INPUT.dijitOffScreen test is for offscreen inputs used in dijit/form/Button, on which
 						// we call click() explicitly, we don't want to stop this event.
-							if(!e._dojo_click &&
+						var target = e.target;
+						if(clickTracker && !e._dojo_click &&
 								(new Date()).getTime() <= clickTime + 1000 &&
-								!(e.target.tagName == "INPUT" && domClass.contains(e.target, "dijitOffScreen"))){
+								!(target.tagName == "INPUT" && domClass.contains(target, "dijitOffScreen"))){
 							e.stopPropagation();
 							e.stopImmediatePropagation && e.stopImmediatePropagation();
-							if(type == "click" && (e.target.tagName != "INPUT" || e.target.type == "radio" || e.target.type == "checkbox")
-								&& e.target.tagName != "TEXTAREA" && e.target.tagName != "AUDIO" && e.target.tagName != "VIDEO"){
-								 // preventDefault() breaks textual <input>s on android, keyboard doesn't popup,
-								 // but it is still needed for checkboxes and radio buttons, otherwise in some cases
-								 // the checked state becomes inconsistent with the widget's state
+							if(type == "click" &&
+								(target.tagName != "INPUT" ||
+								(target.type == "radio" &&
+									// #18352 Do not preventDefault for radios that are not dijit or
+									// dojox/mobile widgets.
+									// (The CSS class dijitCheckBoxInput holds for both checkboxes and radio buttons.)
+									(domClass.contains(target, "dijitCheckBoxInput") ||
+										domClass.contains(target, "mblRadioButton"))) ||
+								(target.type == "checkbox" &&
+									// #18352 Do not preventDefault for checkboxes that are not dijit or
+									// dojox/mobile widgets.
+									(domClass.contains(target, "dijitCheckBoxInput") ||
+										domClass.contains(target, "mblCheckBox")))) &&
+								target.tagName != "TEXTAREA" && target.tagName != "AUDIO" && target.tagName != "VIDEO"){
+								// preventDefault() breaks textual <input>s on android, keyboard doesn't popup,
+								// but it is still needed for checkboxes and radio buttons, otherwise in some cases
+								// the checked state becomes inconsistent with the widget's state
 								e.preventDefault();
 							}
 						}
@@ -28585,107 +29771,109 @@ function(dojo, aspect, dom, domClass, lang, on, has, mouse, domReady, win){
 
 	var hoveredNode;
 
-	if(hasPointer){
-		 // MSPointer (IE10+) already has support for over and out, so we just need to init click support
-		domReady(function(){
-			win.doc.addEventListener(pointer.down, function(evt){
-				doClicks(evt, pointer.move, pointer.up);
-			}, true);
-		});
-	}else if(hasTouch){
-		domReady(function(){
-			// Keep track of currently hovered node
-			hoveredNode = win.body();	// currently hovered node
+	if(has("touch")){
+		if(hasPointer){
+			// MSPointer (IE10+) already has support for over and out, so we just need to init click support
+			domReady(function(){
+				win.doc.addEventListener(pointer.down, function(evt){
+					doClicks(evt, pointer.move, pointer.up);
+				}, true);
+			});
+		}else{
+			domReady(function(){
+				// Keep track of currently hovered node
+				hoveredNode = win.body();	// currently hovered node
 
-			win.doc.addEventListener("touchstart", function(evt){
-					lastTouch = (new Date()).getTime();
+				win.doc.addEventListener("touchstart", function(evt){
+						lastTouch = (new Date()).getTime();
 
-				// Precede touchstart event with touch.over event.  DnD depends on this.
-				// Use addEventListener(cb, true) to run cb before any touchstart handlers on node run,
-				// and to ensure this code runs even if the listener on the node does event.stop().
-				var oldNode = hoveredNode;
-				hoveredNode = evt.target;
-				on.emit(oldNode, "dojotouchout", {
-					relatedTarget: hoveredNode,
-					bubbles: true
-				});
-				on.emit(hoveredNode, "dojotouchover", {
-					relatedTarget: oldNode,
-					bubbles: true
-				});
+					// Precede touchstart event with touch.over event.  DnD depends on this.
+					// Use addEventListener(cb, true) to run cb before any touchstart handlers on node run,
+					// and to ensure this code runs even if the listener on the node does event.stop().
+					var oldNode = hoveredNode;
+					hoveredNode = evt.target;
+					on.emit(oldNode, "dojotouchout", {
+						relatedTarget: hoveredNode,
+						bubbles: true
+					});
+					on.emit(hoveredNode, "dojotouchover", {
+						relatedTarget: oldNode,
+						bubbles: true
+					});
 
-				doClicks(evt, "touchmove", "touchend"); // init click generation
-			}, true);
+					doClicks(evt, "touchmove", "touchend"); // init click generation
+				}, true);
 
-			function copyEventProps(evt){
-				// Make copy of event object and also set bubbles:true.  Used when calling on.emit().
-				var props = lang.delegate(evt, {
-					bubbles: true
-				});
+				function copyEventProps(evt){
+					// Make copy of event object and also set bubbles:true.  Used when calling on.emit().
+					var props = lang.delegate(evt, {
+						bubbles: true
+					});
 
-				if(has("ios") >= 6){
-					// On iOS6 "touches" became a non-enumerable property, which
-					// is not hit by for...in.  Ditto for the other properties below.
-					props.touches = evt.touches;
-					props.altKey = evt.altKey;
-					props.changedTouches = evt.changedTouches;
-					props.ctrlKey = evt.ctrlKey;
-					props.metaKey = evt.metaKey;
-					props.shiftKey = evt.shiftKey;
-					props.targetTouches = evt.targetTouches;
-				}
-
-				return props;
-			}
-
-			on(win.doc, "touchmove", function(evt){
-				lastTouch = (new Date()).getTime();
-
-				var newNode = win.doc.elementFromPoint(
-					evt.pageX - (ios4 ? 0 : win.global.pageXOffset), // iOS 4 expects page coords
-					evt.pageY - (ios4 ? 0 : win.global.pageYOffset)
-				);
-
-				if(newNode){
-					// Fire synthetic touchover and touchout events on nodes since the browser won't do it natively.
-					if(hoveredNode !== newNode){
-						// touch out on the old node
-						on.emit(hoveredNode, "dojotouchout", {
-							relatedTarget: newNode,
-							bubbles: true
-						});
-
-						// touchover on the new node
-						on.emit(newNode, "dojotouchover", {
-							relatedTarget: hoveredNode,
-							bubbles: true
-						});
-
-						hoveredNode = newNode;
+					if(has("ios") >= 6){
+						// On iOS6 "touches" became a non-enumerable property, which
+						// is not hit by for...in.  Ditto for the other properties below.
+						props.touches = evt.touches;
+						props.altKey = evt.altKey;
+						props.changedTouches = evt.changedTouches;
+						props.ctrlKey = evt.ctrlKey;
+						props.metaKey = evt.metaKey;
+						props.shiftKey = evt.shiftKey;
+						props.targetTouches = evt.targetTouches;
 					}
 
-					// Unlike a listener on "touchmove", on(node, "dojotouchmove", listener) fires when the finger
-					// drags over the specified node, regardless of which node the touch started on.
-					if(!on.emit(newNode, "dojotouchmove", copyEventProps(evt))){
-						// emit returns false when synthetic event "dojotouchmove" is cancelled, so we prevent the
-						// default behavior of the underlying native event "touchmove".
-						evt.preventDefault();
-					}
+					return props;
 				}
-			});
 
-			// Fire a dojotouchend event on the node where the finger was before it was removed from the screen.
-			// This is different than the native touchend, which fires on the node where the drag started.
-			on(win.doc, "touchend", function(evt){
+				on(win.doc, "touchmove", function(evt){
 					lastTouch = (new Date()).getTime();
-				var node = win.doc.elementFromPoint(
-					evt.pageX - (ios4 ? 0 : win.global.pageXOffset), // iOS 4 expects page coords
-					evt.pageY - (ios4 ? 0 : win.global.pageYOffset)
-				) || win.body(); // if out of the screen
 
-				on.emit(node, "dojotouchend", copyEventProps(evt));
+					var newNode = win.doc.elementFromPoint(
+						evt.pageX - (ios4 ? 0 : win.global.pageXOffset), // iOS 4 expects page coords
+						evt.pageY - (ios4 ? 0 : win.global.pageYOffset)
+					);
+
+					if(newNode){
+						// Fire synthetic touchover and touchout events on nodes since the browser won't do it natively.
+						if(hoveredNode !== newNode){
+							// touch out on the old node
+							on.emit(hoveredNode, "dojotouchout", {
+								relatedTarget: newNode,
+								bubbles: true
+							});
+
+							// touchover on the new node
+							on.emit(newNode, "dojotouchover", {
+								relatedTarget: hoveredNode,
+								bubbles: true
+							});
+
+							hoveredNode = newNode;
+						}
+
+						// Unlike a listener on "touchmove", on(node, "dojotouchmove", listener) fires when the finger
+						// drags over the specified node, regardless of which node the touch started on.
+						if(!on.emit(newNode, "dojotouchmove", copyEventProps(evt))){
+							// emit returns false when synthetic event "dojotouchmove" is cancelled, so we prevent the
+							// default behavior of the underlying native event "touchmove".
+							evt.preventDefault();
+						}
+					}
+				});
+
+				// Fire a dojotouchend event on the node where the finger was before it was removed from the screen.
+				// This is different than the native touchend, which fires on the node where the drag started.
+				on(win.doc, "touchend", function(evt){
+						lastTouch = (new Date()).getTime();
+					var node = win.doc.elementFromPoint(
+						evt.pageX - (ios4 ? 0 : win.global.pageXOffset), // iOS 4 expects page coords
+						evt.pageY - (ios4 ? 0 : win.global.pageYOffset)
+					) || win.body(); // if out of the screen
+
+					on.emit(node, "dojotouchend", copyEventProps(evt));
+				});
 			});
-		});
+		}
 	}
 
 	//device neutral events - touch.press|move|release|cancel/over/out
@@ -29330,17 +30518,17 @@ define([
 });
 
 },
-'url:dijit/form/templates/Button.html':"<span class=\"dijit dijitReset dijitInline\" role=\"presentation\"\n\t><span class=\"dijitReset dijitInline dijitButtonNode\"\n\t\tdata-dojo-attach-event=\"ondijitclick:__onClick\" role=\"presentation\"\n\t\t><span class=\"dijitReset dijitStretch dijitButtonContents\"\n\t\t\tdata-dojo-attach-point=\"titleNode,focusNode\"\n\t\t\trole=\"button\" aria-labelledby=\"${id}_label\"\n\t\t\t><span class=\"dijitReset dijitInline dijitIcon\" data-dojo-attach-point=\"iconNode\"></span\n\t\t\t><span class=\"dijitReset dijitToggleButtonIconChar\">&#x25CF;</span\n\t\t\t><span class=\"dijitReset dijitInline dijitButtonText\"\n\t\t\t\tid=\"${id}_label\"\n\t\t\t\tdata-dojo-attach-point=\"containerNode\"\n\t\t\t></span\n\t\t></span\n\t></span\n\t><input ${!nameAttrSetting} type=\"${type}\" value=\"${value}\" class=\"dijitOffScreen\"\n\t\tdata-dojo-attach-event=\"onclick:_onClick\"\n\t\ttabIndex=\"-1\" role=\"presentation\" aria-hidden=\"true\" data-dojo-attach-point=\"valueNode\"\n/></span>\n",
+'url:dijit/form/templates/Button.html':"<span class=\"dijit dijitReset dijitInline\" role=\"presentation\"\n\t><span class=\"dijitReset dijitInline dijitButtonNode\"\n\t\tdata-dojo-attach-event=\"ondijitclick:__onClick\" role=\"presentation\"\n\t\t><span class=\"dijitReset dijitStretch dijitButtonContents\"\n\t\t\tdata-dojo-attach-point=\"titleNode,focusNode\"\n\t\t\trole=\"button\" aria-labelledby=\"${id}_label\"\n\t\t\t><span class=\"dijitReset dijitInline dijitIcon\" data-dojo-attach-point=\"iconNode\"></span\n\t\t\t><span class=\"dijitReset dijitToggleButtonIconChar\">&#x25CF;</span\n\t\t\t><span class=\"dijitReset dijitInline dijitButtonText\"\n\t\t\t\tid=\"${id}_label\"\n\t\t\t\tdata-dojo-attach-point=\"containerNode\"\n\t\t\t></span\n\t\t></span\n\t></span\n\t><input ${!nameAttrSetting} type=\"${type}\" value=\"${value}\" class=\"dijitOffScreen\"\n\t\tdata-dojo-attach-event=\"onclick:_onClick\"\n\t\ttabIndex=\"-1\" aria-hidden=\"true\" data-dojo-attach-point=\"valueNode\"\n/></span>\n",
 'url:dijit/templates/MenuItem.html':"<tr class=\"dijitReset\" data-dojo-attach-point=\"focusNode\" role=\"menuitem\" tabIndex=\"-1\">\n\t<td class=\"dijitReset dijitMenuItemIconCell\" role=\"presentation\">\n\t\t<span role=\"presentation\" class=\"dijitInline dijitIcon dijitMenuItemIcon\" data-dojo-attach-point=\"iconNode\"></span>\n\t</td>\n\t<td class=\"dijitReset dijitMenuItemLabel\" colspan=\"2\" data-dojo-attach-point=\"containerNode,textDirNode\"\n\t\trole=\"presentation\"></td>\n\t<td class=\"dijitReset dijitMenuItemAccelKey\" style=\"display: none\" data-dojo-attach-point=\"accelKeyNode\"></td>\n\t<td class=\"dijitReset dijitMenuArrowCell\" role=\"presentation\">\n\t\t<span data-dojo-attach-point=\"arrowWrapper\" style=\"visibility: hidden\">\n\t\t\t<span class=\"dijitInline dijitIcon dijitMenuExpand\"></span>\n\t\t\t<span class=\"dijitMenuExpandA11y\">+</span>\n\t\t</span>\n\t</td>\n</tr>\n",
 'url:dijit/form/templates/TextBox.html':"<div class=\"dijit dijitReset dijitInline dijitLeft\" id=\"widget_${id}\" role=\"presentation\"\n\t><div class=\"dijitReset dijitInputField dijitInputContainer\"\n\t\t><input class=\"dijitReset dijitInputInner\" data-dojo-attach-point='textbox,focusNode' autocomplete=\"off\"\n\t\t\t${!nameAttrSetting} type='${type}'\n\t/></div\n></div>\n",
 'url:dijit/form/templates/CheckBox.html':"<div class=\"dijit dijitReset dijitInline\" role=\"presentation\"\n\t><input\n\t \t${!nameAttrSetting} type=\"${type}\" role=\"${type}\" aria-checked=\"false\" ${checkedAttrSetting}\n\t\tclass=\"dijitReset dijitCheckBoxInput\"\n\t\tdata-dojo-attach-point=\"focusNode\"\n\t \tdata-dojo-attach-event=\"ondijitclick:_onClick\"\n/></div>\n",
 'url:dijit/form/templates/ValidationTextBox.html':"<div class=\"dijit dijitReset dijitInline dijitLeft\"\n\tid=\"widget_${id}\" role=\"presentation\"\n\t><div class='dijitReset dijitValidationContainer'\n\t\t><input class=\"dijitReset dijitInputField dijitValidationIcon dijitValidationInner\" value=\"&#935; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"presentation\"\n\t/></div\n\t><div class=\"dijitReset dijitInputField dijitInputContainer\"\n\t\t><input class=\"dijitReset dijitInputInner\" data-dojo-attach-point='textbox,focusNode' autocomplete=\"off\"\n\t\t\t${!nameAttrSetting} type='${type}'\n\t/></div\n></div>\n",
 'url:dijit/form/templates/Select.html':"<table class=\"dijit dijitReset dijitInline dijitLeft\"\n\tdata-dojo-attach-point=\"_buttonNode,tableNode,focusNode,_popupStateNode\" cellspacing='0' cellpadding='0'\n\trole=\"listbox\" aria-haspopup=\"true\"\n\t><tbody role=\"presentation\"><tr role=\"presentation\"\n\t\t><td class=\"dijitReset dijitStretch dijitButtonContents\" role=\"presentation\"\n\t\t\t><div class=\"dijitReset dijitInputField dijitButtonText\"  data-dojo-attach-point=\"containerNode,textDirNode\" role=\"presentation\"></div\n\t\t\t><div class=\"dijitReset dijitValidationContainer\"\n\t\t\t\t><input class=\"dijitReset dijitInputField dijitValidationIcon dijitValidationInner\" value=\"&#935; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"presentation\"\n\t\t\t/></div\n\t\t\t><input type=\"hidden\" ${!nameAttrSetting} data-dojo-attach-point=\"valueNode\" value=\"${value}\" aria-hidden=\"true\"\n\t\t/></td\n\t\t><td class=\"dijitReset dijitRight dijitButtonNode dijitArrowButton dijitDownArrowButton dijitArrowButtonContainer\"\n\t\t\tdata-dojo-attach-point=\"titleNode\" role=\"presentation\"\n\t\t\t><input class=\"dijitReset dijitInputField dijitArrowButtonInner\" value=\"&#9660; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"presentation\"\n\t\t\t\t${_buttonInputDisabled}\n\t\t/></td\n\t></tr></tbody\n></table>\n",
-'url:dijit/form/templates/DropDownBox.html':"<div class=\"dijit dijitReset dijitInline dijitLeft\"\n\tid=\"widget_${id}\"\n\trole=\"combobox\"\n\taria-haspopup=\"true\"\n\tdata-dojo-attach-point=\"_popupStateNode\"\n\t><div class='dijitReset dijitRight dijitButtonNode dijitArrowButton dijitDownArrowButton dijitArrowButtonContainer'\n\t\tdata-dojo-attach-point=\"_buttonNode\" role=\"presentation\"\n\t\t><input class=\"dijitReset dijitInputField dijitArrowButtonInner\" value=\"&#9660; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"button presentation\" aria-hidden=\"true\"\n\t\t\t${_buttonInputDisabled}\n\t/></div\n\t><div class='dijitReset dijitValidationContainer'\n\t\t><input class=\"dijitReset dijitInputField dijitValidationIcon dijitValidationInner\" value=\"&#935; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"presentation\"\n\t/></div\n\t><div class=\"dijitReset dijitInputField dijitInputContainer\"\n\t\t><input class='dijitReset dijitInputInner' ${!nameAttrSetting} type=\"text\" autocomplete=\"off\"\n\t\t\tdata-dojo-attach-point=\"textbox,focusNode\" role=\"textbox\"\n\t/></div\n></div>\n",
+'url:dijit/form/templates/DropDownBox.html':"<div class=\"dijit dijitReset dijitInline dijitLeft\"\n\tid=\"widget_${id}\"\n\trole=\"combobox\"\n\taria-haspopup=\"true\"\n\tdata-dojo-attach-point=\"_popupStateNode\"\n\t><div class='dijitReset dijitRight dijitButtonNode dijitArrowButton dijitDownArrowButton dijitArrowButtonContainer'\n\t\tdata-dojo-attach-point=\"_buttonNode\" role=\"presentation\"\n\t\t><input class=\"dijitReset dijitInputField dijitArrowButtonInner\" value=\"&#9660; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"button presentation\" aria-hidden=\"true\"\n\t\t\t${_buttonInputDisabled}\n\t/></div\n\t><div class='dijitReset dijitValidationContainer'\n\t\t><input class=\"dijitReset dijitInputField dijitValidationIcon dijitValidationInner\" value=\"&#935; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"presentation\"\n\t/></div\n\t><div class=\"dijitReset dijitInputField dijitInputContainer\"\n\t\t><input class='dijitReset dijitInputInner' ${!nameAttrSetting} type=\"${type}\" autocomplete=\"off\"\n\t\t\tdata-dojo-attach-point=\"textbox,focusNode\" role=\"textbox\"\n\t/></div\n></div>\n",
 'url:dijit/templates/Menu.html':"<table class=\"dijit dijitMenu dijitMenuPassive dijitReset dijitMenuTable\" role=\"menu\" tabIndex=\"${tabIndex}\"\n\t   cellspacing=\"0\">\n\t<tbody class=\"dijitReset\" data-dojo-attach-point=\"containerNode\"></tbody>\n</table>\n",
-'url:dijit/form/templates/DropDownButton.html':"<span class=\"dijit dijitReset dijitInline\"\n\t><span class='dijitReset dijitInline dijitButtonNode'\n\t\tdata-dojo-attach-event=\"ondijitclick:__onClick\" data-dojo-attach-point=\"_buttonNode\"\n\t\t><span class=\"dijitReset dijitStretch dijitButtonContents\"\n\t\t\tdata-dojo-attach-point=\"focusNode,titleNode,_arrowWrapperNode,_popupStateNode\"\n\t\t\trole=\"button\" aria-haspopup=\"true\" aria-labelledby=\"${id}_label\"\n\t\t\t><span class=\"dijitReset dijitInline dijitIcon\"\n\t\t\t\tdata-dojo-attach-point=\"iconNode\"\n\t\t\t></span\n\t\t\t><span class=\"dijitReset dijitInline dijitButtonText\"\n\t\t\t\tdata-dojo-attach-point=\"containerNode\"\n\t\t\t\tid=\"${id}_label\"\n\t\t\t></span\n\t\t\t><span class=\"dijitReset dijitInline dijitArrowButtonInner\"></span\n\t\t\t><span class=\"dijitReset dijitInline dijitArrowButtonChar\">&#9660;</span\n\t\t></span\n\t></span\n\t><input ${!nameAttrSetting} type=\"${type}\" value=\"${value}\" class=\"dijitOffScreen\" tabIndex=\"-1\"\n\t\tdata-dojo-attach-event=\"onclick:_onClick\"\n\t\tdata-dojo-attach-point=\"valueNode\" role=\"presentation\" aria-hidden=\"true\"\n/></span>\n",
+'url:dijit/form/templates/DropDownButton.html':"<span class=\"dijit dijitReset dijitInline\"\n\t><span class='dijitReset dijitInline dijitButtonNode'\n\t\tdata-dojo-attach-event=\"ondijitclick:__onClick\" data-dojo-attach-point=\"_buttonNode\"\n\t\t><span class=\"dijitReset dijitStretch dijitButtonContents\"\n\t\t\tdata-dojo-attach-point=\"focusNode,titleNode,_arrowWrapperNode,_popupStateNode\"\n\t\t\trole=\"button\" aria-haspopup=\"true\" aria-labelledby=\"${id}_label\"\n\t\t\t><span class=\"dijitReset dijitInline dijitIcon\"\n\t\t\t\tdata-dojo-attach-point=\"iconNode\"\n\t\t\t></span\n\t\t\t><span class=\"dijitReset dijitInline dijitButtonText\"\n\t\t\t\tdata-dojo-attach-point=\"containerNode\"\n\t\t\t\tid=\"${id}_label\"\n\t\t\t></span\n\t\t\t><span class=\"dijitReset dijitInline dijitArrowButtonInner\"></span\n\t\t\t><span class=\"dijitReset dijitInline dijitArrowButtonChar\">&#9660;</span\n\t\t></span\n\t></span\n\t><input ${!nameAttrSetting} type=\"${type}\" value=\"${value}\" class=\"dijitOffScreen\" tabIndex=\"-1\"\n\t\tdata-dojo-attach-event=\"onclick:_onClick\" data-dojo-attach-point=\"valueNode\" aria-hidden=\"true\"\n/></span>\n",
 'url:dijit/templates/Tooltip.html':"<div class=\"dijitTooltip dijitTooltipLeft\" id=\"dojoTooltip\" data-dojo-attach-event=\"mouseenter:onMouseEnter,mouseleave:onMouseLeave\"\n\t><div class=\"dijitTooltipConnector\" data-dojo-attach-point=\"connectorNode\"></div\n\t><div class=\"dijitTooltipContainer dijitTooltipContents\" data-dojo-attach-point=\"containerNode\" role='alert'></div\n></div>\n",
-'url:dijit/templates/Calendar.html':"<table cellspacing=\"0\" cellpadding=\"0\" class=\"dijitCalendarContainer\" role=\"grid\" aria-labelledby=\"${id}_mddb ${id}_year\" data-dojo-attach-point=\"gridNode\">\n\t<thead>\n\t\t<tr class=\"dijitReset dijitCalendarMonthContainer\" valign=\"top\">\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"decrementMonth\" scope=\"col\">\n\t\t\t\t<span class=\"dijitInline dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"></span>\n\t\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t\t</th>\n\t\t\t<th class='dijitReset' colspan=\"5\" scope=\"col\">\n\t\t\t\t<div data-dojo-attach-point=\"monthNode\">\n\t\t\t\t</div>\n\t\t\t</th>\n\t\t\t<th class='dijitReset dijitCalendarArrow' scope=\"col\" data-dojo-attach-point=\"incrementMonth\">\n\t\t\t\t<span class=\"dijitInline dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"></span>\n\t\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr role=\"row\">\n\t\t\t${!dayCellsHtml}\n\t\t</tr>\n\t</thead>\n\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"ondijitclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t${!dateRowsHtml}\n\t</tbody>\n\t<tfoot class=\"dijitReset dijitCalendarYearContainer\">\n\t\t<tr>\n\t\t\t<td class='dijitReset' valign=\"top\" colspan=\"7\" role=\"presentation\">\n\t\t\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t\t\t</div>\n\t\t\t</td>\n\t\t</tr>\n\t</tfoot>\n</table>\n",
+'url:dijit/templates/Calendar.html':"<div class=\"dijitCalendarContainer dijitInline\" role=\"presentation\" aria-labelledby=\"${id}_mddb ${id}_year\">\n\t<div class=\"dijitReset dijitCalendarMonthContainer\" role=\"presentation\">\n\t\t<div class='dijitReset dijitCalendarArrow dijitCalendarDecrementArrow' data-dojo-attach-point=\"decrementMonth\">\n\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"/>\n\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t</div>\n\t\t<div class='dijitReset dijitCalendarArrow dijitCalendarIncrementArrow' data-dojo-attach-point=\"incrementMonth\">\n\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"/>\n\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t</div>\n\t\t<div data-dojo-attach-point=\"monthNode\" class=\"dijitInline\"></div>\n\t</div>\n\t<table cellspacing=\"0\" cellpadding=\"0\" role=\"grid\" data-dojo-attach-point=\"gridNode\">\n\t\t<thead>\n\t\t\t<tr role=\"row\">\n\t\t\t\t${!dayCellsHtml}\n\t\t\t</tr>\n\t\t</thead>\n\t\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"ondijitclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t\t${!dateRowsHtml}\n\t\t</tbody>\n\t</table>\n\t<div class=\"dijitReset dijitCalendarYearContainer\" role=\"presentation\">\n\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t</div>\n\t</div>\n</div>\n",
 'url:dijit/templates/MenuSeparator.html':"<tr class=\"dijitMenuSeparator\" role=\"separator\">\n\t<td class=\"dijitMenuSeparatorIconCell\">\n\t\t<div class=\"dijitMenuSeparatorTop\"></div>\n\t\t<div class=\"dijitMenuSeparatorBottom\"></div>\n\t</td>\n\t<td colspan=\"3\" class=\"dijitMenuSeparatorLabelCell\">\n\t\t<div class=\"dijitMenuSeparatorTop dijitMenuSeparatorLabel\"></div>\n\t\t<div class=\"dijitMenuSeparatorBottom\"></div>\n\t</td>\n</tr>\n",
 '*now':function(r){r(['dojo/i18n!*preload*lsmb/nls/main*["ar","ca","cs","da","de","el","en-gb","en-us","es-es","fi-fi","fr-fr","he-il","hu","it-it","ja-jp","ko-kr","nl-nl","nb","pl","pt-br","pt-pt","ru","sk","sl","sv","th","tr","zh-tw","zh-cn","ROOT"]']);}
 }});

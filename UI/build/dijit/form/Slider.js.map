@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"Slider.js",
-"lineCount":2,
-"mappings":"A;AAAAA,MAAA,qBAA4B,mIAAA,MAAA,KAA5B,CAQG,QAAA,CAASC,CAAT,EAKFA,CAAAC,WAAA,kHALE,CARH;",
+"lineCount":4,
+"mappings":"A;AAAAA,MAAA,sBAA4B,mIAAA,MAAA,KAA5B,EAQG,QAAA,CAASC,CAAT;AAKFA,GAAAC,WAAA,oHALE;CARH;",
 "sources":["Slider.js.uncompressed.js"],
 "names":["define","kernel","deprecated"]
 }

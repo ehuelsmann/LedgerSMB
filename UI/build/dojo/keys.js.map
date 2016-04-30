@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"keys.js",
-"lineCount":3,
-"mappings":"A;AAAAA,MAAA,0CAAmD,QAAA,CAASC,CAAT,CAAeC,CAAf,QAK3CD,EAAAE,KAL2C,mEAiB3CD,CAAA,UAjB2C;iSA0ExCA,CAAA,OA1EwC,GA0EzBA,CAAA,OA1EyB,CA0EXA,CAAA,UA1EW,YAAnD;",
+"lineCount":5,
+"mappings":"A;AAAAA,MAAA,6CAAmD,QAAA,CAASC,CAAT,EAAeC,CAAf;QAK3CD,EAAAE,KAL2C,4EAiB3CD,CAAA,UAjB2C;4SA0ExCA,CAAA,OA1EwC,KA0EzBA,CAAA,OA1EyB,GA0EXA,CAAA,UA1EW;CAAnD;",
 "sources":["keys.js.uncompressed.js"],
 "names":["define","dojo","has","keys"]
 }

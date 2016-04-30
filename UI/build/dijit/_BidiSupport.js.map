@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"_BidiSupport.js",
-"lineCount":2,
-"mappings":"A;AAAAA,MAAA,kEAA4E,QAAA,CAASC,CAAT,CAAcC,CAAd,CAA2BC,CAA3B,EAa3ED,CAAAE,OAAA,CAAmBD,CAAnB,CAIAF,EAAAI,IAAA,gBAjB2E,OAmBpEH,EAnBoE,CAA5E;",
+"lineCount":6,
+"mappings":"A;AAAAA,MAAA,sEAA4E,QAAA,CAASC,CAAT,EAAcC,CAAd,EAA2BC,CAA3B;AAa3ED,GAAAE,OAAA,CAAmBD,CAAnB,CAIAF;GAAAI,IAAA,iBAjB2E;QAmBpEH,EAnBoE;CAA5E;",
 "sources":["_BidiSupport.js.uncompressed.js"],
 "names":["define","has","_WidgetBase","_BidiMixin","extend","add"]
 }

@@ -1,3 +1,4 @@
 //>>built
-define("dijit/nls/id/loading",{loadingState:"Memuatkan...",errorState:"Maaf, terjadi kesalahan"});
+define("dijit/nls/id/loading", {loadingState:"Memuatkan...", errorState:"Maaf, terjadi kesalahan"});
+
 //# sourceMappingURL=loading.js.map

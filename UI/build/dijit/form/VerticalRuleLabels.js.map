@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"VerticalRuleLabels.js",
-"lineCount":3,
-"mappings":"A;AAAAA,MAAA,iFAGG,QAAA,CAASC,CAAT,CAAkBC,CAAlB,QAKKD,EAAA,iCAAyCC,CAAzC,8UASSC,QAAAA,CAASC,CAATD,aAEHC,CAFGD,CATT;kBALL,CAHH;",
+"lineCount":6,
+"mappings":"A;AAAAA,MAAA,oFAGG,QAAA,CAASC,CAAT,EAAkBC,CAAlB;QAKKD,EAAA,kCAAyCC,CAAzC,kVASSC,QAAAA,CAASC,CAATD;iBAEHC,CAFGD;GATT,oBALL;CAHH;",
 "sources":["VerticalRuleLabels.js.uncompressed.js"],
 "names":["define","declare","HorizontalRuleLabels","_calcPosition","pos"]
 }

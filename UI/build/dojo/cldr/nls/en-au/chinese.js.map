@@ -2,7 +2,7 @@
 "version":3,
 "file":"chinese.js",
 "lineCount":3,
-"mappings":"A;AAAAA,MAAA,gCAGC,mBAHD,WAIC,wBAJD,aAKC,yBALD,cAMC,uBAND,aAOC,iBAPD,kBAQC,uBARD,aASC,uBATD,aAUC,mBAVD,aAWC,wBAXD,aAYC,sBAZD,SAaC,sBAbD,YAcC,iBAdD,YAeC,wBAfD,cAgBC,wBAhBD;AAiBC,kBAjBD,WAkBC,uBAlBD,aAmBC,uBAnBD,aAoBC,kBApBD,UAqBC,iBArBD,eAsBC,iBAtBD;",
+"mappings":"A;AAAAA,MAAA,iCAGC,mBAHD,YAIC,wBAJD,cAKC,yBALD,eAMC,uBAND,cAOC,iBAPD,mBAQC,uBARD,cASC,uBATD,cAUC,mBAVD,cAWC,wBAXD,cAYC,sBAZD,UAaC,sBAbD,aAcC,iBAdD,aAeC,wBAfD;AAgBC,wBAhBD,eAiBC,kBAjBD,YAkBC,uBAlBD,cAmBC,uBAnBD,cAoBC,kBApBD,WAqBC,iBArBD,gBAsBC,iBAtBD;",
 "sources":["chinese.js.uncompressed.js"],
 "names":["define"]
 }

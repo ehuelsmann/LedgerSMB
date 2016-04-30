@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"PopupMenuBarItem.js",
-"lineCount":2,
-"mappings":"A;AAAAA,MAAA,mFAIG,QAAA,CAASC,CAAT,CAAkBC,CAAlB,CAAiCC,CAAjC,QAOKF,EAAA,2BAAmCC,CAAnC,CAFiBC,CAAAC,kBAEjB,KAPL,CAJH;",
+"lineCount":4,
+"mappings":"A;AAAAA,MAAA,uFAIG,QAAA,CAASC,CAAT,EAAkBC,CAAlB,EAAiCC,CAAjC;QAOKF,EAAA,4BAAmCC,CAAnC,EAFiBC,CAAAC,kBAEjB,MAPL;CAJH;",
 "sources":["PopupMenuBarItem.js.uncompressed.js"],
 "names":["define","declare","PopupMenuItem","MenuBarItem","_MenuBarItemMixin"]
 }

@@ -2,7 +2,7 @@
 "version":3,
 "file":"japanese.js",
 "lineCount":3,
-"mappings":"A;AAAAA,MAAA,iCAGC,wBAHD,cAIC,uBAJD,aAKC,wBALD,cAMC,wBAND,aAOC,uBAPD,aAQC,uBARD,aASC,uBATD,aAUC,mBAVD,aAWC,uBAXD,aAYC,yBAZD,cAaC,iBAbD,oBAcC,sBAdD,SAeC,sBAfD;AAgBC,kBAhBD,iBAiBC,wBAjBD,aAkBC,iBAlBD;",
+"mappings":"A;AAAAA,MAAA,kCAGC,wBAHD,eAIC,uBAJD,cAKC,wBALD,eAMC,wBAND,cAOC,uBAPD,cAQC,uBARD,cASC,uBATD,cAUC,mBAVD,cAWC,uBAXD,cAYC,yBAZD,eAaC,iBAbD,qBAcC,sBAdD,UAeC,sBAfD;AAgBC,kBAhBD,kBAiBC,wBAjBD,cAkBC,iBAlBD;",
 "sources":["japanese.js.uncompressed.js"],
 "names":["define"]
 }

@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"Target.js",
-"lineCount":2,
-"mappings":"A;AAAAA,MAAA,kEAA8E,QAAA,CAASC,CAAT,CAAkBC,CAAlB,CAA4BC,CAA5B,QACtEF,EAAA,mBAA2BE,CAA3B,cAIOC,QAAAA,GAGZC,aAHYD,GAIZF,EAAAI,OAAA,CAAgBC,SAAhB,iBAJYH,CAJP,EADsE,CAA9E;",
+"lineCount":7,
+"mappings":"A;AAAAA,MAAA,sEAA8E,QAAA,CAASC,CAAT,EAAkBC,CAAlB,EAA4BC,CAA5B;QACtEF,EAAA,oBAA2BE,CAA3B,eAIOC,QAAAA;AAGZC,iBAHYD,KAIZF;KAAAI,OAAA,CAAgBC,SAAhB,kBAJYH;GAJP,EADsE;CAA9E;",
 "sources":["Target.js.uncompressed.js"],
 "names":["define","declare","domClass","Source","constructor","isSource","remove","node"]
 }

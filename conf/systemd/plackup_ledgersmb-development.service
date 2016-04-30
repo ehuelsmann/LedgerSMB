@@ -1,0 +1,24 @@
+[Unit]
+Description=LedgerSMB Plack
+After=network.target
+
+[Service]
+Restart=always
+User=www-data
+WorkingDirectory=WORKING_DIR
+Environment="LOG=/var/log/plack/plackup_ledgersmb-development.log"
+#
+ExecStart=/usr/bin/plackup           \
+    --host localhost                 \
+    --port 5001                      \
+    --daemonize                      \
+    --workers 5                      \
+    --access-log $LOG                \
+    --server HTTP::Server::PSGI      \
+    -I lib                           \
+    -E development                   \
+    -R bin,lib,lib/LedgerSMB/Request \
+    tools/starman-development.psgi
+
+[Install]
+WantedBy=multi-user.target

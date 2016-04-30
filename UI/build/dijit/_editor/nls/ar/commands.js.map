@@ -2,7 +2,7 @@
 "version":3,
 "file":"commands.js",
 "lineCount":8,
-"mappings":"A;AAAAA,MAAA,+GAKC,QALD;;;;;;;",
+"mappings":"A;AAAAA,MAAA,mHAKC,QALD;;;;;;;",
 "sources":["commands.js.uncompressed.js"],
 "names":["define"]
 }

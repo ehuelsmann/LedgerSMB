@@ -1,8 +1,8 @@
 {
 "version":3,
 "file":"browser.js",
-"lineCount":2,
-"mappings":"A;AAAGA,OAAAC,I,EACFD,OAAAC,IAAAC,IAAA,gCAEDC,OAAA,sBAA6B,6FAAA,MAAA,KAA7B,CAWU,QAAA,CAASC,CAAT,QAYFA,EAZE,CAXV;",
+"lineCount":5,
+"mappings":"A;AAAGA,OAAAC,I,IACFD,OAAAC,IAAAC,IAAA,iCAEDC;MAAA,uBAA6B,6FAAA,MAAA,KAA7B,EAWU,QAAA,CAASC,CAAT;QAYFA,EAZE;CAXV;",
 "sources":["browser.js.uncompressed.js"],
 "names":["require","has","add","define","dojo"]
 }

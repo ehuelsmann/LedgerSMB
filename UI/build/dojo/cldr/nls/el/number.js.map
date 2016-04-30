@@ -2,7 +2,7 @@
 "version":3,
 "file":"number.js",
 "lineCount":2,
-"mappings":"A;AAAAA,MAAA,kTAkBC,oBAlBD,kGAmBC,qBAnBD;",
+"mappings":"A;AAAAA,MAAA,kUAkBC,oBAlBD,mGAmBC,qBAnBD;",
 "sources":["number.js.uncompressed.js"],
 "names":["define"]
 }

@@ -2,7 +2,7 @@
 "version":3,
 "file":"currency.js",
 "lineCount":2,
-"mappings":"A;AAAAA,MAAA,mOAsBC,OAtBD,IAuBC,OAvBD,IAwBC,OAxBD,sBA4BC,OA5BD,0DAsCC,OAtCD,oDA+CC,SA/CD,IAgDC,OAhDD,IAiDC,OAjDD;",
+"mappings":"A;AAAAA,MAAA,mPAsBC,OAtBD,KAuBC,OAvBD,KAwBC,OAxBD,0BA4BC,OA5BD,oEAsCC,OAtCD,6DA+CC,SA/CD,KAgDC,OAhDD,KAiDC,OAjDD;",
 "sources":["currency.js.uncompressed.js"],
 "names":["define"]
 }

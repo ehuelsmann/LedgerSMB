@@ -2,7 +2,7 @@
 "version":3,
 "file":"generic.js",
 "lineCount":2,
-"mappings":"A;AAAAA,MAAA,gCAGC,wBAHD,oBAIC,kBAJD,iBAKC,sBALD,cAMC,oBAND,YAOC,mBAPD,SAQC,uBARD;",
+"mappings":"A;AAAAA,MAAA,iCAGC,wBAHD,qBAIC,kBAJD,kBAKC,sBALD,eAMC,oBAND,aAOC,mBAPD,UAQC,uBARD;",
 "sources":["generic.js.uncompressed.js"],
 "names":["define"]
 }

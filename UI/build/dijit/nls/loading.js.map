@@ -2,7 +2,7 @@
 "version":3,
 "file":"loading.js",
 "lineCount":2,
-"mappings":"A;AAAAA,MAAA,mGASA,OATA,0DAmBA,OAnBA;",
+"mappings":"A;AAAAA,MAAA,uGASA,OATA,oEAmBA,OAnBA;",
 "sources":["loading.js.uncompressed.js"],
 "names":["define"]
 }
