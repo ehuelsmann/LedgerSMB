@@ -6,11 +6,7 @@ After=network.target
 Restart=always
 User=www-data
 WorkingDirectory=WORKING_DIR
-Environment="LOG=/var/log/plackup_ledgersmb.log"
-#
-ExecStartPre=rm $LOG
-ExecStartPre=touch $LOG
-ExecStartPre=chmod 666 $LOG
+Environment="LOG=/var/log/plack/plackup_ledgersmb.log"
 #
 ExecStart=/usr/bin/plackup           \
     --host localhost                 \
