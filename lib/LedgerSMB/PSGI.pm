@@ -98,35 +98,47 @@ in LedgerSMB::Scripts::*.
 
 =cut
 
+use Data::Printer;
+sub _psgi_app {
+  my $env = shift;
+  warn p($env);
+  # Taken from CGI::Emulate::PSGI, to ease migration.
+  no warnings;
+  my $environment = {
+      GATEWAY_INTERFACE => 'CGI/1.1',
+      HTTPS => ( ( $env->{'psgi.url_scheme'} eq 'https' ) ? 'ON' : 'OFF' ),
+      SERVER_SOFTWARE => "CGI-Emulate-PSGI",
+      REMOTE_ADDR     => '127.0.0.1',
+      REMOTE_HOST     => 'localhost',
+      REMOTE_PORT     => int( rand(64000) + 1000 ),    # not in RFC 3875
+      ( map { $_ => $env->{$_} }
+        grep { !/^psgix?\./ && $_ ne "HTTP_PROXY" } keys %$env )
+  };
+  # End of CGI::Emulate::PSGI
+
+  local %ENV = ( %ENV, %$environment );
+  my $uri = $env->{REQUEST_URI};
+  local $ENV{SCRIPT_NAME} = $uri;
+
+  my $request = LedgerSMB->new();
+  $request->{action} ||= '__default';
+  my $locale = $request->{_locale};
+  $LedgerSMB::App_State::Locale = $locale;
+
+  # $request is really a global which should be stashed in the session.
+  $env->{request} = $request;
+  warn p($env);
+  return %ENV;
+}
 
 sub psgi_app {
     my $env = shift;
-
-    # Taken from CGI::Emulate::PSGI
-    no warnings;
-    my $environment = {
-        GATEWAY_INTERFACE => 'CGI/1.1',
-        HTTPS => ( ( $env->{'psgi.url_scheme'} eq 'https' ) ? 'ON' : 'OFF' ),
-        SERVER_SOFTWARE => "CGI-Emulate-PSGI",
-        REMOTE_ADDR     => '127.0.0.1',
-        REMOTE_HOST     => 'localhost',
-        REMOTE_PORT     => int( rand(64000) + 1000 ),    # not in RFC 3875
-        ( map { $_ => $env->{$_} }
-          grep { !/^psgix?\./ && $_ ne "HTTP_PROXY" } keys %$env )
-    };
-    # End of CGI::Emulate::PSGI
-
-    local %ENV = ( %ENV, %$environment );
-    my $uri = $env->{REQUEST_URI};
-    local $ENV{SCRIPT_NAME} = $uri;
-
-    my $request = LedgerSMB->new();
-    $request->{action} ||= '__default';
-    my $locale = $request->{_locale};
-    $LedgerSMB::App_State::Locale = $locale;
+    local %ENV = _psgi_app($env);
+    warn p($env);
 
     $ENV{SCRIPT_NAME} =~ m/([^\/\\]*)\.pl(\?.*)?$/;
     my $script = "LedgerSMB::Scripts::$1";
+    my $request = $env->{request};
     $request->{_script_handle} = $script;
 
     return [ 500,

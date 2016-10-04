@@ -1,4 +1,3 @@
-
 =pod
 
 =head1 NAME
@@ -28,6 +27,7 @@ use Try::Tiny;
 
 use strict;
 use warnings;
+use Carp;
 
 our $VERSION = 1.0;
 
@@ -90,6 +90,11 @@ If unsuccessful sends a 401 if the username/password is bad, or a 454 error
 if the database does not exist.
 
 =cut
+sub authenticator {
+    my( $username, $pass, $env ) = @_;
+    croak "Authenticator called";
+    $env->{'psgix.logger'}({ level => 'error', message => 'Hi' });
+}
 
 sub authenticate {
     my ($request) = @_;
@@ -99,34 +104,30 @@ sub authenticate {
         }
         $request->_db_init;
     }
-    my $path = $ENV{SCRIPT_NAME};
-    $path =~ s|[^/]*$||;
-
-    # if ($request->{dbh} && $request->{next}) {
-
-    #     print "Content-Type: text/html\n";
-    #     print "Set-Cookie: ${LedgerSMB::Sysconfig::cookie_name}=Login; path=$path\n";
-    #     print "Status: 302 Found\n";
-    #     print "Location: ".$path.$request->{next}."\n";
-    #     print "\n";
-    #     $request->finalize_request();
-    # }
-    # els
     if ($request->{dbh} and !$request->{log_out}){
 
         print "Content-Type: text/plain\n";
         LedgerSMB::Session::check($request->{cookie}, $request)
              unless $request->{dbonly};
-        print "Status: 200 Success\n\nSuccess\n";
+        return [
+          200,
+          [ 'Content-Type', 'text/plain'],
+          [ 'Success\n\n', 'Success\n' ]
+        ];
     }
     else {
         if (($request->{_auth_error} ) && ($request->{_auth_error} =~/$LedgerSMB::Sysconfig::no_db_str/i)){
-            print "Status: 454 Database Does Not Exist\n\n";
-            print "No message here";
+            return [
+              404,
+              [ 'Content-Type', 'text/plain'],
+              [ 'Database Does Not Exist\n\n', 'No message here' ]
+            ];
         } else {
-            print "WWW-Authenticate: Basic realm=\"LedgerSMB\"\n";
-            print "Status: 401 Unauthorized\n\n";
-            print "Please enter your credentials.\n";
+            return [
+              401,
+              [ 'Content-Type', 'text/plain'],
+              [ 'Unauthorized\n\n', 'Please enter your credentials.\n' ]
+            ];
         }
         $request->finalize_request();
     }

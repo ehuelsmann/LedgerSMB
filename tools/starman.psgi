@@ -23,8 +23,8 @@ use LedgerSMB::PSGI;
 use LedgerSMB::Sysconfig;
 use Plack::Builder;
 use Plack::App::File;
-use Plack::Middleware::Auth::Form;
 use Plack::Middleware::Log4perl;
+use Plack::Middleware::PSGIAuthForm;
 use Plack::Middleware::Redirect;
 #use Plack::Middleware::TemplateToolkit;
 # Optimization
@@ -56,17 +56,22 @@ my $psgi_app = \&LedgerSMB::PSGI::psgi_app;
 
 my $chi = CHI->new( driver => 'Memory', global => 1 );
 
+# Use your own Log4perl configuration
+use Log::Log4perl;
+Log::Log4perl::init(\$LedgerSMB::Sysconfig::log4perl_config);
+
 builder {
    enable 'Cache::CHI', chi => $chi, rules => [
       qr{\.(css|js)$}     => { expires_in => '15 min' },
       qr{\.(jpg|png)$}    => { expires_in => '1 year' },
    ], scrub => [ 'Set-Cookie' ], cachequeries => 1;
 
-    enable 'Log4perl', conf => $log4perl_config;
+    enable 'Log4perl';
     enable 'Session', store => 'File';
+    enable 'PSGIAuthForm';
 
     enable 'Redirect', url_patterns => [
-        qr/^\/?$/ => ['/login.pl',302]
+        qr/^\/?$/ => ['/login',302]
     ];
 
     enable match_if path(qr!.+\.(css|js|png|ico|jp(e)?g|gif)$!),
