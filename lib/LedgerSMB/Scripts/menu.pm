@@ -86,7 +86,7 @@ sub root_doc {
             template => 'main',
          format => 'HTML'
     );
-    $template->render($menu);
+    $template->render_to_psgi($menu);
 }
 
 =pod
@@ -128,7 +128,7 @@ sub expanding_menu {
          template => 'expanding',
          format => 'HTML',
     );
-    $template->render($menu);
+    $template->render_to_psgi($menu);
 }
 
 =pod
@@ -160,7 +160,7 @@ sub drilldown_menu {
          template => 'drilldown',
          format => 'HTML',
     );
-    $template->render($menu);
+    $template->render_to_psgi($menu);
 }
 
 =pod
