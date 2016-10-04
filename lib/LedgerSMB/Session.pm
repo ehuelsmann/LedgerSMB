@@ -23,8 +23,6 @@ use strict;
 use warnings;
 
 
-my $logger = Log::Log4perl->get_logger('LedgerSMB');
-
 =item check
 
 Checks to see if a session exists based on current logged in credentials.
@@ -38,18 +36,13 @@ sub check {
 
     my $path = ($ENV{SCRIPT_NAME});
     $path =~ s|[^/]*$||;
-    my $secure;
-   if (($cookie eq 'Login') or ($cookie =~ /^::/) or (!$cookie)){
+    if (($cookie eq 'Login') or ($cookie =~ /^::/) or (!$cookie)){
         return create($form);
     }
     my $timeout;
-
-
     my $dbh = $form->{dbh};
-
     my $checkQuery = $dbh->prepare(
         "SELECT * FROM session_check(?, ?)");
-
     my ($sessionID, $token, $company) = split(/:/, $cookie);
 
     $form->{company} ||= $company;
@@ -59,14 +52,12 @@ sub check {
     $sessionID =~ s/[^0-9]//g;
     $sessionID = int $sessionID;
 
-
     if ( !$form->{timeout} ) {
         $timeout = "1 day";
     }
     else {
         $timeout = "$form->{timeout} seconds";
     }
-
     $checkQuery->execute( $sessionID, $token)
       || $form->dberror(
         __FILE__ . ':' . __LINE__ . ': Looking for session: ' );
@@ -76,46 +67,29 @@ sub check {
 
     if ($sessionValid) {
 
+        my $login = $form->{login} =~ s/[^a-zA-Z0-9._+\@'-]//g;
 
-
-        my $login = $form->{login};
-
-        $login =~ s/[^a-zA-Z0-9._+\@'-]//g;
         if (( $session_ref ))
         {
-
-
-
-
             my $newCookieValue =
               $session_ref->{session_id} . ':' . $session_ref->{token} . ':' . $form->{company};
 
             #now update the cookie in the browser
-            if ($ENV{SERVER_PORT} == 443){
-                 $secure = ' Secure;';
-            }
-            else {
-                $secure = '';
-            }
-            print qq|Set-Cookie: ${LedgerSMB::Sysconfig::cookie_name}=$newCookieValue; path=$path;$secure\n|;
+            my $secure = $ENV{SERVER_PORT} == 443 ? ' Secure;' : '';
+            $form->{_new_session_cookie_value} =
+                qq|${LedgerSMB::Sysconfig::cookie_name}=$newCookieValue; path=$path;$secure|;
             return 1;
-
         }
         else {
-
             return 0;
         }
-
     }
     else {
 
         #cookie is not valid
         #delete the cookie in the browser
-            if ($ENV{SERVER_PORT} == 443){
-                 $secure = ' Secure;';
-            }
-            destroy($form);
-            LedgerSMB::Auth::credential_prompt;
+        destroy($form);
+        return 0;
     }
 }
 
@@ -128,16 +102,13 @@ etc.
 
 sub create {
     my ($lsmb) = @_;
-    my $path = ($ENV{SCRIPT_NAME});
-    my $secure;
-    $path =~ s|[^/]*$||;
+    my $path = $ENV{SCRIPT_NAME} =~ s|[^/]*$||;
     my $dbh = $lsmb->{dbh};
     my $login = $lsmb->{login};
     if (!$login) {
        my $creds = LedgerSMB::Auth::get_credentials;
        $login = $creds->{login};
     }
-
 
     if ( !$ENV{GATEWAY_INTERFACE} ) {
 
@@ -168,7 +139,7 @@ sub create {
       || $lsmb->dberror( __FILE__ . ':' . __LINE__ . ': Fetch login id: ' );
     my ( $userID ) = $fetchUserID->fetchrow_array;
     unless($userID) {
-        $logger->error(__FILE__ . ':' . __LINE__ . ": no such user: $login");
+        $ENV->{'psgix.logger'}->error(__FILE__ . ':' . __LINE__ . ": no such user: $login");
         LedgerSMB::Auth->http_error('401');#tshvr4
         return;#tshvr4?
     }
@@ -179,8 +150,7 @@ sub create {
 
 # I am changing this to use HTTP Basic Auth credentials for now.  -- CT
 
-    my $auth = $ENV{HTTP_AUTHORIZATION};
-    $auth =~ s/^Basic //i;
+    my $auth = $ENV{HTTP_AUTHORIZATION} =~ s/^Basic //i;
 
 #doing the random stuff in the db so that LedgerSMB won't
 #require a good random generator - maybe this should be reviewed,
@@ -205,19 +175,14 @@ sub create {
       || $lsmb->dberror(
         __FILE__ . ':' . __LINE__ . ': Reseed random generator: ' );
 
-
     my $newCookieValue = $newSessionID . ':' . $newToken . ':'
     . $lsmb->{company};
 
     #now set the cookie in the browser
     #TODO set domain from ENV, also set path to install path
-    if ($ENV{SERVER_PORT} == 443){
-         $secure = ' Secure;';
-    }
-    else {
-        $secure = '';
-    }
-    print qq|Set-Cookie: ${LedgerSMB::Sysconfig::cookie_name}=$newCookieValue; path=$path;$secure\n|;
+    my $secure = $ENV{SERVER_PORT} == 443 ?  ' Secure;' : '';
+    $lsmb->{_new_session_cookie_value} =
+        qq|${LedgerSMB::Sysconfig::cookie_name}=$newCookieValue; path=$path;$secure|;
     $lsmb->{LedgerSMB} = $newCookieValue;
 }
 
@@ -230,12 +195,8 @@ Destroys a session and removes it from the db.
 sub destroy {
 
     my ($form) = @_;
-    my $path = ($ENV{SCRIPT_NAME});
-    my $secure = '';
-    $path =~ s|[^/]*$||;
-
-    my $login = $form->{login};
-    $login =~ s/[^a-zA-Z0-9._+\@'-]//g;
+    my $path = $ENV{SCRIPT_NAME} =~ s|[^/]*$||;
+    my $login = $form->{login} =~ s/[^a-zA-Z0-9._+\@'-]//g;
 
     # use the central database handle
     my $dbh = $form->{dbh};
@@ -250,10 +211,9 @@ sub destroy {
         __FILE__ . ':' . __LINE__ . ': Delete from session: ' );
 
     #delete the cookie in the browser
-    if ($ENV{SERVER_PORT} == 443){
-         $secure = ' Secure;';
-    }
-    print qq|Set-Cookie: ${LedgerSMB::Sysconfig::cookie_name}=Login; path=$path;$secure\n|;
+    my $secure = $ENV{SERVER_PORT} == 443 ? ' Secure;' : '';
+    $form->{_new_session_cookie_value} =
+        qq|${LedgerSMB::Sysconfig::cookie_name}=Login; path=$path;$secure|;
     $dbh->commit; # called before anything else on the page, make sure the
                   # session is really gone.  -CT
 }
@@ -274,4 +234,3 @@ sub destroy {
 # with permission.  It is released under the GNU General Public License
 # Version 2 or, at your option, any later version.  See COPYRIGHT file for
 # details.
-
