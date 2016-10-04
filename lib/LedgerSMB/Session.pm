@@ -23,6 +23,7 @@ use strict;
 use warnings;
 
 
+
 =item check
 
 Checks to see if a session exists based on current logged in credentials.
@@ -40,9 +41,13 @@ sub check {
         return create($form);
     }
     my $timeout;
+
+
     my $dbh = $form->{dbh};
+
     my $checkQuery = $dbh->prepare(
         "SELECT * FROM session_check(?, ?)");
+
     my ($sessionID, $token, $company) = split(/:/, $cookie);
 
     $form->{company} ||= $company;
@@ -52,12 +57,14 @@ sub check {
     $sessionID =~ s/[^0-9]//g;
     $sessionID = int $sessionID;
 
+
     if ( !$form->{timeout} ) {
         $timeout = "1 day";
     }
     else {
         $timeout = "$form->{timeout} seconds";
     }
+
     $checkQuery->execute( $sessionID, $token)
       || $form->dberror(
         __FILE__ . ':' . __LINE__ . ': Looking for session: ' );
@@ -69,8 +76,13 @@ sub check {
 
         my $login = $form->{login} =~ s/[^a-zA-Z0-9._+\@'-]//g;
 
+
         if (( $session_ref ))
         {
+
+
+
+
             my $newCookieValue =
               $session_ref->{session_id} . ':' . $session_ref->{token} . ':' . $form->{company};
 
@@ -79,10 +91,13 @@ sub check {
             $form->{_new_session_cookie_value} =
                 qq|${LedgerSMB::Sysconfig::cookie_name}=$newCookieValue; path=$path;$secure|;
             return 1;
+
         }
         else {
+
             return 0;
         }
+
     }
     else {
 
@@ -109,6 +124,7 @@ sub create {
        my $creds = LedgerSMB::Auth::get_credentials;
        $login = $creds->{login};
     }
+
 
     if ( !$ENV{GATEWAY_INTERFACE} ) {
 
@@ -175,6 +191,7 @@ sub create {
       || $lsmb->dberror(
         __FILE__ . ':' . __LINE__ . ': Reseed random generator: ' );
 
+
     my $newCookieValue = $newSessionID . ':' . $newToken . ':'
     . $lsmb->{company};
 
@@ -234,3 +251,4 @@ sub destroy {
 # with permission.  It is released under the GNU General Public License
 # Version 2 or, at your option, any later version.  See COPYRIGHT file for
 # details.
+
