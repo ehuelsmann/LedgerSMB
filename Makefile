@@ -396,13 +396,13 @@ fbsd_feature_OpenOffice:
 #   make cpan
 #       installs any remaining perl dependancies using cpanm
 cpan:
-	cpanm --quiet --notest --with-feature=starman --installdeps .
+	cpanm --sudo --quiet --notest --with-feature=starman --installdeps .
 
 
 #   make feature_PDF
 #       Install system and cpan packages for generating PDF/Postscript output
 feature_PDF: $(OS_feature_PDF)
-	cpanm --quiet --notest --with-feature=latex-pdf-ps --with-feature=latex-pdf-images --installdeps .
+	cpanm --sudo --quiet --notest --with-feature=latex-pdf-ps --with-feature=latex-pdf-images --installdeps .
 
 #   make feature_PDF_utf8
 #       Install system and cpan packages for UTF8 ouput in PDF/Postscript output
@@ -411,7 +411,7 @@ feature_PDF_utf8: $(OS_feature_PDF_utf8) feature_PDF
 #   make feature_OpenOffice
 #       Install system and cpan packages for generating OpenOffice output
 feature_OpenOffice: $(OS_feature_OpenOffice)
-	cpanm --quiet --notest --with-feature=openoffice --installdeps .
+	cpanm --sudo --quiet --notest --with-feature=openoffice --installdeps .
 
 
 postgres_user:

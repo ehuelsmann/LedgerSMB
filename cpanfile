@@ -33,10 +33,11 @@ requires 'PGObject::Util::DBMethod';
 requires 'PGObject::Util::DBAdmin', '0.09';
 requires 'Plack::App::File';
 requires 'Plack::Builder';
-requires 'Plack::Middleware::ConditionalGET'; # YLA
 requires 'Plack::Builder::Conditionals'; # YLA
+requires 'Plack::Middleware::ConditionalGET'; # YLA
 requires 'Plack::Middleware::Redirect';
 requires 'Template', '2.14';
+requires 'Plack::Middleware::XSRFBlock';
 requires 'Template::Parser';
 requires 'Template::Provider';
 requires 'Try::Tiny';
