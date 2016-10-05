@@ -101,7 +101,8 @@ in LedgerSMB::Scripts::*.
 sub psgi_app {
     my $env = shift;
     # Taken from CGI::Emulate::PSGI, to ease migration.
-    no warnings;
+    #no warnings;
+    local *STDIN = $env->{'psgi.input'};
     my $environment = {
         GATEWAY_INTERFACE => 'CGI/1.1',
         HTTPS => ( ( $env->{'psgi.url_scheme'} eq 'https' ) ? 'ON' : 'OFF' ),
@@ -115,8 +116,6 @@ sub psgi_app {
     # End of CGI::Emulate::PSGI
 
     local %ENV = ( %ENV, %$environment );
-    my $uri = $env->{REQUEST_URI};
-    local $ENV{SCRIPT_NAME} = $uri;
 
     my $request = LedgerSMB->new($env);
     $request->{action} ||= '__default';
@@ -126,7 +125,7 @@ sub psgi_app {
     # $request is really a global which should be stashed in the session.
     $env->{request} = $request;
 
-    $ENV{SCRIPT_NAME} =~ m/([^\/\\]*)\.pl(\?.*)?$/;
+    $ENV{SCRIPT_NAME} =~ m/([^\/\\\?]*)\.pl$/;
     my $script = "LedgerSMB::Scripts::$1";
     $request->{_script_handle} = $script;
 
@@ -179,7 +178,7 @@ sub psgi_app {
         }
 
         $LedgerSMB::App_State::DBH = $request->{dbh};
-        ($status, $headers, $body) = @{&$action($request,$env)};
+        ($status, $headers, $body) = @{&$action($request,$env)->finalize};
 
         $request->{dbh}->commit if defined $request->{dbh};
         LedgerSMB::App_State->cleanup();
