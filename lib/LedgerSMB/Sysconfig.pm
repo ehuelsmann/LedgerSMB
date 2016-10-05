@@ -328,7 +328,7 @@ for (sort $cfg->Parameters('log4perl_config_modules_loglevel')){
 }
 # Log4perl configuration
 our $log4perl_config = qq(
-    log4perl.rootlogger = $LedgerSMB::Sysconfig::log_level, Basic, Debug
+    log4perl.rootlogger = $LedgerSMB::Sysconfig::log_level, Basic, Debug, DebugPanel
     )
     .
     $modules_loglevel_overrides

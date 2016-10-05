@@ -25,7 +25,6 @@ use LedgerSMB::Sysconfig;
 use Plack::Builder;
 use Plack::App::File;
 use Plack::Middleware::Log4perl;
-use Plack::Middleware::PSGIAuthForm;
 use Plack::Middleware::Redirect;
 #use Plack::Middleware::TemplateToolkit;
 # Optimization
@@ -34,7 +33,8 @@ use Plack::Middleware::ETag;
 use Plack::Middleware::ConditionalGET;
 use Plack::Builder::Conditionals;
 # Development specific
-use Plack::Middleware::Debug::Log4perl;
+require Plack::Middleware::Debug::Log4perl
+    if ( $ENV{PLACK_ENV} && $ENV{PLACK_ENV} eq 'development' );
 
 require Plack::Middleware::Pod
     if ( $ENV{PLACK_ENV} && $ENV{PLACK_ENV} eq 'development' );
@@ -69,17 +69,16 @@ builder {
 
     enable 'Log4perl';
     enable 'Session', store => 'File';
-    enable 'PSGIAuthForm';
 
     enable 'Redirect', url_patterns => [
-        qr/^\/?$/ => ['/login',302]
+        qr/^\/?$/ => ['/login.pl',302]
     ];
 
     enable match_if path(qr!.+\.(css|js|png|ico|jp(e)?g|gif)$!),
         'ConditionalGET';
 
-    enable "Plack::Middleware::ETag",
-        file_etag => [qw/inode mtime size/];
+#    enable "Plack::Middleware::ETag",
+#        file_etag => [qw/inode mtime size/];
 
     enable 'ContentLength';
 
