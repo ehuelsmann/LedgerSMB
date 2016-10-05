@@ -33,6 +33,9 @@ use Plack::Middleware::ETag;
 use Plack::Middleware::ConditionalGET;
 use Plack::Builder::Conditionals;
 # Development specific
+require Plack::Middleware::StackTrace
+if ( $ENV{PLACK_ENV} && $ENV{PLACK_ENV} eq 'development' );
+
 require Plack::Middleware::Debug::Log4perl
     if ( $ENV{PLACK_ENV} && $ENV{PLACK_ENV} eq 'development' );
 
@@ -57,15 +60,15 @@ my $psgi_app = \&LedgerSMB::PSGI::psgi_app;
 
 my $chi = CHI->new( driver => 'Memory', global => 1 );
 
-# Use your own Log4perl configuration
+# Use our own Log4perl configuration
 use Log::Log4perl;
 Log::Log4perl::init(\$LedgerSMB::Sysconfig::log4perl_config);
 
 builder {
-   enable 'Cache::CHI', chi => $chi, rules => [
-      qr{\.(css|js)$}     => { expires_in => '15 min' },
-      qr{\.(jpg|png)$}    => { expires_in => '1 year' },
-   ], scrub => [ 'Set-Cookie' ], cachequeries => 1;
+#   enable 'Cache::CHI', chi => $chi, rules => [
+#      qr{\.(css|js)$}     => { expires_in => '15 min' },
+#      qr{\.(jpg|png)$}    => { expires_in => '1 year' },
+#   ], scrub => [ 'Set-Cookie' ], cachequeries => 1;
 
     enable 'Log4perl';
     enable 'Session', store => 'File';
@@ -84,11 +87,11 @@ builder {
 
 # Cool Debug Panel.
     enable 'Debug',  panels => [
-# The commented parameters aren't very usefull
+            # The commented parameters aren't very usefull
             qw(Parameters Environment Response Log4perl Session),   # Timer Memory ModuleVersions PerlConfig
-# Profiler is very nice but VERY costly
-#              [ 'Profiler::NYTProf', exclude => [qw(.*\.css .*\.png .*\.ico .*\.js .*\.gif)], minimal => 1 ],
-# Dancer not yet there.
+            # Profiler is very nice but VERY costly
+#           [ 'Profiler::NYTProf', exclude => [qw(.*\.css .*\.png .*\.ico .*\.js .*\.gif)], minimal => 1 ],
+            # Dancer not yet there.
 #           qw/Dancer::Settings Dancer::Logger Dancer::Version/
     ] if $ENV{PLACK_ENV} =~ "development";
 
@@ -101,23 +104,25 @@ builder {
     # old code had: print qq|Set-Cookie: $cookie_name=Login; path=$path;$secure\n|;
     # my $path = $ENV{SCRIPT_NAME} =~ s|[^/]*$||;
     # XSRFBlock uses '/' as path
-    enable 'XSRFBlock',
-        parameter_name          => 'xsrf_token',
-        cookie_name             => $LedgerSMB::Sysconfig::cookie_name,
-        cookie_options          => { secure => $ENV{SERVER_PORT} == 443 ? 1 : 0},
-        cookie_expiry_seconds   => (3 * 60 * 60),
-        token_per_request       => 0,
-        meta_tag                => undef,
-        inject_form_input       => 1,
-        header_name             => undef,
-        secret                  => undef,
-        blocked                 => sub {
-                                    return [ $status, $headers, $body ]
-                                };
+#    enable 'XSRFBlock',
+#        parameter_name          => 'xsrf_token',
+#        cookie_name             => $LedgerSMB::Sysconfig::cookie_name,
+#        cookie_options          => { secure => $ENV{SERVER_PORT} == 443 ? 1 : 0},
+#        cookie_expiry_seconds   => (3 * 60 * 60),
+#        token_per_request       => 0,
+#        meta_tag                => undef,
+#        inject_form_input       => 1,
+#        header_name             => undef,
+#        secret                  => undef,
+#        blocked                 => sub {
+#                                    return [ $status, $headers, $body ]
+#                                };
 
 #    enable 'TemplateToolkit',
 #        INCLUDE_PATH => 'UI',     # required
 #        pass_through => 1;        # delegate missing templates to $app
+
+    enable 'StackTrace';
 
     mount '/rest/' => LedgerSMB::PSGI::rest_app();
 
@@ -128,6 +133,7 @@ builder {
              'is.pl', 'oe.pl', 'pe.pl');
 
     mount "/account.pl" => $psgi_app;
+    mount "/login.pl"   => $psgi_app;
 
     mount "/$_" => $new_app
         for  (@LedgerSMB::Sysconfig::newscripts);

@@ -38,14 +38,14 @@ to the drilldown_menu.  Otherwise, it routes to expanding_menu.
 =cut
 
 sub __default {
-    my ($request) = @_;
+    my ($request, $env) = @_;
     if ($request->{new}){
-        root_doc($request);
+        root_doc($request, $env);
     }
     if ($request->{menubar}){
-        drilldown_menu($request);
+        drilldown_menu($request, $env);
     } else {
-        expanding_menu($request);
+        expanding_menu($request, $env);
     }
 }
 
@@ -64,11 +64,10 @@ creates the root document.
 =cut
 
 sub root_doc {
-    my ($request) = @_;
-    my $template;
+    my ($request, $env) = @_;
 
     $request->{title} = "LedgerSMB $request->{VERSION} -- ".
-    "$request->{login} -- $request->{company}";
+                        "$request->{login} -- $request->{company}";
 
     my $menu = LedgerSMB::DBObject::Menu->new({base => $request});
     $menu->generate();
@@ -79,7 +78,7 @@ sub root_doc {
         }
     }
 
-    $template = LedgerSMB::Template->new(
+    my $template = LedgerSMB::Template->new(
             user =>$request->{_user},
             locale => $request->{_locale},
             path => 'UI',
@@ -104,14 +103,13 @@ there nodes which are supposed to be open are marked.
 =cut
 
 sub expanding_menu {
-    my ($request) = @_;
+    my ($request, $env) = @_;
     if ($request->{'open'} !~ s/:$request->{id}:/:/){
-    $request->{'open'} .= ":$request->{id}:";
+        $request->{'open'} .= ":$request->{id}:";
     }
 
     # The above system can lead to extra colons.
     $request->{'open'} =~ s/:+/:/g;
-
 
     my $menu = LedgerSMB::DBObject::Menu->new({base => $request});
     $menu->generate();
@@ -147,7 +145,7 @@ the like).
 =cut
 
 sub drilldown_menu {
-    my ($request) = @_;
+    my ($request, $env) = @_;
     my $menu = LedgerSMB::DBObject::Menu->new({base => $request});
 
     $menu->{parent_id} ||= 0;

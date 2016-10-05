@@ -98,48 +98,39 @@ in LedgerSMB::Scripts::*.
 
 =cut
 
-use Data::Printer;
-sub _psgi_app {
-  my $env = shift;
-  warn p($env);
-  # Taken from CGI::Emulate::PSGI, to ease migration.
-  no warnings;
-  my $environment = {
-      GATEWAY_INTERFACE => 'CGI/1.1',
-      HTTPS => ( ( $env->{'psgi.url_scheme'} eq 'https' ) ? 'ON' : 'OFF' ),
-      SERVER_SOFTWARE => "CGI-Emulate-PSGI",
-      REMOTE_ADDR     => '127.0.0.1',
-      REMOTE_HOST     => 'localhost',
-      REMOTE_PORT     => int( rand(64000) + 1000 ),    # not in RFC 3875
-      ( map { $_ => $env->{$_} }
-        grep { !/^psgix?\./ && $_ ne "HTTP_PROXY" } keys %$env )
-  };
-  # End of CGI::Emulate::PSGI
-
-  local %ENV = ( %ENV, %$environment );
-  my $uri = $env->{REQUEST_URI};
-  local $ENV{SCRIPT_NAME} = $uri;
-
-  my $request = LedgerSMB->new();
-  $request->{action} ||= '__default';
-  my $locale = $request->{_locale};
-  $LedgerSMB::App_State::Locale = $locale;
-
-  # $request is really a global which should be stashed in the session.
-  $env->{request} = $request;
-  warn p($env);
-  return %ENV;
-}
-
 sub psgi_app {
     my $env = shift;
-    local %ENV = _psgi_app($env);
-    warn p($env);
+    # Taken from CGI::Emulate::PSGI, to ease migration.
+    no warnings;
+    my $environment = {
+        GATEWAY_INTERFACE => 'CGI/1.1',
+        HTTPS => ( ( $env->{'psgi.url_scheme'} eq 'https' ) ? 'ON' : 'OFF' ),
+        SERVER_SOFTWARE => "CGI-Emulate-PSGI",
+        REMOTE_ADDR     => '127.0.0.1',
+        REMOTE_HOST     => 'localhost',
+        REMOTE_PORT     => int( rand(64000) + 1000 ),    # not in RFC 3875
+        ( map { $_ => $env->{$_} }
+          grep { !/^psgix?\./ && $_ ne "HTTP_PROXY" } keys %$env )
+    };
+    # End of CGI::Emulate::PSGI
+
+    local %ENV = ( %ENV, %$environment );
+    my $uri = $env->{REQUEST_URI};
+    local $ENV{SCRIPT_NAME} = $uri;
+
+    my $request = LedgerSMB->new($env);
+    $request->{action} ||= '__default';
+    my $locale = $request->{_locale};
+    $LedgerSMB::App_State::Locale = $locale;
+
+    # $request is really a global which should be stashed in the session.
+    $env->{request} = $request;
 
     $ENV{SCRIPT_NAME} =~ m/([^\/\\]*)\.pl(\?.*)?$/;
     my $script = "LedgerSMB::Scripts::$1";
-    my $request = $env->{request};
     $request->{_script_handle} = $script;
+
+    $env->{'psgix.logger'}->({ level => 'debug', message => "psgi_app called" });
 
     return [ 500,
              [ 'Content-Type' => 'text/html' ],
@@ -176,7 +167,7 @@ sub psgi_app {
                         );
                     return; # exit 'try' scope
                 }
-                if (! $request->verify_session()) {
+                if (! $request->verify_session($env)) {
                     ($status, $headers, $body) =
                         ( 303, # Found, GET other
                           [ 'Location' => 'login.pl?action=logout&reason=timeout' ],
@@ -188,33 +179,33 @@ sub psgi_app {
         }
 
         $LedgerSMB::App_State::DBH = $request->{dbh};
-        ($status, $headers, $body) = @{&$action($request)};
+        ($status, $headers, $body) = @{&$action($request,$env)};
 
         $request->{dbh}->commit if defined $request->{dbh};
         LedgerSMB::App_State->cleanup();
     }
-    catch {
-        my $error = $_;
-        eval {
-            $LedgerSMB::App_State::DBH->rollback
-                if ($LedgerSMB::App_State::DBH && $_ eq 'Died');
-        };
-        eval {
-            LedgerSMB::App_State->cleanup();
-        };
-        if ($error !~ /^Died at/) {
-            ($status, $headers, $body) =
-                 ( 500,
-                   [ 'Content-Type' => 'text/html; charset=utf-8' ],
-                   [ qq|<html>
-<body><h2 class="error">Error!</h2> <p><b>$_</b></p>
-<p>dbversion: $request->{dbversion}, company: $request->{company}</p>
-</body>
-</html>
-| ]
-                 );
-             }
-    };
+#    catch {
+#        my $error = $_;
+#        eval {
+#            $LedgerSMB::App_State::DBH->rollback
+#                if ($LedgerSMB::App_State::DBH && $_ eq 'Died');
+#        };
+#        eval {
+#            LedgerSMB::App_State->cleanup();
+#        };
+#        if ($error !~ /^Died at/) {
+#            ($status, $headers, $body) =
+#                 ( 500,
+#                   [ 'Content-Type' => 'text/html; charset=utf-8' ],#
+#                   [ qq|<html>
+#<body><h2 class="error">Error!</h2> <p><b>$_</b></p>
+#<p>dbversion: $request->{dbversion}, company: $request->{company}</p>
+#</body>
+#</html>
+#| ]
+#                 );
+#             }
+#    };
 
     push @$headers, ( 'Set-Cookie' =>
                       $request->{'request.download-cookie'} . '=downloaded' )

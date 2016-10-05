@@ -174,21 +174,22 @@ use DBI;
 use base qw(LedgerSMB::Request);
 our $VERSION = '1.6.0-dev';
 
-my $logger = Log::Log4perl->get_logger('LedgerSMB');
+my $logger;
 
 sub new {
-    #my $type   = "" unless defined shift @_;
-    #my $argstr = "" unless defined shift @_;
     (my $package,my $filename,my $line)=caller;
 
-    my $type   = shift @_;
-    my $argstr = shift @_;
+    my ($type, $argstr);
+    my $env = pop @_;
+    $type   = shift @_;
+    $argstr = shift @_;
     my $self = {};
 
     $type = "" unless defined $type;
     $argstr = "" unless defined $argstr;
 
-    $logger->debug("Begin called from \$filename=$filename \$line=$line \$type=$type \$argstr=$argstr ref argstr=".ref $argstr);
+    $logger = $env->{'psgix.logger'} // Log::Log4perl->get_logger('LedgerSMB');
+    $logger->({level => 'debug', message => "Begin called from \$filename=$filename \$line=$line \$type=$type \$argstr=$argstr ref argstr=".ref $argstr});
 
     my $creds =  LedgerSMB::Auth::get_credentials;
     $self->{login} = $creds->{login};
@@ -211,17 +212,16 @@ sub new {
     $self->{_request} = $query;
     $self->{have_latex} = $LedgerSMB::Sysconfig::latex;
 
-    $self->_set_default_locale();
-    $self->_set_action();
-    $self->_set_path();
-    $self->_set_script_name();
-    $self->_process_cookies();
+    $self->_set_default_locale($env);
+    $self->_set_action($env);
+    $self->_set_path($env);
+    $self->_set_script_name($env);
+    $self->_process_cookies($env);
 
     #HV set _locale already to default here,
     # so routines lower in stack can use it;e.g. login.pl
 
-
-    $logger->debug("End");
+    $logger->({ level => 'debug', message => "End" });
     return $self;
 }
 
@@ -271,26 +271,25 @@ sub close_form {
 }
 
 sub verify_session {
-    my ($self) = @_;
+    my ($self, $env) = @_;
 
     if ($self->is_run_mode('cgi', 'mod_perl') and !$ENV{LSMB_NOHEAD}) {
-       if (!LedgerSMB::Session::check( $self->{cookie}, $self) ) {
+       if (!LedgerSMB::Session::check( $self->{cookie}, $self, $env) ) {
             $logger->error("Session did not check");
             return 0;
        }
-       $logger->debug("session_check completed OK");
+       $logger->({ level => 'debug', message => "session_check completed OK" });
     }
     return 1;
 }
 
 sub initialize_with_db {
-    my ($self) = @_;
+    my ($self, $env) = @_;
 
     my $sth = $self->{dbh}->prepare("
             SELECT value FROM defaults
              WHERE setting_key = 'role_prefix'");
     $sth->execute;
-
 
     ($self->{_role_prefix}) = $sth->fetchrow_array;
 
@@ -303,7 +302,6 @@ sub initialize_with_db {
         $sth->execute;
         ($self->{pw_expires})  = $sth->fetchrow_array;
     }
-
 
     my $query = "SELECT t.extends,
             coalesce (t.table_name, 'custom_' || extends)
@@ -369,7 +367,7 @@ sub _set_action {
 }
 
 sub _set_script_name {
-    my ($self) = @_;
+    my ($self, $env) = @_;
 
     $ENV{SCRIPT_NAME} = "" unless defined $ENV{SCRIPT_NAME};
 
@@ -383,8 +381,8 @@ sub _set_script_name {
     if (!$self->{script}) {
         $self->{script} = 'login.pl';
     }
-    $logger->debug("\$self->{script} = $self->{script} "
-                   . "\$self->{action} = $self->{action}");
+    $logger->({ level => 'debug', message => "\$self->{script} = $self->{script} "
+                   . "\$self->{action} = $self->{action}" });
 }
 
 sub _set_path {
@@ -406,7 +404,7 @@ sub _set_path {
 
 
 sub _process_argstr {
-    my ($self, $argstr) = @_;
+    my ($self, $argstr, $env) = @_;
 
     my %params=();
     my $query = ($argstr) ? new CGI::Simple($argstr) : new CGI::Simple;
@@ -550,7 +548,7 @@ Content-Type: text/html; charset=utf-8
 sub _db_init {
     my $self     = shift @_;
     my %args     = @_;
-    (my $package,my $filename,my $line)=caller;
+#    (my $package,my $filename,my $line)=caller;
     if (!$self->{company}){
         $self->{company} = $LedgerSMB::Sysconfig::default_db;
     }
@@ -563,15 +561,8 @@ sub _db_init {
     return 1;
 }
 
-#private, for db connection errors
-sub _on_connection_error {
-    for (@_){
-        $logger->error("$_");
-    }
-}
-
 sub dberror{
-   my $self = shift @_;
+   my ($self) = @_;
    my $state_error = {};
    my $locale = $LedgerSMB::App_State::Locale;
    if(! $locale){$locale=$self->{_locale};}#tshvr4
@@ -603,13 +594,13 @@ sub dberror{
 sub merge {
     (my $package,my $filename,my $line)=caller;
     my ( $self, $src ) = @_;
-    $logger->debug("begin caller \$filename=$filename \$line=$line");
+    $logger->({ level => 'debug', message => "begin caller \$filename=$filename \$line=$line" });
        # Removed dbh from logging string since not used on this api call and
        # not initialized in test cases -CT
     for my $arg ( $self, $src ) {
         shift;
     }
-    my %args  = @_;
+    my %args  = @_ ;
     my @keys;
     if (defined $args{keys}){
          @keys  = @{ $args{keys} };
@@ -628,23 +619,23 @@ sub merge {
         }
         if ( defined $dst_arg && defined $src->{$arg} )
         {
-            $logger->trace("LedgerSMB.pm: merge setting $dst_arg to $src->{$arg}");
+            $logger->({ level => 'trace', message => "LedgerSMB.pm: merge setting $dst_arg to $src->{$arg}" });
         }
         elsif ( !defined $dst_arg && defined $src->{$arg} )
         {
-            $logger->trace("LedgerSMB.pm: merge setting \$dst_arg is undefined \$src->{\$arg} is defined $src->{$arg}");
+            $logger->({ level => 'trace', message => "LedgerSMB.pm: merge setting \$dst_arg is undefined \$src->{\$arg} is defined $src->{$arg}" });
         }
         elsif ( defined $dst_arg && !defined $src->{$arg} )
         {
-            $logger->trace("LedgerSMB.pm: merge setting \$dst_arg is defined $dst_arg \$src->{\$arg} is undefined");
+            $logger->({ level => 'trace', message => "LedgerSMB.pm: merge setting \$dst_arg is defined $dst_arg \$src->{\$arg} is undefined" });
         }
         elsif ( !defined $dst_arg && !defined $src->{$arg} )
         {
-            $logger->trace("LedgerSMB.pm: merge setting \$dst_arg is undefined \$src->{\$arg} is undefined");
+            $logger->({ level => 'trace', message => "LedgerSMB.pm: merge setting \$dst_arg is undefined \$src->{\$arg} is undefined" });
         }
         $self->{$dst_arg} = $src->{$arg};
     }
-    $logger->debug("end caller \$filename=$filename \$line=$line");
+    $logger->({ level => 'debug', message => "end caller \$filename=$filename \$line=$line" });
 }
 
 sub type {
@@ -695,5 +686,3 @@ sub take_top_level {
 }
 
 1;
-
-

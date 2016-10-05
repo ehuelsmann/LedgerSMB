@@ -1,9 +1,7 @@
-
 package LedgerSMB::Scripts::account;
 use Template;
 use LedgerSMB::DBObject::Account;
 use LedgerSMB::DBObject::EOY;
-use Log::Log4perl;
 use strict;
 use warnings;
 
@@ -28,9 +26,6 @@ maintainable.
 =cut
 
 
-my $logger = Log::Log4perl::get_logger("LedgerSMB::DBObject::Account");
-
-
 =item new
 
 Displays a screen to create a new account.
@@ -38,10 +33,10 @@ Displays a screen to create a new account.
 =cut
 
 sub new {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     $request->{title} = $request->{_locale}->text('Add Account');
     $request->{charttype} = 'A';
-    return _display_account_screen($request);
+    return _display_account_screen($request,$env);
 }
 
 =item edit
@@ -53,7 +48,7 @@ Requires the id and charttype variables in the request to be set.
 =cut
 
 sub edit {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     if (!defined $request->{id}){
         $request->error('No ID provided');
     } elsif (!defined $request->{charttype}){
@@ -68,7 +63,7 @@ sub edit {
     }
     $acc->{title} = $request->{_locale}->text('Edit Account');
     $acc->{_locale} = $request->{_locale};
-    return _display_account_screen($acc);
+    return _display_account_screen($acc,$env);
 }
 
 =item save
@@ -89,7 +84,7 @@ link:  a list of strings representing text box identifier.
 =cut
 
 sub save {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     {
       no warnings 'uninitialized';
       $request->{parent} = undef if $request->{parent} == -1;
@@ -100,7 +95,7 @@ sub save {
     my $account = LedgerSMB::DBObject::Account->new({base => $request});
     $account->{$account->{summary}}=$account->{summary};
     $account->save;
-    return edit($account);
+    return edit($account,$env);
 }
 
 =item update_translations
@@ -110,7 +105,7 @@ Saves selected translations
 =cut
 
 sub update_translations {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     my $account = LedgerSMB::DBObject::Account->new({base => $request});
     if ($request->{languagecount} > 0) {
         $account->{translations} = {};
@@ -119,9 +114,8 @@ sub update_translations {
             = $request->{"languagetranslation_$index"};
         }
     }
-
     $account->save_translations;
-    return edit($account);
+    return edit($account,$env);
 }
 
 =item save_as_new
@@ -131,14 +125,15 @@ Saves as a new account.  Deletes the id field and then calls save()
 =cut
 
 sub save_as_new {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     $request->{id} = undef;
-    return save($request);
+    return save($request,$env);
 }
 
 # copied from AM.pm.  To be refactored.
 sub _display_account_screen {
-    my ($form) = @_;
+    my ($form,$env) = @_;
+    my $session = $env->{'psgix.session'};
     my $account = LedgerSMB::DBObject::Account->new({base => $form});
     @{$form->{all_headings}} = $account->list_headings();
     @{$form->{all_gifi}} = $account->gifi_list();
@@ -147,8 +142,7 @@ sub _display_account_screen {
     my $buttons = [];
     my $checked;
     my $hiddens;
-    my $logger = Log::Log4perl->get_logger('');
-    $logger->debug("scripts/account.pl Locale: $locale");
+    $env->{'psgix.logger'}->({ level => 'debug', message => "scripts/account.pl Locale: $locale" });
 
     foreach my $item ( split( /:/, $form->{link} ) ) {
         $form->{$item} = 1;
@@ -212,7 +206,7 @@ Shows the yearend screen.  No expected inputs.
 =cut
 
 sub yearend_info {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     my $eoy =  LedgerSMB::DBObject::EOY->new({base => $request});
     $eoy->list_earnings_accounts;
     $eoy->{closed_date} = $eoy->latest_closing;
@@ -239,7 +233,7 @@ in_retention_acc_id: Account id to post retained earnings into
 =cut
 
 sub post_yearend {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     my $eoy =  LedgerSMB::DBObject::EOY->new({base => $request});
     $eoy->close_books;
     my $template = LedgerSMB::Template->new_UI(
@@ -260,12 +254,12 @@ period_close_date: Date up to (inclusive) which to close the books
 =cut
 
 sub close_period {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     $request->{end_date} = $request->{period_close_date};
     my $eoy = LedgerSMB::DBObject::EOY->new({base => $request});
     $eoy->checkpoint_only;
     delete $request->{period_close_date};
-    return yearend_info($request);
+    return yearend_info($request,$env);
 }
 
 
@@ -276,11 +270,11 @@ This reopens books as of $request->{reopen_date}
 =cut
 
 sub reopen_books {
-    my ($request) = @_;
+    my ($request,$env) = @_;
     my $eoy =  LedgerSMB::DBObject::EOY->new({base => $request});
     $eoy->reopen_books;
     delete $request->{reopen_date};
-    return yearend_info($request);
+    return yearend_info($request,$env);
 }
 
 =back

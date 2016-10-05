@@ -48,34 +48,27 @@ Displays the login screen.
 
 =cut
 
+use Data::Printer;
 sub __default {
-    my ($request) = @_;
+    my ($request, $env) = @_;
 
     if ($request->{cookie} && $request->{cookie} ne 'Login') {
         if (! $request->_db_init()) {
             LedgerSMB::Auth::credential_prompt;
         }
-        if (! $request->verify_session()) {
+        if (! $request->verify_session($env)) {
             $request->_get_password("Session expired");
         }
-        print "Set-Cookie: $request->{_new_session_cookie_value}\n"
-            if $request->{_new_session_cookie_value};
-        $request->initialize_with_db();
-        LedgerSMB::Scripts::menu::root_doc($request);
-        return;
+        $request->initialize_with_db($env);
+        my $rendered = LedgerSMB::Scripts::menu::root_doc($request, $env);
+        my $response = Plack::Response->new($rendered->[0],$rendered->[1],$rendered->[2]);
+        #TODO: get the proper way to handle the new_session_cookie
+        $response->cookies->{$request->{_new_session_cookie_value}} = {
+          value => $request->{_new_session_cookie_value},
+        } if $request->{_new_session_cookie_value};
+        return $response->finalize;
     }
 
-    my $secure = '';
-
-    # copy of code in LedgerSMB::Session
-    my $path = $ENV{SCRIPT_NAME};
-    $path =~ s|[^/]*$||;
-
-    my $cookie_name = $LedgerSMB::Sysconfig::cookie_name;
-    if ($ENV{SERVER_PORT} == 443){
-        $secure = ' Secure;';
-    }
-    print qq|Set-Cookie: $cookie_name=Login; path=$path;$secure\n|;
     $request->{stylesheet} = "ledgersmb.css";
     $request->{titlebar} = "LedgerSMB $request->{VERSION}";
     my $template = LedgerSMB::Template->new(
@@ -85,7 +78,15 @@ sub __default {
         template => 'login',
         format => 'HTML'
     );
-    $template->render($request);
+    #TODO: Consider if the renderer should return a Plack::Response
+    my $rendered = $template->render_to_psgi($request);
+    my $response = Plack::Response->new($rendered->[0],$rendered->[1],$rendered->[2]);
+    $response->cookies->{$LedgerSMB::Sysconfig::cookie_name} = {
+      value => 'Login',
+      path => $ENV{SCRIPT_NAME} =~ s|[^/]*$||,
+      secure => $ENV{SERVER_PORT} == 443 ? ' Secure;' : ''
+    };
+    return $response->finalize;
 }
 
 =item authenticate
@@ -97,14 +98,9 @@ If unsuccessful sends a 401 if the username/password is bad, or a 454 error
 if the database does not exist.
 
 =cut
-sub authenticator {
-    my( $username, $pass, $env ) = @_;
-    croak "Authenticator called";
-    $env->{'psgix.logger'}({ level => 'error', message => 'Hi' });
-}
 
 sub authenticate {
-    my ($request) = @_;
+    my ($request, $env) = @_;
     if (!$request->{dbh}){
         if (!$request->{company}){
              $request->{company} = $LedgerSMB::Sysconfig::default_db;
@@ -115,8 +111,7 @@ sub authenticate {
     }
     if ($request->{dbh} and !$request->{log_out}){
 
-        print "Content-Type: text/plain\n";
-        LedgerSMB::Session::check($request->{cookie}, $request)
+        LedgerSMB::Session::check($request->{cookie}, $request, $env)
              unless $request->{dbonly};
         return [
           200,
@@ -149,13 +144,14 @@ Logs in the user and displays the root document.
 =cut
 
 sub login {
-    my ($request) = @_;
-
+    my ($request,$env) = @_;
+warn "Login++";
     if (!$request->{_user}){
-        __default($request);
+        __default($request,$env);
     }
     require LedgerSMB::Scripts::menu;
-    LedgerSMB::Scripts::menu::root_doc($request);
+    LedgerSMB::Scripts::menu::root_doc($request,$env);
+warn "Login--";
 }
 
 =item logout
@@ -167,13 +163,12 @@ Firefox, Opera, and Internet Explorer are all supported.  Not sure about Chrome
 =cut
 
 sub logout {
-    my ($request) = @_;
-    $request->{callback}   = "";
-    $request->{endsession} = 1;
+    my ($request,$env) = @_;
 
     try { # failure only means we clear out the session later
-        $request->_db_init();
-        LedgerSMB::Session::destroy($request);
+        $request->_db_init;
+        LedgerSMB::Session::destroy($request,$env);
+        #TODO use session state
     };
     my $template = LedgerSMB::Template->new(
         user =>$request->{_user},
@@ -182,7 +177,7 @@ sub logout {
         template => 'logout',
         format => 'HTML'
     );
-    $template->render($request);
+    $template->render_to_psgi($request);
 }
 
 =item logout_js

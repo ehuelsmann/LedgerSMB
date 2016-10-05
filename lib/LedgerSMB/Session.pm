@@ -16,7 +16,6 @@ sessions).
 package LedgerSMB::Session;
 
 use LedgerSMB::Sysconfig;
-use Log::Log4perl;
 use LedgerSMB::Auth;
 use CGI::Simple;
 use strict;
@@ -33,15 +32,12 @@ Handles failure by creating a new session, since credentials are now separate.
 =cut
 
 sub check {
-    my ( $cookie, $form ) = @_;
+    my ( $cookie, $form, $env ) = @_;
 
-    my $path = ($ENV{SCRIPT_NAME});
-    $path =~ s|[^/]*$||;
     if (($cookie eq 'Login') or ($cookie =~ /^::/) or (!$cookie)){
-        return create($form);
+        return create($form, $env);
     }
     my $timeout;
-
 
     my $dbh = $form->{dbh};
 
@@ -56,7 +52,6 @@ sub check {
     #must be an integer
     $sessionID =~ s/[^0-9]//g;
     $sessionID = int $sessionID;
-
 
     if ( !$form->{timeout} ) {
         $timeout = "1 day";
@@ -76,17 +71,15 @@ sub check {
 
         my $login = $form->{login} =~ s/[^a-zA-Z0-9._+\@'-]//g;
 
-
+        #TODO: Use Session::State
         if (( $session_ref ))
         {
-
-
-
 
             my $newCookieValue =
               $session_ref->{session_id} . ':' . $session_ref->{token} . ':' . $form->{company};
 
             #now update the cookie in the browser
+            my $path = $ENV{SCRIPT_NAME} =~ s|[^/]*$||;
             my $secure = $ENV{SERVER_PORT} == 443 ? ' Secure;' : '';
             $form->{_new_session_cookie_value} =
                 qq|${LedgerSMB::Sysconfig::cookie_name}=$newCookieValue; path=$path;$secure|;
@@ -103,7 +96,7 @@ sub check {
 
         #cookie is not valid
         #delete the cookie in the browser
-        destroy($form);
+        destroy($form, $env);
         return 0;
     }
 }
@@ -116,7 +109,7 @@ etc.
 =cut
 
 sub create {
-    my ($lsmb) = @_;
+    my ($lsmb, $env) = @_;
     my $path = $ENV{SCRIPT_NAME} =~ s|[^/]*$||;
     my $dbh = $lsmb->{dbh};
     my $login = $lsmb->{login};
@@ -124,7 +117,6 @@ sub create {
        my $creds = LedgerSMB::Auth::get_credentials;
        $login = $creds->{login};
     }
-
 
     if ( !$ENV{GATEWAY_INTERFACE} ) {
 
@@ -155,7 +147,7 @@ sub create {
       || $lsmb->dberror( __FILE__ . ':' . __LINE__ . ': Fetch login id: ' );
     my ( $userID ) = $fetchUserID->fetchrow_array;
     unless($userID) {
-        $ENV->{'psgix.logger'}->error(__FILE__ . ':' . __LINE__ . ": no such user: $login");
+        $env->{'psgix.logger'}->error(__FILE__ . ':' . __LINE__ . ": no such user: $login");
         LedgerSMB::Auth->http_error('401');#tshvr4
         return;#tshvr4?
     }
@@ -191,7 +183,6 @@ sub create {
       || $lsmb->dberror(
         __FILE__ . ':' . __LINE__ . ': Reseed random generator: ' );
 
-
     my $newCookieValue = $newSessionID . ':' . $newToken . ':'
     . $lsmb->{company};
 
@@ -211,7 +202,7 @@ Destroys a session and removes it from the db.
 
 sub destroy {
 
-    my ($form) = @_;
+    my ($form, $env) = @_;
     my $path = $ENV{SCRIPT_NAME} =~ s|[^/]*$||;
     my $login = $form->{login} =~ s/[^a-zA-Z0-9._+\@'-]//g;
 
@@ -251,4 +242,3 @@ sub destroy {
 # with permission.  It is released under the GNU General Public License
 # Version 2 or, at your option, any later version.  See COPYRIGHT file for
 # details.
-
