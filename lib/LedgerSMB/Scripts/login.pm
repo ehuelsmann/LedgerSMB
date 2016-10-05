@@ -60,9 +60,7 @@ sub __default {
             $request->_get_password("Session expired");
         }
         $request->initialize_with_db($env);
-        my $rendered = LedgerSMB::Scripts::menu::root_doc($request, $env);
-        my $response = Plack::Response->new($rendered->[0],$rendered->[1],$rendered->[2]);
-        #TODO: get the proper way to handle the new_session_cookie
+        my $response = LedgerSMB::Scripts::menu::root_doc($request, $env);
         $response->cookies->{$request->{_new_session_cookie_value}} = {
           value => $request->{_new_session_cookie_value},
         } if $request->{_new_session_cookie_value};
@@ -78,9 +76,7 @@ sub __default {
         template => 'login',
         format => 'HTML'
     );
-    #TODO: Consider if the renderer should return a Plack::Response
-    my $rendered = $template->render_to_psgi($request);
-    my $response = Plack::Response->new($rendered->[0],$rendered->[1],$rendered->[2]);
+    my $response = $template->render_to_psgi($request);
     $response->cookies->{$LedgerSMB::Sysconfig::cookie_name} = {
       value => 'Login',
       path => $ENV{SCRIPT_NAME} =~ s|[^/]*$||,

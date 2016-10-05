@@ -385,6 +385,7 @@ sub render {
     return $post;
 }
 
+use Plack::Response;
 
 sub render_to_psgi {
     my $self = shift @_;
@@ -420,7 +421,7 @@ sub render_to_psgi {
         unlink $self->{rendered};
     }
 
-    return [ 200, $headers, $body ];
+    return Plack::Response->new(200,$headers, $body);
 }
 
 sub escape {
