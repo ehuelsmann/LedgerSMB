@@ -1,6 +1,6 @@
 <?lsmb INCLUDE "ui-header.html"
        stylesheet="ledgersmb.css"
-       include_stylesheet=[ "setup.css"];
+       include_stylesheet=[ "/setup.css"];
        PROCESS "elements.html"  ?>
 <body id="setup-login" class="lsmb <?lsmb settings.dojo_theme ?>">
     <div class="setupconsole" style="position:relative;height:100%">
@@ -24,7 +24,7 @@
                         alt="LedgerSMB Logo" />
                 </a>
                 <h2 align="center" style="margin-top: 0">
-                    LedgerSMB <?lsmb ledgersmb_version ?>
+                    LedgerSMB <?lsmb VERSION ?>
                 </h2>
                 <div class="listtop">
                     <?lsmb text('Database administrator credentials') ?>
@@ -66,6 +66,16 @@
                                          label = text('Password')
                                 } ?>
                             </div>
+                        </div>
+                        <div class="inputrow">
+                            <?lsmb INCLUDE input element_data = {
+                                      name = '__auth_extensible_database'
+                                     value = database
+                                      type = 'text'
+                                      size = '15'
+                                     class = 'database'
+                                     label = text('Database')
+                                } ?>
                         </div>
                     </div>
                     <div class="inputrow"

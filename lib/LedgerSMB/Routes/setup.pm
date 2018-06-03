@@ -1,4 +1,3 @@
-
 package LedgerSMB::Routes::setup;
 
 =head1 NAME

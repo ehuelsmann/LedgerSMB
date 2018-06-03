@@ -416,6 +416,7 @@ sub new_UI {
                     } )
                ],
                LIST_FORMATS => sub { return available_formats(); },
+)
             },
         },
     );

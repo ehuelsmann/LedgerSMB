@@ -26,6 +26,7 @@ engines:
       end_tag: '\?\>'
       include_path: UI/lib/
       TRIM: 1
+
   session:
     Cookie:
       secret_key: V9slW49T0WzHndRaLc56UeV6K87qRp1m
