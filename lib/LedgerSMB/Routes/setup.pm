@@ -57,6 +57,8 @@ sub render_login_template {
 
 =cut
 
+set layout => 'setup';
+
 hook before => sub {
     # we want separate auth cookies for setup and the main app
     engine('session')->{cookie_name} = 'ledgersmb.setup';
