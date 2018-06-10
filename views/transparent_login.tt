@@ -67,16 +67,6 @@
                                 } ?>
                             </div>
                         </div>
-                        <div class="inputrow">
-                            <?lsmb INCLUDE input element_data = {
-                                      name = '__auth_extensible_database'
-                                     value = database
-                                      type = 'text'
-                                      size = '15'
-                                     class = 'database'
-                                     label = text('Database')
-                                } ?>
-                        </div>
                     </div>
                     <div class="inputrow"
                          style="text-align:right; padding-right: 4ex; margin-top: 1ex">
