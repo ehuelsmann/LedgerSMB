@@ -122,6 +122,36 @@ sub _list_databases {
     return $databases;
 }
 
+sub _list_directory {
+    my $dir = shift;
+
+    return [] if ! -d $dir;
+
+    opendir(COA, $dir);
+    my @files =
+        map +{ code => $_ },
+        sort(grep !/^(\.|[Ss]ample.*)/,
+             readdir(COA));
+    closedir(COA);
+
+    return \@files;
+}
+
+sub _list_templates {
+    my $templates = [];
+    opendir ( DIR, $LedgerSMB::Sysconfig::templates)
+        or die "Couldn't open template directory: $!";
+
+    while( my $name = readdir(DIR)){
+        next if ($name =~ /^\./);
+        if (-d (LedgerSMB::Sysconfig::templates() . "/$name") ) {
+            push @$templates, $name;
+        }
+    }
+    closedir(DIR);
+    return $templates;
+}
+
 sub _list_users {
     return [] unless param('database');
 
