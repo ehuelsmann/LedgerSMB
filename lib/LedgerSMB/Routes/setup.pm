@@ -258,15 +258,7 @@ get '/' => require_login sub {
 
 sub _template_create_company {
     my $errormessage = shift;
-    my $dbconfig = LedgerSMB::Database::Config->new;
-    my $charts = $dbconfig->charts_of_accounts;
 
-    for my $type (qw( chart gifi sic )) {
-        for my $locale (keys %$charts) {
-            $charts->{$locale}->{$type} =
-                [ map { +{ code => $_ } } @{$charts->{$locale}->{$type}} ];
-        }
-    }
     template 'create-company', {
         'coa_countries' => [ sort { $a->{name} cmp $b->{name} }
                              values %$charts ],
