@@ -122,11 +122,13 @@
     "yargs": "16.1.0"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "content-disposition": "^0.5.3",
     "core-js": "3.8.1",
     "dijit": "1.16.3",
     "dojo": "1.16.3",
-    "regenerator-runtime": "0.13.7"
+    "regenerator-runtime": "0.13.7",
+    "vue": "^2.6.12"
   },
   "main": "UI/js/bootstrap.js",
   "homepage": "http://ledgersmb.org/",
