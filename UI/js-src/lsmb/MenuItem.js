@@ -61,8 +61,8 @@ export default {
         }
     },
     follow(event) {
-      console.log(this.url);
-      event.preventDefault();
+        event.preventDefault();
+        dijit.registry.byId('maindiv').load_link(this.url);
     },
   },
 }
