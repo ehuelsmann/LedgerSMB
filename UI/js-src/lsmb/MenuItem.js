@@ -49,9 +49,15 @@ export default {
       return false;
     },
     url() {
-      return this.item.module + '?'
+      var l = document.location.toString();
+      l = l.substr(0,l.indexOf('#'));
+      return l + '#' + this.item.module + '?'
         + this.item.args.join('&');
     },
+    loader_url() {
+        return this.item.module + '?'
+            + this.item.args.join('&');
+    }
   },
   methods: {
     toggle(event) {
@@ -62,7 +68,7 @@ export default {
     },
     follow(event) {
         event.preventDefault();
-        dijit.registry.byId('maindiv').load_link(this.url);
+        dijit.registry.byId('maindiv').load_link(this.loader_url);
     },
   },
 }
