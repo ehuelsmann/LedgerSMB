@@ -668,3 +668,22 @@ h2 {
 #email #body {
     min-height: 8em;
 }
+
+
+expando {
+    width: 3em;
+}
+ul.menu {
+    list-style: none;
+    padding: 0;
+    padding-left: 1em;
+}
+ul.menu ul {
+    list-style: none;
+    padding-left: 1em;
+}
+ul.menu a {
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+}
