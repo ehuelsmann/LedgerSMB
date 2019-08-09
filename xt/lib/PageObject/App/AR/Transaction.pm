@@ -29,6 +29,13 @@ sub _verify {
     return $self;
 }
 
+sub update {
+    my ($self) = @_;
+
+    $self->find("*button", text => "Update")->click;
+    $self->session->page->body->maindiv->wait_for_content;
+}
+
 sub _counterparty {
     return 'customer';
 }
@@ -63,6 +70,22 @@ sub select_customer {
 }
 
 
+sub _extract_total {
+    my ($self, $type) = @_;
+    my $total_elm = $self->find("#amount-total", scheme => 'css');
+
+    my $rv = {
+        amount => $total_elm->get_text,
+    };
+
+    return $rv;
+}
+
+sub total {
+    my $self = shift;
+
+    return $self->_extract_total;
+}
 
 __PACKAGE__->meta->make_immutable;
 

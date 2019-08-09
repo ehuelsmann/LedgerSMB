@@ -705,7 +705,7 @@ qq|<td><textarea data-dojo-type="dijit/form/Textarea" name="description_$i" rows
         }
         else {
             $description =
-qq|<td><input data-dojo-type="dijit/form/TextBox" name="description_$i" size=40 value="$form->{"description_$i"}"></td>|;
+qq|<td><input data-dojo-type="dijit/form/TextBox" name="description_$i" id="description_$i" size=40 value="$form->{"description_$i"}"></td>|;
         }
 
     $taxchecked="";
@@ -715,10 +715,10 @@ qq|<td><input data-dojo-type="dijit/form/TextBox" name="description_$i" size=40 
 
     }
 
-    $taxformcheck=qq|<td><input type="checkbox" data-dojo-type="dijit/form/CheckBox" name="taxformcheck_$i" value="1" $taxchecked></td>|;
+    $taxformcheck=qq|<td><input type="checkbox" data-dojo-type="dijit/form/CheckBox" name="taxformcheck_$i" id="taxformcheck_$i" value="1" $taxchecked></td>|;
         print qq|
     <tr valign=top class="transaction-line $form->{ARAP}" id="line-$i">
-     <td><input data-dojo-type="dijit/form/TextBox" name="amount_$i" size=10 value="$form->{"amount_$i"}" accesskey="$i"></td>
+     <td><input data-dojo-type="dijit/form/TextBox" name="amount_$i" id="amount_$i" size=10 value="$form->{"amount_$i"}" accesskey="$i"></td>
      <td>| . (($form->{currency} ne $form->{defaultcurrency})
               ? $form->format_amount(\%myconfig, $form->parse_amount( \%myconfig, $form->{"amount_$i"} )
                                                   * $form->parse_amount( \%myconfig, $form->{exchangerate} ),2)
@@ -788,7 +788,7 @@ qq|<td><input data-dojo-type="dijit/form/TextBox" name="description_$i" size=40 
      $selectARAP =~ s/(\Qoption value="$form->{$form->{ARAP}}"\E)/$1 selected="selected"/;
     print qq|
         <tr class="transaction-line $form->{ARAP} total" id="line-total">
-      <th align=left>$form->{invtotal}</th>
+      <th align=left id="amount-total">$form->{invtotal}</th>
      <td>| . (($form->{currency} ne $form->{defaultcurrency})
               ? $form->format_amount(\%myconfig,
                                      $form->{invtotal}

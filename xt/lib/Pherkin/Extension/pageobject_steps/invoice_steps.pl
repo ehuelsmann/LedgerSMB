@@ -93,6 +93,18 @@ When qr/I add an invoice line with (?:part|service) "(.+)"( with these values:)?
     }
 };
 
+When qr/I add a transaction line with these values:$/, sub {
+    my $session = S->{ext_wsl};
+    my $trn = $session->page->body->maindiv->content;
+    my @empty = $trn->lines->empty_lines;
+    my $empty = shift @empty;
+
+    for my $row (@{C->data}) {
+        $empty->field_value($row->{name}, $row->{value});
+    }
+    $trn->update;
+};
+
 When qr/I post the invoice/, sub {
 
     my $session = S->{ext_wsl};
@@ -220,6 +232,15 @@ Then qr/I expect to see the invoice(?: subtotal of ([^\s]+) and)? total of ([^\s
             }
         }
     }
+};
+
+Then qr/I expect to see the transaction total of ([^\s]+)(?: ([A-Z]{3,3}))?/, sub {
+    my $expected_total = $1;
+    my $expected_curr = $2;
+
+    my $total = S->{ext_wsl}->page->body->maindiv->content->total;
+    is($total->{amount}, $expected_total,
+       'Expected and actual total invoice amounts are equal');
 };
 
 Then qr/I expect to see (\d+) (empty )?payment lines?/, sub {
