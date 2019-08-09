@@ -31,3 +31,16 @@ Scenario: Creation of a new AR transaction, no taxes
        | Account         | 4010     |
        | Description     | Test 1   |
     Then I expect to see the transaction total of 20.00
+
+Scenario: Creation of a new AR transaction, with taxes
+   Given customer "Customer 1" with this tax:
+       | Tax account          |
+       | 2150--Sales Tax      |
+    When I open the AR transaction entry screen
+     And I select customer "Customer 1"
+    When I add a transaction line with these values:
+       | name            | value    |
+       | Amount          | 20.00    |
+       | Account         | 4010     |
+       | Description     | Test 1   |
+    Then I expect to see the transaction total of 21.00
