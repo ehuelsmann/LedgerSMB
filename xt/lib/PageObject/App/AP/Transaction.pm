@@ -11,7 +11,7 @@ use PageObject::App::Invoices::Header;
 
 use Moose;
 use namespace::autoclean;
-extends 'PageObject';
+extends 'PageObject::App::Transaction';
 
 my $page_heading = 'Add AP Transaction';
 
@@ -33,21 +33,6 @@ sub _counterparty {
     return 'vendor';
 }
 
-sub header {
-    my ($self) = @_;
-
-    $self->verify;
-    return $self->find('*invoice-header',
-                       widget_args => [ counterparty_type => $self->_counterparty ]);
-}
-
-
-sub lines {
-    my ($self) = @_;
-
-    $self->verify;
-    return $self->find('*transaction-lines');
-}
 
 sub select_vendor {
     my ($self, $vendor) = @_;
@@ -62,7 +47,6 @@ sub select_vendor {
     $self->find("*button", text => "Update")->click;
     $self->session->page->body->maindiv->wait_for_content(replaces => $elem);
 }
-
 
 
 __PACKAGE__->meta->make_immutable;

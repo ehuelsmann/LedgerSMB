@@ -19,6 +19,7 @@ __PACKAGE__->self_register(
                   id => 'transaction-lines',
               });
 
+has transaction_type => (is => 'ro', isa => 'Str', required => 1);
 
 sub _verify {
     my ($self) = @_;
@@ -34,13 +35,15 @@ sub line {
     if ($opts{by} eq 'id') {
         $id = 'line-' . $id;
     }
-    return $self->find('*transaction-line', $opts{by} => $id);
+    return $self->find('*transaction-line', $opts{by} => $id,
+        widget_args => [ transaction_type => $self->transaction_type ]);
 }
 
 sub all_lines {
     my ($self) = @_;
 
-    return $self->find_all('*transaction-line');
+    return $self->find_all('*transaction-line',
+        widget_args => [ transaction_type => $self->transaction_type ]);
 }
 
 sub empty_lines {

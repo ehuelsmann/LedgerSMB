@@ -20,6 +20,8 @@ __PACKAGE__->self_register(
               classes => ['transaction-line'],
     );
 
+has transaction_type => (is => 'ro', isa => 'Str', required => 1);
+
 sub _verify {
     my ($self) = @_;
 
@@ -28,19 +30,25 @@ sub _verify {
     return $self;
 };
 
-my %field_map = (
-    'Amount' => 'amount',
-    'Account' => 'AR_amount',
-    'Description' => 'description',
-    'Tax Form Applied' => 'taxformcheck',
-    );
 
 sub field {
     my ($self, $label) = @_;
 
+    my %field_map = (
+        'Amount' => 'amount',
+        'Account' => ($self->transaction_type . '_amount'),
+        'Description' => 'description',
+        'Tax Form Applied' => 'taxformcheck',
+    );
+
+
     my $id = $self->get_attribute('id');
     $id =~ s/^line-//;
-    return $self->find(qq{.//*[\@id="$field_map{$label}_${id}"]});
+
+    my $field = $self->find(qq{.//*[\@id="$field_map{$label}_${id}"]});
+    die "Transaction line column $field_map{$label}_${id} not found"
+        if not defined $field;
+    return $field;
 }
 
 sub field_value {
@@ -53,7 +61,7 @@ sub field_value {
         # special handling of the total line
         my %field_map = (
             'Amount' => 'amount-total',
-            'Account' => 'AR',
+            'Account' => $self->transaction_type,
             );
 
         die "Unavailable field requested: total $label"
@@ -64,11 +72,7 @@ sub field_value {
         return $field->can('value') ? $field->value : $field->get_text;
     }
 
-    my $field = $self->find(qq{.//*[\@id="$field_map{$label}_${id}"]
-           | .//input[\@type="hidden" and
-                      \@name="$field_map{$label}_${id}"]});
-    die "Transaction line column $field_map{$label}_${id} not found"
-        if not defined $field;
+    my $field = $self->field($label);
     my $rv = $field->value;
 
     $rv = ''

@@ -11,7 +11,7 @@ use PageObject::App::Invoices::Header;
 
 use Moose;
 use namespace::autoclean;
-extends 'PageObject';
+extends 'PageObject::App::Transaction';
 
 my $page_heading = 'Add AR Transaction';
 
@@ -29,31 +29,10 @@ sub _verify {
     return $self;
 }
 
-sub update {
-    my ($self) = @_;
-
-    $self->find("*button", text => "Update")->click;
-    $self->session->page->body->maindiv->wait_for_content;
-}
-
 sub _counterparty {
     return 'customer';
 }
 
-sub header {
-    my ($self) = @_;
-
-    $self->verify;
-    return $self->find('*invoice-header',
-                       widget_args => [ counterparty_type => $self->_counterparty ]);
-}
-
-sub lines {
-    my ($self) = @_;
-
-    $self->verify;
-    return $self->find('*transaction-lines');
-}
 
 sub select_customer {
     my ($self, $customer) = @_;
@@ -69,23 +48,6 @@ sub select_customer {
     $self->session->page->body->maindiv->wait_for_content(replaces => $elem);
 }
 
-
-sub _extract_total {
-    my ($self, $type) = @_;
-    my $total_elm = $self->find("#amount-total", scheme => 'css');
-
-    my $rv = {
-        amount => $total_elm->get_text,
-    };
-
-    return $rv;
-}
-
-sub total {
-    my $self = shift;
-
-    return $self->_extract_total;
-}
 
 __PACKAGE__->meta->make_immutable;
 

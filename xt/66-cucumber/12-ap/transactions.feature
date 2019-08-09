@@ -25,4 +25,9 @@ Scenario: Creation of a new AP transaction, no taxes
        | Order Number    |          |
        | PO Number       |          |
      And I expect to see a transaction with 2 lines
-###TODO: entry of amounts and other data
+    When I add a transaction line with these values:
+       | name            | value    |
+       | Amount          | 20.00    |
+       | Account         | 5780     |
+       | Description     | Test 1   |
+    Then I expect to see the transaction total of 20.00
