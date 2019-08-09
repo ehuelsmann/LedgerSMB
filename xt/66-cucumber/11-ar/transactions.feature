@@ -44,3 +44,7 @@ Scenario: Creation of a new AR transaction, with taxes
        | Account         | 4010     |
        | Description     | Test 1   |
     Then I expect to see the transaction total of 21.00
+
+@wip
+Scenario: Manual tax entry by de-selecting tax checkbox
+

@@ -76,3 +76,36 @@ Scenario: Creation of a new sales invoice, with taxes
      And I expect to see the invoice subtotal of 30.00 and total of 31.50 with these taxes:
        | description | amount |
        | Sales Tax   | 1.50   |
+
+
+
+@wip
+Scenario: Creation of a new sales invoice, manual taxes
+
+
+@wip
+Scenario: Creation of a new sales invoice, with taxed customer, but untaxed part
+
+@wip
+Scenario: Creation of a new sales invoice, with a taxed part, but untaxed customer
+
+@wip
+Scenario: Creation of a new sales invoice, with taxed and untaxed parts (taxed customer)
+
+@wip
+Scenario: Modify an entered line
+
+@wip
+Scenario: Delete a line
+
+@wip
+Scenario: Change customer after entered lines
+
+@wip
+Scenario: Add Ship-to information, from shipping addresses
+
+@wip
+Scenario: Add Ship-to information, new entry
+
+@wip
+Scenario: Creation of a new sales invoice by copy-from existing
