@@ -25,6 +25,36 @@ sub _counterparty {
     return 'customer';
 }
 
+sub _post_btn {
+    my ($self) = @_;
+
+    my $outer = $self->find('.//span[contains(@widgetid,"action-post-")]
+                             | .//span[contains(@widgetid,"action-approve-")]');
+    my $lbl_id = $outer->get_attribute('widgetid');
+    my $label = $self->find(qq{//span[\@id="${lbl_id}_label"]});
+    return $label;
+}
+
+sub _post_btn_text {
+    my ($self) = @_;
+
+    return $self->_post_btn->get_text;
+}
+
+sub post {
+    my ($self) = @_;
+    if ($self->_post_btn_text eq 'Save') {
+        # 2-step in case separation of duties is enabled
+        my $btn = $self->_post_btn;
+        $btn->click;
+        $self->session->page->body->maindiv->wait_for_content(replaces => $btn);
+    }
+
+    my $btn = $self->session->page->body->maindiv->content->_post_btn;
+    $btn->click;
+    $self->session->page->body->maindiv->wait_for_content(replaces => $btn);
+}
+
 sub header {
     my ($self) = @_;
 

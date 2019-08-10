@@ -48,12 +48,14 @@ sub post {
     my ($self) = @_;
     if ($self->_post_btn_text eq 'Save') {
         # 2-step in case separation of duties is enabled
-        $self->_post_btn->click;
-        $self->session->page->body->maindiv->wait_for_content;
+        my $btn = $self->_post_btn;
+        $btn->click;
+        $self->session->page->body->maindiv->wait_for_content(replaces => $btn);
     }
 
-    $self->session->page->body->maindiv->content->_post_btn->click;
-    $self->session->page->body->maindiv->wait_for_content;
+    my $btn = $self->session->page->body->maindiv->content->_post_btn;
+    $btn->click;
+    $self->session->page->body->maindiv->wait_for_content(replaces => $btn);
 }
 
 
