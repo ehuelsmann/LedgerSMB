@@ -163,7 +163,11 @@ Then qr/I expect to see an invoice with these lines/, sub {
                S->{ext_wsl}->wait_for(
                     sub {
                         return $actual_line->field_value($field) eq $expected_line->{$field};
-                    });
+                    },
+                   on_timeout => sub {
+                       fail "Timeout waiting for field $field to equal $expected_line->{$field}; got: " . ($actual_line->field_value($field) // '');
+                       die 'Time-out waiting for field value';
+                   });
                 is($actual_line->field_value($field),
                    $expected_line->{$field},
                    qq{Actual value for field $field matches expectation});
