@@ -34,14 +34,6 @@ Stores a LedgerSMB::User object for the currently logged in user.
 =cut
 
 
-=item DBH
-
-Database handle for current connection
-
-=cut
-
-our $DBH;
-
 =back
 
 Each of the above has an accessor function of the same name which reads the
@@ -69,22 +61,6 @@ sub set_User {
     return $User = shift;
 }
 
-=item DBH
-
-=cut
-
-sub DBH {
-    return $DBH;
-}
-
-=item set_DBH
-
-=cut
-
-sub set_DBH {
-    return $DBH = shift;
-}
-
 =back
 
 =head1 METHODS
@@ -100,8 +76,7 @@ sub run_with_state {
     my $block = shift;
     my $state = { @_ };
 
-    local ($DBH, $User) = (
-        $state->{DBH} // $DBH,
+    local ($User) = (
         $state->{User} // $User,
         );
 

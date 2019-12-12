@@ -35,7 +35,6 @@ use Scope::Guard;
 use Syntax::Keyword::Try qw|try :experimental(typed)|;
 
 use LedgerSMB;
-use LedgerSMB::App_State;
 use LedgerSMB::Company;
 use LedgerSMB::Database;
 use LedgerSMB::Database::Config;
@@ -130,7 +129,6 @@ sub _init_db {
     $request->{dbh} = eval {
         $database->connect({PrintError => 0, AutoCommit => 0 })
     } if ! defined $request->{dbh};
-    $LedgerSMB::App_State::DBH = $request->{dbh};
 
     return (undef, $database);
 }

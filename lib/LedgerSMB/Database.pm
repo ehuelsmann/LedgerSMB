@@ -261,9 +261,6 @@ sub get_info {
         $self->logger->debug("DBI->connect dbh=$dbh");
         _set_system_info($dbh, $retval);
 
-        # don't assign to App_State::DBH, since we're a fallback connection,
-        #  not one to the company database
-
         my $sth = $dbh->prepare(
             'select count(*) = 1 from pg_database where datname = ?'
             );

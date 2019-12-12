@@ -414,7 +414,6 @@ my $part_count = 0;
 sub create_part {
     my ($self, $props) = @_;
 
-    local $LedgerSMB::App_State::DBH = $self->admin_dbh;
     my $account = LedgerSMB::DBObject::Account->new();
     $account->set_dbh($self->admin_dbh);
     my @accounts = $account->list();

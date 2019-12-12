@@ -4,16 +4,9 @@ use LedgerSMB::Setting;
 use LedgerSMB::App_State;
 
 {
-  no strict 'refs'; # avoiding addming more dependencies
-                    # so doing mocking by hand
-
   no warnings 'redefine';
-
-
-  # LedgerSMB::Setting->get always uses LedgerSMB::App_State::DBH
-  # as a datbase handle, regardless of any other initialisation.
-  my $got_dbh = sub { ok(1, 'Got Database Handle'); return 'db' };
-  local *{"LedgerSMB::App_State::DBH"} = $got_dbh;
+  no strict 'refs'; # avoiding adding more dependencies
+                    # so doing mocking by hand
 
   # Check that it uses that database handle to run the query
   local *{"PGObject::call_procedure"} = sub {
@@ -29,8 +22,5 @@ use LedgerSMB::App_State;
   is(LedgerSMB::Setting->new(dbh => 'db')->get('database'), '123', 'got mocked value back');
 }
 
-
-
-
-
 done_testing;
+

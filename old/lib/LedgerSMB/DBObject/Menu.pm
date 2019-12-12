@@ -22,7 +22,6 @@ use warnings;
 
 use base qw(LedgerSMB::PGOld);
 
-
 =head1 METHODS
 
 =over

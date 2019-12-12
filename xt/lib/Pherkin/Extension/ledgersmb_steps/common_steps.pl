@@ -4,6 +4,7 @@
 use strict;
 use warnings;
 
+use LedgerSMB::App_State;
 use LedgerSMB::Batch;
 use LedgerSMB::IR;
 use LedgerSMB::Form;
@@ -298,7 +299,6 @@ my $invnumber = 0;
 Given qr/inventory has been built up for '(.*)' from these transactions:$/, sub {
     my $part = $1;
 
-    local $LedgerSMB::App_State::DBH = S->{ext_lsmb}->admin_dbh;
     local $LedgerSMB::App_State::User = {
         numberformat => '1000.00'
     };

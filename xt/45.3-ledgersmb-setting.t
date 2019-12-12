@@ -11,7 +11,6 @@ use Test2::V0;
 
 use DBI;
 use LedgerSMB::Setting;
-use LedgerSMB::App_State;
 
 
 # Create test run conditions
@@ -24,9 +23,6 @@ my $dbh = DBI->connect(
     { AutoCommit => 0, PrintError => 1, RaiseError => 1 }
 ) or die "Can't connect to template database: " . DBI->errstr;
 
-# Needed until LedgerSMB::Setting->get() is refactored to use its
-# class dbh, rather than App_State
-LedgerSMB::App_State::set_DBH($dbh);
 
 # Add some sample accounts
 $dbh->do("INSERT INTO account_heading (accno) VALUES ('0000')")
