@@ -79,6 +79,9 @@ declare
         t_table text;
 begin
         SELECT table_name into t_table FROM transactions where id = in_id;
+        IF NOT FOUND THEN
+                RETURN FALSE;
+        END IF;
 
         IF (t_table = 'ar') THEN
                 PERFORM cogs__add_for_ar_line(id) FROM invoice
@@ -94,20 +97,9 @@ begin
                 raise exception 'Invalid table % in draft_approve for transaction %', t_table, in_id;
         END IF;
 
-        IF NOT FOUND THEN
-                RETURN FALSE;
-        END IF;
-
-        UPDATE transactions
-        SET approved_by =
-                        (select entity_id FROM users
-                        WHERE username = SESSION_USER),
-                approved_at = now()
-        WHERE id = in_id;
-
         RETURN TRUE;
 END;
-$$ LANGUAGE PLPGSQL SECURITY DEFINER;
+$$ LANGUAGE PLPGSQL;
 
 COMMENT ON FUNCTION draft_approve(in_id int) IS
 $$ Posts draft to the books.  in_id is the id from the ar, ap, or gl table.$$;
@@ -138,7 +130,7 @@ begin
         END IF;
         RETURN TRUE;
 END;
-$$ LANGUAGE PLPGSQL SECURITY DEFINER;
+$$ LANGUAGE PLPGSQL;
 
 COMMENT ON FUNCTION draft_delete(in_id int) is
 $$ Deletes the draft from the book.  Only will delete unapproved transactions.

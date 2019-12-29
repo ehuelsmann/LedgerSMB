@@ -2418,8 +2418,12 @@ BEGIN
                 IF new.id = old.id AND new.approved = old.approved THEN
                         return new;
                 ELSE
-                        UPDATE transactions SET id = new.id,
-                                                approved = new.approved
+                        UPDATE transactions
+                           SET id = new.id,
+                               approved = new.approved,
+                               approved_by = (select entity_id FROM users
+                                               WHERE username = SESSION_USER),
+                               approved_at = now()
                          WHERE id = old.id;
                 END IF;
         ELSE
