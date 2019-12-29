@@ -12,7 +12,7 @@ SELECT count(*) = 1
   JOIN "session" s USING (session_id)
   JOIN users u ON (s.users_id = u.id)
  WHERE f.session_id = $1 and f.id = $2 and u.username = SESSION_USER;
-$$ language sql SECURITY DEFINER;
+$$ language sql;
 
 COMMENT ON FUNCTION form_check(in_session_id int, in_form_id int) IS
 $$ This checks to see if an open form (record in open_forms) exists with
@@ -35,7 +35,7 @@ BEGIN
             RETURN FALSE;
         END IF;
 END;
-$$ language plpgsql SECURITY DEFINER;
+$$ language plpgsql;
 
 COMMENT ON FUNCTION form_close(in_session_id int, in_form_id int) IS
 $$ Closes out the form by deleting it from the open_forms table.
@@ -67,7 +67,7 @@ BEGIN
         END IF;
         RETURN test_result;
 END;
-$$ LANGUAGE PLPGSQL SECURITY DEFINER; -- run by public, but no input from user.
+$$ LANGUAGE PLPGSQL;
 
 COMMENT ON FUNCTION check_expiration() IS
 $$ This checks whether the user needs to be notified of a pending expiration of
@@ -97,7 +97,7 @@ BEGIN
 
         RETURN form_id;
 END;
-$$ LANGUAGE PLPGSQL SECURITY DEFINER;
+$$ LANGUAGE PLPGSQL;
 
 COMMENT ON FUNCTION form_open(in_session_id int) IS
 $$ This opens a form, and returns the id of the form opened.$$;

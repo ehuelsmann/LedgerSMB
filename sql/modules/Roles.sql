@@ -161,9 +161,17 @@ USING (SESSION_USER = username);
 
 ALTER TABLE budget_info ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE open_forms ENABLE ROW LEVEL SECURITY;
+
 
 \echo BASE ROLES
 SELECT lsmb__create_role('base_user');
+
+\echo XSRF table
+SELECT lsmb__grant_perms('base_user', 'open_forms', 'ALL');
+SELECT lsmb__grant_policy('self_insert', 'base_user', 'open_forms',
+                          'ALL',
+                          'EXISTS (select 1 from "session" s join users u on s.users_id = u.id where s.session_id = session_id)');
 
 \echo BUDGETS
 SELECT lsmb__create_role('budget_view');
