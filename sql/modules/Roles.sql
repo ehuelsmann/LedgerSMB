@@ -165,29 +165,32 @@ USING (SESSION_USER = username);
 SELECT lsmb__create_role('base_user');
 
 \echo BUDGETS
-SELECT lsmb__create_role('budget_enter');
 SELECT lsmb__create_role('budget_view');
-SELECT lsmb__create_role('budget_approve');
-SELECT lsmb__grant_role('budget_approve', 'budget_view');
-SELECT lsmb__create_role('budget_obsolete');
-
-SELECT lsmb__grant_role('budget_obsolete', 'budget_view');
 SELECT lsmb__grant_perms('budget_view', 'budget_info', 'SELECT');
 SELECT lsmb__grant_perms('budget_view', 'budget_line', 'SELECT');
+SELECT lsmb__grant_menu('budget_view', 253, 'allow');
+
+SELECT lsmb__create_role('budget_enter');
 SELECT lsmb__grant_perms('budget_enter', 'budget_info', 'INSERT');
 SELECT lsmb__grant_perms('budget_enter', 'budget_to_business_unit', 'INSERT');
 SELECT lsmb__grant_perms('budget_enter', 'budget_line', 'INSERT');
 SELECT lsmb__grant_perms('budget_enter', 'budget_note', 'INSERT');
-SELECT lsmb__grant_exec('budget_enter', ' budget__save_info(integer,date,date,text,text,integer[])');
+SELECT lsmb__grant_exec('budget_enter',
+                        'budget__save_info(integer,date,date,text,text,integer[])');
+SELECT lsmb__grant_menu('budget_enter', 252, 'allow');
+
+SELECT lsmb__create_role('budget_approve');
+SELECT lsmb__grant_role('budget_approve', 'budget_view');
 SELECT lsmb__grant_perms('budget_approve', 'budget_info', 'UPDATE',
-       array['approved_at'::text, 'approved_by']);
+                         array['approved_at'::text, 'approved_by']);
+
+SELECT lsmb__grant_exec('budget_approve', 'budget__reject(in_id int)');
+
+SELECT lsmb__grant_role('budget_obsolete', 'budget_view');
+SELECT lsmb__create_role('budget_obsolete');
 SELECT lsmb__grant_perms('budget_obsolete', 'budget_info', 'UPDATE',
        array['approved_at'::text, 'approved_by']);
 
-SELECT lsmb__grant_menu('budget_enter', 252, 'allow');
-SELECT lsmb__grant_menu('budget_view', 253, 'allow');
-
-SELECT lsmb__grant_exec('budget_approve', 'budget__reject(in_id int)');
 
 \echo BUSINESS UNITS
 SELECT lsmb__create_role('business_units_manage');
