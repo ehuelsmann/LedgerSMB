@@ -296,7 +296,7 @@ BEGIN
                  ' VALID UNTIL '|| quote_literal(t_expires);
     return 1;
 END;
-$$ language plpgsql security definer;
+$$ language plpgsql;
 
 COMMENT ON FUNCTION user__change_password(in_new_password text) IS
 $$ Allows a user to change his or her own password.  The password is set to

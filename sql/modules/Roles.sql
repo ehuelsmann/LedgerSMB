@@ -67,6 +67,25 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION lsmb__grant_policy
+(in_policy_name text, in_role text, in_table text, in_scope text,
+ in_policy text)
+RETURNS BOOL
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+   EXECUTE 'DROP POLICY IF EXISTS ' || quote_ident(in_policy_name) ||
+           ' ON ' || quote_ident(in_table);
+   EXECUTE 'CREATE POLICY ' || quote_ident(in_policy_name) || ' ON ' ||
+       quote_ident(in_table) ||
+       ' FOR ' || in_scope ||
+       ' TO ' || quote_ident(lsmb__role(in_role)) ||
+       ' USING (' || in_policy || ')';
+
+   RETURN TRUE;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION quote_ident_array(text[]) returns text[]
 language sql as $$
    SELECT array_agg(quote_ident(e))
@@ -119,8 +138,27 @@ BEGIN
 END;
 $$;
 
+--
+--  Schema access set-up
+--
+
 GRANT SELECT ON periods TO public; -- 'periods' is a view in Pg-database
 GRANT SELECT ON location_class_to_entity_class TO PUBLIC;
+
+\echo ROW LEVEL ACCESS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS self_view ON users;
+CREATE POLICY self_view ON users
+   FOR SELECT
+USING (SESSION_USER = username);
+
+DROP POLICY IF EXISTS self_modify ON users;
+CREATE POLICY self_modify ON users
+   FOR UPDATE
+USING (SESSION_USER = username);
+
+
 
 
 \echo BASE ROLES
@@ -1114,14 +1152,20 @@ SELECT lsmb__grant_menu('template_edit', id, 'allow')
                     181,182,183,184,185,186,187,241,242]) id;
 
 SELECT lsmb__create_role('users_manage');
+SELECT lsmb__grant_policy('admin_modify', 'users_manage', 'users',
+                          'ALL', 'true');
+
 SELECT lsmb__grant_role('users_manage', 'contact_read');
 SELECT lsmb__grant_role('users_manage', 'contact_create');
 SELECT lsmb__grant_role('users_manage', 'contact_class_employee');
+
 SELECT lsmb__grant_exec('users_manage', 'admin__add_user_to_role(TEXT, TEXT)');
 SELECT lsmb__grant_exec('users_manage', 'admin__remove_user_from_role(TEXT, TEXT)');
 SELECT lsmb__grant_exec('users_manage', 'admin__save_user(int,int,text,text,bool)');
 SELECT lsmb__grant_exec('users_manage', 'admin__delete_user(TEXT, bool)');
-SELECT lsmb__grant_menu('users_manage', 222, 'allow');SELECT lsmb__grant_menu('users_manage', 48, 'allow');
+
+SELECT lsmb__grant_menu('users_manage', 222, 'allow');
+SELECT lsmb__grant_menu('users_manage', 48, 'allow');
 SELECT lsmb__grant_menu('users_manage', 48, 'allow');
 SELECT lsmb__grant_menu('users_manage', 49, 'allow');
 
