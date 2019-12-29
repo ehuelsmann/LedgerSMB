@@ -159,6 +159,7 @@ CREATE POLICY self_modify ON users
 USING (SESSION_USER = username);
 
 
+ALTER TABLE budget_info ENABLE ROW LEVEL SECURITY;
 
 
 \echo BASE ROLES
@@ -169,8 +170,10 @@ SELECT lsmb__create_role('budget_view');
 SELECT lsmb__grant_perms('budget_view', 'budget_info', 'SELECT');
 SELECT lsmb__grant_perms('budget_view', 'budget_line', 'SELECT');
 SELECT lsmb__grant_menu('budget_view', 253, 'allow');
+SELECT lsmb__grant_policy('view', 'budget_view', 'budget_info', 'SELECT', 'true');
 
 SELECT lsmb__create_role('budget_enter');
+SELECT lsmb__grant_role('budget_enter', 'budget_view');
 SELECT lsmb__grant_perms('budget_enter', 'budget_info', 'INSERT');
 SELECT lsmb__grant_perms('budget_enter', 'budget_to_business_unit', 'INSERT');
 SELECT lsmb__grant_perms('budget_enter', 'budget_line', 'INSERT');
@@ -183,11 +186,15 @@ SELECT lsmb__create_role('budget_approve');
 SELECT lsmb__grant_role('budget_approve', 'budget_view');
 SELECT lsmb__grant_perms('budget_approve', 'budget_info', 'UPDATE',
                          array['approved_at'::text, 'approved_by']);
+SELECT lsmb__grant_policy('approve', 'budget_approve', 'budget_info', 'UPDATE',
+                          'approved_by IS NULL');
+SELECT lsmb__grant_policy('reject', 'budget_approve', 'budget_info', 'DELETE',
+                          'approved_by IS NULL');
 
 SELECT lsmb__grant_exec('budget_approve', 'budget__reject(in_id int)');
 
-SELECT lsmb__grant_role('budget_obsolete', 'budget_view');
 SELECT lsmb__create_role('budget_obsolete');
+SELECT lsmb__grant_role('budget_obsolete', 'budget_view');
 SELECT lsmb__grant_perms('budget_obsolete', 'budget_info', 'UPDATE',
        array['approved_at'::text, 'approved_by']);
 

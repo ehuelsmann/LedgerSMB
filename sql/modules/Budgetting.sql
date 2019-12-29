@@ -151,7 +151,7 @@ BEGIN
   retval := budget__get_info(t_id);
   return retval;
 END;
-$$ security definer language plpgsql;
+$$ language plpgsql;
 
 COMMENT ON FUNCTION budget__save_info
 (in_id int, in_start_date date, in_end_date date, in_reference text,
@@ -339,7 +339,7 @@ DELETE FROM budget_info WHERE id = in_id AND approved_by IS NULL;
 
 RETURN FOUND;
 END;
-$$ LANGUAGE PLPGSQL SECURITY DEFINER;
+$$ LANGUAGE PLPGSQL;
 REVOKE EXECUTE ON FUNCTION budget__reject(in_id int) FROM public;
 
 COMMENT ON FUNCTION budget__reject(in_id int) IS
