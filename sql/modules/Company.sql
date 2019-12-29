@@ -1086,8 +1086,6 @@ $$
 DECLARE out_row record;
         t_entity_id int;
 BEGIN
-        -- ALERT: security definer function.  Be extra careful about EXECUTE
-        -- in here. --CT
         SELECT entity_id INTO t_entity_id
         FROM entity_credit_account
         WHERE id = in_credit_id;
@@ -1102,7 +1100,7 @@ BEGIN
                 RETURN NEXT out_row;
         END LOOP;
 END;
-$$ LANGUAGE PLPGSQL SECURITY DEFINER;
+$$ LANGUAGE PLPGSQL;
 
 COMMENT ON FUNCTION eca__list_notes(in_credit_id int) IS
 $$Returns a list of notes attached to the entity credit account.$$;
