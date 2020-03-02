@@ -46,7 +46,8 @@ use strict;
 use warnings;
 
 use LedgerSMB::Setting;
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 
 =item get_new_info
 

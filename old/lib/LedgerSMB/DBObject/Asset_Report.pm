@@ -71,7 +71,8 @@ If true, submitted for approval
 
 =cut
 
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 use strict;
 use warnings;
 

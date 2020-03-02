@@ -27,7 +27,8 @@ User/group management for LedgerSMB
 =cut
 
 
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 
 use LedgerSMB::Entity::Person::Employee;
 use LedgerSMB::DBObject::User;

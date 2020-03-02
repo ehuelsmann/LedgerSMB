@@ -9,10 +9,10 @@ package LedgerSMB::DBObject::User;
 use strict;
 use warnings;
 
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 
 use Locale::CLDR;
-
 use Log::Log4perl;
 
 =head2 NOTES

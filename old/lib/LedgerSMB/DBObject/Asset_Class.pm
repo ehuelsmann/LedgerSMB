@@ -41,7 +41,8 @@ Integer id of depreciation method.
 
 =cut
 
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 
 use strict;
 use warnings;

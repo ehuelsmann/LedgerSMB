@@ -11,7 +11,7 @@ and accounts).
 
 =over
 
-=item LedgerSMB::PGOld
+=item LedgerSMB::PGObject
 
 =back
 
@@ -22,7 +22,8 @@ and accounts).
 package LedgerSMB::DBObject::Account;
 use strict;
 use warnings;
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 
 use Syntax::Keyword::Try qw|try :experimental(typed)|;
 

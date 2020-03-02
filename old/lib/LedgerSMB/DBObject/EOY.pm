@@ -29,7 +29,8 @@ closure
 =cut
 
 package LedgerSMB::DBObject::EOY;
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 use strict;
 use warnings;
 

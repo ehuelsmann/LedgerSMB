@@ -1,5 +1,6 @@
 package LedgerSMB::DBObject::TransTemplate;
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 use strict;
 use warnings;
 use Log::Log4perl;
@@ -56,7 +57,7 @@ sub save {
    @{$self}{keys %$ref} = values %$ref if $ref;
    $self->{journal_id} = $self->{id};
    for my $line (@{$self->{journal_lines}}){
-       my $l = bless $line, 'LedgerSMB::PGOld';
+       my $l = bless $line, 'LedgerSMB::PGObject';
        $l->{_locale} = $self->{_locale};
        $l->set_dbh($self->dbh);
        $l->{journal_id} = $self->{id};

@@ -23,7 +23,8 @@ on the fly, but this will have to be implemented in the future.
 
 package LedgerSMB::DBObject::TaxForm;
 
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 
 use strict;
 use warnings;

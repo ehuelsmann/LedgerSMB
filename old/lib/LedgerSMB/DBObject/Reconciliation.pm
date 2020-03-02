@@ -49,7 +49,8 @@ package LedgerSMB::DBObject::Reconciliation;
 use strict;
 use warnings;
 
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 use List::Util qw(sum);
 use LedgerSMB::Reconciliation::CSV;
 use LedgerSMB::PGNumber;

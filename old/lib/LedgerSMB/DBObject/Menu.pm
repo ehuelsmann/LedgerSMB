@@ -20,7 +20,8 @@ package LedgerSMB::DBObject::Menu;
 use strict;
 use warnings;
 
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 
 
 =head1 METHODS

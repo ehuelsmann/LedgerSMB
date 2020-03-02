@@ -20,7 +20,10 @@ use LedgerSMB::FileFormats::OFX::BankStatement;
 
 use strict;
 use warnings;
-use base qw(LedgerSMB::PGOld);
+
+use Moose;
+with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 
 use Syntax::Keyword::Try;
 
@@ -81,5 +84,7 @@ sub process {
 
     return $self->{entries};
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;

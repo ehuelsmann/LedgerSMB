@@ -1,6 +1,6 @@
 package LedgerSMB::Setting;
 
-use base qw(LedgerSMB::PGOld Exporter);
+use base qw(LedgerSMB::PGObject Exporter);
 use strict;
 use warnings;
 
@@ -46,7 +46,7 @@ our @EXPORT_OK = qw( increment_process );
 
 =head1 METHODS
 
-Inherits from L<LedgerSMB::PGOld>
+Inherits from L<LedgerSMB::PGObject>
 
 =head2 get($key)
 

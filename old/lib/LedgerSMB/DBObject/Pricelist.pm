@@ -10,7 +10,8 @@ LedgerSMB::DBObject::Pricelist - Pricelists for customers and vendors
 =cut
 
 package LedgerSMB::DBObject::Pricelist;
-use base qw(LedgerSMB::PGOld);
+use Moose;
+with 'LedgerSMB::PGObject';
 use strict;
 use warnings;
 
