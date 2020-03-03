@@ -1,6 +1,9 @@
 package LedgerSMB::Setting;
 
-use base qw(LedgerSMB::PGObject Exporter);
+use Moose;
+with 'LedgerSMB::PGObject';
+use namespace::autoclean;
+
 use strict;
 use warnings;
 
@@ -39,10 +42,6 @@ LedgerSMB::Setting - Interact with LedgerSMB company settings.
 =head1 EXPORTS
 
 C<increment_process>
-
-=cut
-
-our @EXPORT_OK = qw( increment_process );
 
 =head1 METHODS
 

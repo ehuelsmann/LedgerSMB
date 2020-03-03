@@ -22,7 +22,7 @@ To save a sequence:
 
 =cut
 
-use LedgerSMB::Setting qw( increment_process );
+use LedgerSMB::Setting;
 use Carp;
 use Moose;
 use namespace::autoclean;
@@ -173,8 +173,10 @@ sub increment {
        $vars = $val2;
     }
     my ($ref) = __PACKAGE__->call_procedure(funcname => 'sequence__increment',
-                                            args => [$label]);
-    return increment_process($ref->{value}, $vars);
+                                          args => [$label]);
+    my $value = $ref->{value};
+    return LedgerSMB::Setting::increment_process($value, $vars);
+
 }
 
 =head2 should_increment($vars, $fldname, [$label]);
