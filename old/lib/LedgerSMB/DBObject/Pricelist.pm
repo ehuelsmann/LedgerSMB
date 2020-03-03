@@ -12,6 +12,7 @@ LedgerSMB::DBObject::Pricelist - Pricelists for customers and vendors
 package LedgerSMB::DBObject::Pricelist;
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 use strict;
 use warnings;
 

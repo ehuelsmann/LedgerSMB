@@ -1,6 +1,7 @@
 package LedgerSMB::DBObject::TransTemplate;
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 use strict;
 use warnings;
 use Log::Log4perl;

@@ -22,6 +22,7 @@ use warnings;
 
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 
 
 =head1 METHODS

@@ -73,6 +73,7 @@ If true, submitted for approval
 
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 use strict;
 use warnings;
 

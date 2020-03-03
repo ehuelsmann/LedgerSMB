@@ -43,6 +43,7 @@ Integer id of depreciation method.
 
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 
 use strict;
 use warnings;

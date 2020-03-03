@@ -25,6 +25,7 @@ package LedgerSMB::DBObject::TaxForm;
 
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 
 use strict;
 use warnings;

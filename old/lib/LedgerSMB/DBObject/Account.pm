@@ -24,6 +24,7 @@ use strict;
 use warnings;
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 
 use Syntax::Keyword::Try qw|try :experimental(typed)|;
 

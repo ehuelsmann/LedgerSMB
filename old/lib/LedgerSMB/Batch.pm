@@ -48,6 +48,7 @@ use warnings;
 use LedgerSMB::Setting;
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 
 =item get_new_info
 

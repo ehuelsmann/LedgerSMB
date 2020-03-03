@@ -51,6 +51,7 @@ use warnings;
 
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 use List::Util qw(sum);
 use LedgerSMB::Reconciliation::CSV;
 use LedgerSMB::PGNumber;

@@ -29,6 +29,7 @@ User/group management for LedgerSMB
 
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 
 use LedgerSMB::Entity::Person::Employee;
 use LedgerSMB::DBObject::User;

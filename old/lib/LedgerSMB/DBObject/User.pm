@@ -11,6 +11,7 @@ use warnings;
 
 use Moose;
 with 'LedgerSMB::PGObject';
+use namespace::autoclean;
 
 use Locale::CLDR;
 use Log::Log4perl;
