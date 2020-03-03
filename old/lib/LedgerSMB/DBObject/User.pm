@@ -227,4 +227,7 @@ sub get_all_users {
 
 =cut
 
+
+__PACKAGE__->meta->make_immutable;
+
 1;

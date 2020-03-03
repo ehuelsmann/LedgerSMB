@@ -103,6 +103,9 @@ sub list_earnings_accounts{
     return @results;
 }
 
+
+__PACKAGE__->meta->make_immutable;
+
 1;
 
 =back

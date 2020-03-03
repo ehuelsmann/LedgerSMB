@@ -150,6 +150,9 @@ sub delete {
                           args => [ $id ]);
 }
 
+
+__PACKAGE__->meta->make_immutable;
+
 1;
 
 =head1 COPYRIGHT

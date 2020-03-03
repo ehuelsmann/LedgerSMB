@@ -107,7 +107,7 @@ sub fetch_config {
     return $myconfig;
 }
 
+
+__PACKAGE__->meta->make_immutable;
+
 1;
-
-=back
-

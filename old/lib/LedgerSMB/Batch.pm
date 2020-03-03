@@ -308,8 +308,6 @@ sub get {
     return $self;
 }
 
-1;
-
 =back
 
 =head1 Copyright (C) 2009-2018, The LedgerSMB core team.
@@ -319,5 +317,8 @@ option any later version.  A copy of the license should have been included with
 your software.
 
 =cut
+
+
+__PACKAGE__->meta->make_immutable;
 
 1;
