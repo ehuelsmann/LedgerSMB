@@ -7,6 +7,7 @@ use warnings;
 use Log::Log4perl;
 
 use LedgerSMB::Magic qw(JRNL_GJ JRNL_AR JRNL_AP EC_CUSTOMER EC_VENDOR);
+use PGObject::Simple;
 
 =head1 NAME
 
@@ -58,10 +59,11 @@ sub save {
    @{$self}{keys %$ref} = values %$ref if $ref;
    $self->{journal_id} = $self->{id};
    for my $line (@{$self->{journal_lines}}){
-       my $l = bless $line, 'LedgerSMB::PGObject';
-       $l->{_locale} = $self->{_locale};
+       my $l = PGObject::Simple->new( ###TODO: create special 'line' type!
+           _locale    => $self->{_locale},
+           journal_id => $self->{id},
+           );
        $l->set_dbh($self->dbh);
-       $l->{journal_id} = $self->{id};
        my ($ref) = $l->call_dbmethod(funcname => 'account__get_from_accno');
        $l->{account_id} = $ref->{id};
        $logger->debug( "$l->{accno}\n" );
