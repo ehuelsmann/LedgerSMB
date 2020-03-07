@@ -9,6 +9,15 @@ LedgerSMB::DBObject::Asset - LedgerSMB Base Class for Fixed Assets
 This library contains the base utility functions for creating, saving, and
 retrieving fixed assets for depreciation
 
+=cut
+
+use strict;
+use warnings;
+
+use Moose;
+with 'LedgerSMB::PGObject';
+use namespace::autoclean;
+
 =head1 STANDARD PROPERTIES
 
 =over
@@ -81,17 +90,29 @@ ID of asset class.
 
 =back
 
+=cut
+
+has 'id' => (is => 'rw');
+has 'description' => (is => 'rw');
+has 'tag' => (is => 'rw');
+has 'purchase_value' => (is => 'rw');
+has 'salvage_value' => (is => 'rw');
+has 'usable_life' => (is => 'rw');
+has 'purchase_date' => (is => 'rw');
+has 'start_depreciation' => (is => 'rw');
+has 'location_id' => (is => 'rw');
+has 'department_id' => (is => 'rw');
+has 'invoice_id' => (is => 'rw');
+has 'asset_account_id' => (is => 'rw');
+has 'dep_account_id' => (is => 'rw');
+has 'exp_account_id' => (is => 'rw');
+has 'obsolete_by' => (is => 'rw');
+has 'asset_class_id' => (is => 'rw');
+
 =head1 METHODS
 
 =over
 
-=cut
-
-use Moose;
-with 'LedgerSMB::PGObject';
-use namespace::autoclean;
-use strict;
-use warnings;
 
 =item save
 
@@ -254,7 +275,7 @@ sub get_invoice_id {
     my ($self) = @_;
     my ($ref) = $self->call_dbmethod(funcname => 'get_vendor_invoice_id');
     if (!$ref) {
-        return $self->error($self->{_locale}->text('Invoice not found'));
+        return $self->error('Invoice not found');
     } else {
         return $self->{invoice_id} = $ref->{get_vendor_invoice_id};
     }
