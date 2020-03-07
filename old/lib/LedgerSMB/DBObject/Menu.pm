@@ -29,10 +29,6 @@ use namespace::autoclean;
 
 =over
 
-=item new()
-
-Inherited from LedgerSMB::DBObject.  Please see that documnetation for details.
-
 =item generate()
 
 This function returns a list of menu items.  Each list item is a hashref:
@@ -45,9 +41,7 @@ th result set, This function does not return an entry for the top-level menu.
 sub generate {
     my ($self) = shift @_;
 
-    @{$self->{menu_items}} = $self->call_dbmethod(funcname => 'menu_generate');
-
-    return @{$self->{menu_items}};
+    return $self->call_dbmethod(funcname => 'menu_generate');
 }
 
 

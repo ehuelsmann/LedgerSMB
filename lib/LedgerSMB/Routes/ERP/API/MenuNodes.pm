@@ -33,13 +33,13 @@ get '/menu-nodes/' => sub {
     my ($env) = @_;
     my $locale = locale($env);
 
-    my $menu = LedgerSMB::DBObject::Menu->new(dbh => $env->{'lsmb.app'});
-    $menu->generate;
+    my $menu = LedgerSMB::DBObject::Menu->new(_dbh => $env->{'lsmb.app'});
+    my @items = $menu->generate;
     $_->{label} = $locale->maketext($_->{label})
-        for (@{$menu->{menu_items}});
+        for (@items);
 
     return [ 200, [ 'Content-Type' => 'application/json; charset=UTF-8' ],
-             [ json()->encode( $menu->{menu_items} ) ] ];
+             [ json()->encode( \@items ) ] ];
 };
 
 
