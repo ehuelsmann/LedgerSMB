@@ -35,7 +35,7 @@ use namespace::autoclean;
 use strict;
 use warnings;
 
-=item $eoy->checkpoint_only();
+=item $eoy->checkpoint_only($date);
 
 This creates account checkpoints at $eoy->{end_date}.  This has two uses:
 1)  Can be used to "close" books without zeroing income/expense accounts.  This
@@ -46,20 +46,22 @@ prevents data from being inserted for earlier dates.
 =cut
 
 sub checkpoint_only {
-    my ($self) = @_;
-   $self->call_dbmethod(funcname => 'eoy_create_checkpoint');
+    my ($self, $date) = @_;
+    $self->call_dbmethod(funcname => 'eoy_create_checkpoint',
+                         args => { end_date => $date });
 }
 
-=item $eoy->reopen_books()
+=item $eoy->reopen_books($date)
 
-This reverses any end of year transaction on $eoy->{reopen_date}, and deletes
+This reverses any end of year transaction on $date, and deletes
 checkpoints later than that and creates a checkpoint for the prior day.
 
 =cut
 
 sub reopen_books {
-    my ($self) = @_;
-   $self->call_dbmethod(funcname => 'eoy__reopen_books_at');
+    my ($self, $date) = @_;
+    $self->call_dbmethod(funcname => 'eoy__reopen_books_at',
+                         args => { reopen_date => $date });
 }
 
 =item $eoy->latest_closing()
@@ -75,24 +77,29 @@ sub latest_closing {
     return $ref->{end_date};
 }
 
-=item $eoy->close_books()
+=item $eoy->close_books($date, $reference_text, $description, $acc_id)
 
-Requires all properies in BASIC PROPERTIES to be set.  This creates a gl
+This creates a gl
 yearend transaction, and moves income/expenses to the selected equity account
 for retained earnings.
 
 =cut
 
 sub close_books {
-    my ($self) = @_;
-   $self->call_dbmethod(funcname => 'eoy_close_books');
+    my ($self, $date, $reference_text, $description, $acc_id) = @_;
+    $self->call_dbmethod(funcname => 'eoy_close_books',
+                         args => {
+                             end_date => $date,
+                             reference => $reference_text,
+                             description => $description,
+                             retention_acc_id => $acc_id
+                         });
 }
 
 =item $eoy->list_earnings_accounts
 
-Returns a list of equity accounts, and sets $eoy->{earnings_accounts} to a
-list of hashrefs.  These are used to select retained earnings accounts in
-closing books.
+Returns a list of equity accounts, alist of hashrefs.  These are used
+to select retained earnings accounts in closing books.
 
 =cut
 

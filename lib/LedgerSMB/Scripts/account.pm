@@ -182,7 +182,7 @@ Shows the yearend screen.  No expected inputs.
 
 sub yearend_info {
     my ($request) = @_;
-    my $eoy =  LedgerSMB::DBObject::EOY->new(%$request);
+    my $eoy =  LedgerSMB::DBObject::EOY->new(_dbh => $request->{dbh}, %$request);
     my $template = LedgerSMB::Template::UI->new_UI;
     return $template->render(
         $request, 'accounts/yearend',
@@ -209,8 +209,10 @@ in_retention_acc_id: Account id to post retained earnings into
 
 sub post_yearend {
     my ($request) = @_;
-    my $eoy =  LedgerSMB::DBObject::EOY->new(%$request);
-    $eoy->close_books;
+    my $eoy =  LedgerSMB::DBObject::EOY->new(_dbh => $request->{dbh}, %$request);
+    $eoy->close_books( $request->{end_date},
+                       $request->{reference}, $request->{description},
+                       $request->{retention_acc_id} );
     my $template = LedgerSMB::Template::UI->new_UI;
     return $template->render($request, 'accounts/yearend_complete', $eoy);
 }
@@ -226,9 +228,8 @@ period_close_date: Date up to (inclusive) which to close the books
 
 sub close_period {
     my ($request) = @_;
-    $request->{end_date} = $request->{period_close_date};
-    my $eoy = LedgerSMB::DBObject::EOY->new(%$request);
-    $eoy->checkpoint_only;
+    my $eoy = LedgerSMB::DBObject::EOY->new(_dbh => $request->{dbh}, %$request);
+    $eoy->checkpoint_only( $request->{period_close_date} );
     delete $request->{period_close_date};
     return yearend_info($request);
 }
@@ -243,7 +244,7 @@ This reopens books as of $request->{reopen_date}
 sub reopen_books {
     my ($request) = @_;
     my $eoy =  LedgerSMB::DBObject::EOY->new(%$request);
-    $eoy->reopen_books;
+    $eoy->reopen_books( $request->{reopen_date});
     delete $request->{reopen_date};
     return yearend_info($request);
 }
