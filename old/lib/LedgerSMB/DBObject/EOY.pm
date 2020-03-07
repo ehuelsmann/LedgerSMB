@@ -98,9 +98,7 @@ closing books.
 
 sub list_earnings_accounts{
     my ($self) = @_;
-    my @results = $self->call_dbmethod(funcname => 'eoy_earnings_accounts');
-    $self->{earnings_accounts} = \@results;
-    return @results;
+    return $self->call_dbmethod(funcname => 'eoy_earnings_accounts');
 }
 
 
@@ -112,6 +110,6 @@ __PACKAGE__->meta->make_immutable;
 
 =head1 COPYRYIGHT
 
-Copyright (C) 2009 The LedgerSMB Core Team.  This may be re-used as permitted by
+Copyright (C) 2009-2020 The LedgerSMB Core Team.  This may be re-used as permitted by
 the GNU General Public License v 2 or at your option any later version.  Please
 see included License.txt for details.

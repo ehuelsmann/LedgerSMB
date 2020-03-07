@@ -183,13 +183,16 @@ Shows the yearend screen.  No expected inputs.
 sub yearend_info {
     my ($request) = @_;
     my $eoy =  LedgerSMB::DBObject::EOY->new(%$request);
-    $eoy->list_earnings_accounts;
-    $eoy->{closed_date} = $eoy->latest_closing;
-    $eoy->{user} = $request->{_user};
     my $template = LedgerSMB::Template::UI->new_UI;
-    return $template->render($request, 'accounts/yearend',
-                             { request => $request,
-                               eoy => $eoy});
+    return $template->render(
+        $request, 'accounts/yearend',
+        {
+            request => $request,
+            eoy => {
+                closed_date       => $eoy->latest_closing,
+                earnings_accounts => [ $eoy->list_earnings_accounts ],
+            },
+        });
 }
 
 =item post_yearend
