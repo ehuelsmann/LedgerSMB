@@ -9,6 +9,18 @@ LedgerSMB::DBObject::Asset_Class - LedgerSMB Base Class for Asset Classes
 This library contains the base utility functions for creating, saving, and
 retrieving depreciation categories of assets.
 
+
+=cut
+
+use strict;
+use warnings;
+
+
+use Moose;
+with 'LedgerSMB::PGObject';
+use namespace::autoclean;
+
+
 =head1 STANDARD PROPERTIES
 
 =over
@@ -35,18 +47,22 @@ Integer id of depreciation method.
 
 =back
 
+=cut
+
+has 'id' => (is => 'rw');
+has 'label' => (is => 'rw');
+has 'asset_account_id' => (is => 'rw');
+has 'dep_account_id' => (is => 'rw');
+has 'method' => (is => 'rw');
+has 'unit_label' => (is => 'rw');
+
+has 'asset_accounts' => (is => 'rw');
+has 'dep_accounts' => (is => 'rw');
+has 'dep_methods' => (is => 'rw');
+
 =head1 METHODS
 
 =over
-
-=cut
-
-use Moose;
-with 'LedgerSMB::PGObject';
-use namespace::autoclean;
-
-use strict;
-use warnings;
 
 =item save
 
@@ -81,13 +97,13 @@ dep_methods to arrayrefo of depreciation methods
 
 sub get_metadata {
     my ($self) = @_;
-    @{$self->{asset_accounts}} = $self->call_dbmethod(funcname => 'asset_class__get_asset_accounts');
-    @{$self->{dep_accounts}} = $self->call_dbmethod(funcname => 'asset_class__get_dep_accounts');
-    @{$self->{dep_methods}} = $self->call_dbmethod(funcname => 'asset_class__get_dep_methods');
-    for my $acc (@{$self->{asset_accounts}}){
+    $self->asset_accounts( [ $self->call_dbmethod(funcname => 'asset_class__get_asset_accounts') ] );
+    $self->dep_accounts( [ $self->call_dbmethod(funcname => 'asset_class__get_dep_accounts') ] );
+    $self->dep_methods( [ $self->call_dbmethod(funcname => 'asset_class__get_dep_methods') ] );
+    for my $acc (@{$self->asset_accounts}){
         $acc->{text} = $acc->{accno} . '--' . $acc->{description};
     }
-    for my $acc (@{$self->{dep_accounts}}){
+    for my $acc (@{$self->dep_accounts}){
         $acc->{text} = $acc->{accno} . '--' . $acc->{description};
     }
     return;
@@ -123,7 +139,7 @@ sub list_asset_classes {
 
 =back
 
-=head1 Copyright (C) 2010-2014, The LedgerSMB core team.
+=head1 Copyright (C) 2010-2020, The LedgerSMB core team.
 
 This file is licensed under the Gnu General Public License version 2, or at your
 option any later version.  A copy of the license should have been included with
