@@ -20,9 +20,14 @@ see the included COPYRIGHT and LICENSE files for more information.
 
 package LedgerSMB::DBObject::Payment;
 
-use base qw(LedgerSMB::PGObject);
+
 use strict;
 use warnings;
+
+use Moose;
+with 'LedgerSMB::PGObject';
+use namespace::autoclean;
+
 use LedgerSMB::PGNumber;
 
 use LedgerSMB::Magic qw(BC_PAYMENT);
