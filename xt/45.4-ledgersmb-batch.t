@@ -40,7 +40,7 @@ my ($batch_class_id) = $q->fetchrow_array
 
 # Create a batch
 $data = {
-    dbh => $dbh,
+    _dbh => $dbh,
     batch_number => 'TEST-001',
     batch_class => 'ar',
     batch_date => '2018-09-08',
@@ -56,7 +56,7 @@ is($id, $batch->{id}, 'id object property matches returned id');
 
 # Retrieve a batch
 $data = {
-    dbh => $dbh,
+    _dbh => $dbh,
     batch_id => $id,
 };
 $batch = LedgerSMB::Batch->new(%$data);
@@ -74,14 +74,14 @@ ok(exists $result->{approved_on}, 'retrieved approved_on');
 is($result->{approved_on}, undef, 'retrieved approved_on is undef');
 like($result->{created_on}, qr/^\d{4}-\d{2}-\d{2}$/, 'retrieved created on');
 ok(exists $result->{locked_by}, 'retrieved locked_by');
-is($result->{loked_by}, undef, 'retrieved locked_by is undef');
+is($result->{locked_by}, undef, 'retrieved locked_by is undef');
 ok(exists $result->{approved_by}, 'retrieved approved_by');
 is($result->{approved_by}, undef, 'retrieved approved_by is undef');
 
 
 # Delete a batch
 $data = {
-    dbh => $dbh,
+    _dbh => $dbh,
     batch_id => $id,
 };
 $batch = LedgerSMB::Batch->new(%$data);
@@ -92,7 +92,7 @@ ok($result, 'deleting a batch returns true');
 
 # Retrieve a non-existent batch
 $data = {
-    dbh => $dbh,
+    _dbh => $dbh,
     batch_id => $id,
 };
 $batch = LedgerSMB::Batch->new(%$data);
@@ -109,7 +109,7 @@ is($batch->get_class_id('ar'), $batch_class_id, 'batch class id lookup');
 
 # Create and approve/post a batch
 $data = {
-    dbh => $dbh,
+    _dbh => $dbh,
     batch_number => 'TEST-002',
     batch_class => 'ar',
     batch_date => '2018-09-08',
@@ -120,7 +120,7 @@ isa_ok($batch, ['LedgerSMB::Batch'], 'instantiated object with data');
 like($id = $batch->create, qr/^\d+$/, 'batch creation returns numeric id');
 
 $data = {
-    dbh => $dbh,
+    _dbh => $dbh,
     batch_id => $id,
 };
 $batch = LedgerSMB::Batch->new(%$data);

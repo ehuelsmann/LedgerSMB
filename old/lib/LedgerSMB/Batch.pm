@@ -50,6 +50,18 @@ use Moose;
 with 'LedgerSMB::PGObject';
 use namespace::autoclean;
 
+has 'id' => (is => 'rw');
+has 'batch_id' => (is => 'rw');
+has 'batch_number' => (is => 'rw');
+has 'batch_class' => (is => 'rw');
+has 'batch_date' => (is => 'rw');
+has 'description' => (is => 'rw');
+
+has 'batch_class_id' => (is => 'rw');
+has 'control_code' => (is => 'rw');
+has 'default_date' => (is => 'rw');
+has 'created_on' => (is => 'rw');
+
 =item get_new_info
 
 This gets the information required for the new batch screen.  Currently this

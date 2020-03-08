@@ -11,10 +11,9 @@ use Test2::V0;
 
 use DBI;
 use LedgerSMB::Batch;
-use LedgerSMB::Report::Unapproved::Batch_Overview
+use LedgerSMB::Report::Unapproved::Batch_Overview;
 
 # Create test run conditions
-my $data;
 my $report;
 my $rows;
 my $row;
@@ -63,7 +62,7 @@ foreach my $batch_data(@test_batches) {
 
     if($batch_data->{__POST}) {
         $batch = LedgerSMB::Batch->new(
-            dbh => $dbh,
+            _dbh => $dbh,
             batch_id => $batch_id,
         );
         $batch->post or die 'Failed to post/approve test batch';
