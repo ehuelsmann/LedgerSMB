@@ -28,6 +28,21 @@ use namespace::autoclean;
 
 use Syntax::Keyword::Try qw|try :experimental(typed)|;
 
+has 'charttype' => (is => 'rw');
+has 'id' => (is => 'rw');
+has 'contra' => (is => 'rw');
+has 'tax' => (is => 'rw');
+has 'recon' => (is => 'rw');
+has 'accno' => (is => 'rw');
+has 'description' => (is => 'rw');
+has 'category' => (is => 'rw');
+has 'is_temp' => (is => 'rw');
+has 'gifi_accno' => (is => 'rw');
+has 'heading' => (is => 'rw');
+has 'link' => (is => 'rw');
+has 'obsolete' => (is => 'rw');
+has 'summary' => (is => 'rw');
+
 sub _get_translations {
     my ($self) = @_;
     my $trans_func = 'account__list_translations';
@@ -127,8 +142,6 @@ sub save {
        $self->{is_temp} = '1';
        $self->{category} = 'Q';
     }
-
-    $self->generate_links;
 
     my $func = 'account__save';
     if ($self->{charttype} and $self->{charttype} eq 'H') {
@@ -306,7 +319,7 @@ sub gifi_list {
     return @{$self->{gifi_list}};
 }
 
-=item generate_links()
+=item generate_links( \%links )
 
 Returns an arrayref containing account_link descriptions corresponding with
 those present and true in the request parameters.
@@ -315,11 +328,14 @@ The LedgerSMB UI does not allow an account to be a 'summary' for more than one
 descriptor. This is implied by the user interface and enforced at the database
 level.
 
+Takes the boolean indicators for links being enabled on an account from the
+C<%links> hashref.
+
 =cut
 
 sub generate_links {
-    my $self = shift;
-    my @links;
+    my ($self, $links) = @_;
+    my @link;
     my @descriptions = $self->call_dbmethod(
         funcname => 'get_link_descriptions',
         args => {
@@ -330,12 +346,12 @@ sub generate_links {
 
     foreach my $d (@descriptions) {
        my $l = $d->{description};
-       if ($self->{$l}) {
-           push (@links, $l);
+       if ($links->{$l}) {
+           push (@link, $l);
         }
      }
 
-     return $self->{link} = \@links;
+     return $self->{link} = \@link;
 }
 
 =item list_headings

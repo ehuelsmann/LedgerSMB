@@ -40,7 +40,7 @@ sub new_account {
     my ($request) = @_;
 
     my $account = LedgerSMB::DBObject::Account->new(
-        dbh => $request->{dbh},
+        _dbh => $request->{dbh},
         charttype => 'A',
     );
 
@@ -57,7 +57,7 @@ sub new_heading {
     my ($request) = @_;
 
     my $account = LedgerSMB::DBObject::Account->new(
-        dbh => $request->{dbh},
+        _dbh => $request->{dbh},
         charttype => 'H',
     );
 
@@ -73,11 +73,11 @@ Requires the id and charttype variables in the request to be set.
 =cut
 
 sub edit {
-    my ($request) = @_;
+    my ($request, $account) = @_;
 
-    my $account = LedgerSMB::DBObject::Account->new(
-        dbh => $request->{dbh},
-        id => $request->{id},
+    $account = LedgerSMB::DBObject::Account->new(
+        _dbh => $request->{dbh},
+        id => ($account->{id} // $request->{id}),
         charttype => $request->{charttype},
     );
 
@@ -108,13 +108,14 @@ sub save {
     if ( defined $request->{parent} and $request->{parent} == -1 ) {
         $request->{parent} = undef;
     }
-    die $request->{_locale}->text('Please select a valid heading')
+    die 'Please select a valid heading'
        if (defined $request->{heading}
            and $request->{heading} =~ /\D/);
-    my $account = LedgerSMB::DBObject::Account->new(%$request);
-    $account->{$account->{summary}}=$account->{summary};
+    my $account = LedgerSMB::DBObject::Account->new(_dbh => $request->{dbh}, %$request);
+    $request->{$request->{summary}}=$request->{summary};
+    $account->generate_links($request);
     $account->save;
-    return edit($account);
+    return edit($request, $account);
 }
 
 =item update_translations
@@ -125,7 +126,7 @@ Saves selected translations
 
 sub update_translations {
     my ($request) = @_;
-    my $account = LedgerSMB::DBObject::Account->new(%$request);
+    my $account = LedgerSMB::DBObject::Account->new(_dbh => $request->{dbh}, %$request);
     if ($request->{languagecount} > 0) {
         $account->{translations} = {};
         for my $index (1..$request->{languagecount}) {
@@ -135,7 +136,7 @@ sub update_translations {
     }
 
     $account->save_translations;
-    return edit($account);
+    return edit($request, $account);
 }
 
 =item save_as_new
