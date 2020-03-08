@@ -48,7 +48,6 @@ use LedgerSMB::Magic qw( EC_EMPLOYEE HTTP_454 PERL_TIME_EPOCH );
 use LedgerSMB::Mailer;
 use LedgerSMB::PGDate;
 use LedgerSMB::PSGI::Util;
-use LedgerSMB::Setting;
 use LedgerSMB::Setup::SchemaChecks qw( html_formatter_context );
 use LedgerSMB::Sysconfig;
 use LedgerSMB::Template::UI;
@@ -1140,7 +1139,7 @@ sub _render_new_user {
     $request->{dbh}->{AutoCommit} = 0;
 
     if ( $request->{coa_lc} ) {
-        LedgerSMB::Setting->new(%$request)->set('default_country',$request->{coa_lc});
+        $request->setting->set('default_country',$request->{coa_lc});
     }
     return _render_user($request, $entrypoint);
 }
@@ -1248,6 +1247,43 @@ sub _post_migration_schema_upgrade {
     $dbh->commit;
 
     return;
+}
+
+=item run_upgrade
+
+
+
+=cut
+
+sub run_upgrade {
+    my ($request) = @_;
+    my ($reauth, $database) = _init_db($request);
+    return $reauth if $reauth;
+
+    my $dbh = $request->{dbh};
+    my $dbinfo = $database->get_info();
+    my $v = $dbinfo->{version};
+    $v =~ s/\.//;
+    $dbh->do("ALTER SCHEMA $LedgerSMB::Sysconfig::db_namespace
+                RENAME TO lsmb$v")
+        or die "Can't rename schema '$LedgerSMB::Sysconfig::db_namespace': "
+        . $dbh->errstr();
+    $dbh->commit;
+
+    process_and_run_upgrade_script($request, $database, "lsmb$v",
+                   "$dbinfo->{version}-$CURRENT_MINOR_VERSION");
+
+    if ($v ne '1.2'){
+        $request->{only_templates} = 1;
+    }
+
+    my $templates = $request->setting->get('templates');
+    if ($templates){
+       $request->{template_dir} = $templates;
+       return load_templates($request);
+    } else {
+       return template_screen($request);
+    }
 }
 
 =item add_user

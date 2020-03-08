@@ -50,7 +50,6 @@ use LedgerSMB::Form;
 use LedgerSMB::IS;
 use LedgerSMB::PE;
 use LedgerSMB::Tax;
-use LedgerSMB::Setting;
 use LedgerSMB::DBObject::Draft;
 
 use Workflow::Factory qw(FACTORY);
@@ -285,7 +284,7 @@ sub prepare_invoice {
             $form->{"discount_$i"} =
               $form->format_amount( \%myconfig, $form->{"discount_$i"} * 100 );
 
-            my $moneyplaces = LedgerSMB::Setting->new(%$form)->get('decimal_places');
+            my $moneyplaces = $form->get_setting('decimal_places');
             my ($dec) = ($form->{"sellprice_$i"} =~/\.(\d*)/);
             $dec = length $dec;
             $decimalplaces = ( $dec > $moneyplaces ) ? $dec : $moneyplaces;
@@ -453,7 +452,7 @@ sub form_header {
         <td colspan=3>
           <table>
             <tr> |;
-      if (LedgerSMB::Setting->new(%$form)->get('show_creditlimit')){
+      if ($form->get_setting('show_creditlimit')){
           print qq|
               <th align=right nowrap>| . $locale->text('Credit Limit') . qq|</th>
               <td>|

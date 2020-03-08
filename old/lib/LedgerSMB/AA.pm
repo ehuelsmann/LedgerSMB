@@ -30,7 +30,6 @@ package AA;
 use Log::Log4perl;
 use LedgerSMB::File;
 use LedgerSMB::PGNumber;
-use LedgerSMB::Setting;
 
 my $logger = Log::Log4perl->get_logger("AA");
 
@@ -713,7 +712,7 @@ sub get_name {
     my $arap = ( $form->{vc} eq 'customer' ) ? 'ar' : 'ap';
     my $ARAP = uc $arap;
 
-    if (LedgerSMB::Setting->new(%$form)->get('show_creditlimit')){
+    if ($form->get_setting('show_creditlimit')){
         $form->{creditlimit} = LedgerSMB::PGNumber->from_input('0') unless
           $form->{creditlimit} > 0;
         $form->{creditremaining} = $form->{creditlimit};

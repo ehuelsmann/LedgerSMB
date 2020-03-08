@@ -22,7 +22,6 @@ This module provides the workflow scripts for managing currencies and fx rates.
 use LedgerSMB::Currency;
 use LedgerSMB::Exchangerate;
 use LedgerSMB::Exchangerate_Type;
-use LedgerSMB::Setting;
 use LedgerSMB::Template::UI;
 
 use Log::Log4perl;

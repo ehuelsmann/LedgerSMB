@@ -37,7 +37,6 @@ use LedgerSMB::File;
 use LedgerSMB::I18N;
 use LedgerSMB::Magic qw( EC_EMPLOYEE );
 use LedgerSMB::Part;
-use LedgerSMB::Setting;
 use LedgerSMB::Template::UI;
 
 use LedgerSMB::old_code qw(dispatch);
@@ -286,8 +285,7 @@ sub _main_screen {
     my @sic_list = $request->call_procedure(funcname => 'sic__list');
 
     my @all_currencies =
-        map { { curr => $_ } }
-        (LedgerSMB::Setting->new(%$request))->get_currencies;
+        map { { curr => $_ } } $request->setting->get_currencies;
 
     my $default_country = $request->setting->get('default_country');
     my ($default_language) = $request->setting->get('default_language');

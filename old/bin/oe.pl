@@ -46,7 +46,6 @@ use LedgerSMB::OE;
 use LedgerSMB::IR;
 use LedgerSMB::IS;
 use LedgerSMB::PE;
-use LedgerSMB::Setting;
 use LedgerSMB::Tax;
 use LedgerSMB::Template::UI;
 use LedgerSMB::Legacy_Util;
@@ -416,7 +415,7 @@ sub form_header {
 
         $n = ( $form->{creditremaining} < 0 ) ? "0" : "1";
 
-        if (LedgerSMB::Setting->new(%$form)->get('show_creditlimit')){
+        if ($form->get_setting('show_creditlimit')){
         $creditremaining = qq|
           <tr>
         <td></td>

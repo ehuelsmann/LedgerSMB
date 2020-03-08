@@ -46,7 +46,6 @@ use LedgerSMB::Tax;
 use LedgerSMB::Template;
 use LedgerSMB::Template::UI;
 use LedgerSMB::Sysconfig;
-use LedgerSMB::Setting;
 use LedgerSMB::Legacy_Util;
 use LedgerSMB::DBObject::Draft;
 use LedgerSMB::File;
@@ -290,7 +289,7 @@ qq|<option value="$ref->{partsgroup}--$ref->{id}">$ref->{partsgroup}\n|;
                 ( $null, $dec ) = split /,/, $form->{"sellprice_$i"};
             }
         }
-        my $moneyplaces = LedgerSMB::Setting->new(%$form)->get('decimal_places');
+        my $moneyplaces = $form->get_setting('decimal_places');
         $dec = length $dec;
         $decimalplaces = ( $dec > $moneyplaces ) ? $dec : $moneyplaces;
         $form->{"precision_$i"} = $decimalplaces;

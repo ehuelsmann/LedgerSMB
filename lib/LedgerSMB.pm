@@ -507,8 +507,7 @@ sub setting {
             'cannot initialise LedgerSMB::Setting object -'.
             'database handler is undefined'
         );
-        $self->{_setting} = LedgerSMB::Setting->new();
-        $self->{_setting}->set_dbh($self->{dbh});
+        $self->{_setting} = LedgerSMB::Setting->new(_dbh => $self->{dbh});
     }
 
     return $self->{_setting};

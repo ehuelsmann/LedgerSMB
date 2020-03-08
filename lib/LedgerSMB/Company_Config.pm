@@ -32,7 +32,6 @@ namespace (scope of which is 'my') and setting keys as expected.
 
 use strict;
 use warnings;
-use LedgerSMB::Setting;
 
 my @company_settings = qw(templates businessnumber weightunit curr
                           default_email_from default_email_to
@@ -49,8 +48,14 @@ our $settings = {};
 
 sub initialize{
     my ($request) = @_;
-    my $s = LedgerSMB::Setting->new(dbh => $request->{dbh});
-    $settings = { map {$_ => $s->get($_) } @company_settings };
+
+    if (ref $request eq 'Form') {
+        $settings = { map {$_ => $request->get_setting($_) } @company_settings };
+    }
+    else {
+        my $s = $request->setting;
+        $settings = { map {$_ => $s->get($_) } @company_settings };
+    }
     $settings->{curr} = [ split (/:/, $settings->{curr}) ];
     $settings->{default_currency} = $settings->{curr}->[0];
 

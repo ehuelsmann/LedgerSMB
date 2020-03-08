@@ -512,7 +512,7 @@ sub _render {
         return [map { +{ %$_, %{shift @newlines} } } @$lines ];
     };
 
-    my $setting = LedgerSMB::Setting->new(%$request);
+    my $setting = $request->setting;
     return $args{renderer}->(
         $template, $self,
         {

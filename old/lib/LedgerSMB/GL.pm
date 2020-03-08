@@ -40,7 +40,6 @@ LedgerSMB:GL - General Ledger backend code
 package GL;
 
 use LedgerSMB::File;
-use LedgerSMB::Setting;
 
 =over
 
@@ -274,9 +273,8 @@ sub transaction {
         my $results = $sth->fetchall_hashref('setting_key');
         $form->{closedto} = $results->{'closedto'}->{'value'};
         $form->{revtrans} = $results->{'revtrans'}->{'value'};
-        @{$form->{currencies}} =
-            (LedgerSMB::Setting->new(%$form))->get_currencies;
-        #$form->{separate_duties} = $results->{'separate_duties'}->{'value'};
+        $form->currencies;
+
         $sth->finish;
 
         $query = qq|SELECT g.*
@@ -334,8 +332,7 @@ sub transaction {
         $form->{separate_duties} = $results->{'separate_duties'}->{'value'};
         $form->{closedto}  = $results->{'closedto'}->{'value'};
         $form->{revtrans}  = $results->{'revtrans'}->{'value'};
-        @{$form->{currencies}} =
-            (LedgerSMB::Setting->new(%$form))->get_currencies;
+        $form->currencies;
         if (!$form->{transdate}){
             $form->{transdate} = $results->{'revtrans'}->{'transdate'};
         }

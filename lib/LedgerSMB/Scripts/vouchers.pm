@@ -27,7 +27,6 @@ use LedgerSMB::Report::Unapproved::Batch_Overview;
 use LedgerSMB::Report::Unapproved::Batch_Detail;
 use LedgerSMB::Scripts::payment;
 use LedgerSMB::Scripts::reports;
-use LedgerSMB::Setting;
 use LedgerSMB::Sysconfig;
 use LedgerSMB::Template::UI;
 
@@ -278,7 +277,7 @@ Displays all vouchers from the batch by type, and includes amount.
 
 sub get_batch {
     my ($request)  = @_;
-    my $setting =  LedgerSMB::Setting->new(%$request);
+    my $setting = $request->setting;
     $request->open_form;
 
     $request->{hiddens} = { batch_id => $request->{batch_id} };

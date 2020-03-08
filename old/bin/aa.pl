@@ -48,7 +48,6 @@ package lsmb_legacy;
 use LedgerSMB::Form;
 use LedgerSMB::IR;
 use LedgerSMB::IS;
-use LedgerSMB::Setting;
 use LedgerSMB::Tax;
 use LedgerSMB::DBObject::Draft;
 use LedgerSMB::DBObject::TransTemplate;
@@ -552,7 +551,7 @@ $form->open_status_div($status_div_id) . qq|
         <td colspan=3>
           <table width=100%>
             <tr> |;
-    if (LedgerSMB::Setting->new(%$form)->get('show_creditlimit')){
+    if ($form->get_setting('show_creditlimit')){
        print qq|
               <th align=left nowrap>| . $locale->text('Credit Limit') . qq|</th>
               <td>$form->{creditlimit}</td>

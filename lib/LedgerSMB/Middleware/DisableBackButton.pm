@@ -73,8 +73,8 @@ sub call {
                                         qw| no-store  no-cache  must-revalidate
                                         post-check=0 pre-check=0 false|),
                 'Pragma' => 'no-cache'
-                );
-        }
+                ) if LedgerSMB::Setting->new(_dbh => $env->{'lsmb.db'})
+                ->get('disable_back');
     });
 }
 
