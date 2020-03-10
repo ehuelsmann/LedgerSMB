@@ -25,28 +25,8 @@ use Moose;
 with 'LedgerSMB::PGObject';
 use namespace::autoclean;
 
-=item search()
-
-returns a list of results for the search criteria.  This list is also stored
-in $draft->{search_resuts}
-
-Requres $self->{type} to be one of 'ar', 'ap', or 'gl'
-
-Optional hash entries for search criteria are:
-
-with_accno: Draft transaction against a specific account.
-from_date:  Earliest date for match
-to_date: Latest date for match
-amount_le: total less than or equal to
-amount_ge: total greater than or equal to
-
-=cut
-
-sub search {
-    my ($self) = @_;
-    @{$self->{draft_results}} = $self->call_dbmethod(funcname => 'draft__search');
-    return @{$self->{draft_results}};
-}
+has 'id' => (is => 'rw');
+has 'type' => (is => 'rw');
 
 =item approve()
 
@@ -58,7 +38,7 @@ approved, the draft shows up in financial reports.
 sub approve {
    my ($self) = @_;
    if (!$self->{id}){
-       $self->error($self->{_locale}->text('No ID Set'));
+       $self->error('No ID Set');
    }
    ($self->{approved}) = $self->call_dbmethod(funcname => 'draft_approve');
    return $self->{approved};
@@ -76,7 +56,7 @@ books, a draft may not be deleted.
 sub delete {
    my ($self) = @_;
    if (!$self->{id}){
-       $self->error($self->{_locale}->text('No ID Set'));
+       $self->error('No ID Set');
    }
    ($self->{deleted}) = $self->call_dbmethod(funcname => 'draft_delete');
    return $self->{deleted};
@@ -86,7 +66,7 @@ sub delete {
 
 =head1 COPYRIGHT
 
-Copyright (C) 2009 LedgerSMB Core Team.  This file is licensed under the GNU
+Copyright (C) 2009-2020 LedgerSMB Core Team.  This file is licensed under the GNU
 General Public License version 2, or at your option any later version.  Please
 see the included License.txt for details.
 
