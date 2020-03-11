@@ -56,6 +56,20 @@ use List::Util qw(sum);
 use LedgerSMB::Reconciliation::CSV;
 use LedgerSMB::PGNumber;
 
+has 'report_id' => (is => 'rw');
+has 'chart_id' => (is => 'rw');
+has 'total' => (is => 'rw');
+has 'end_date' => (is => 'rw');
+has 'recon_fx' => (is => 'rw');
+
+has 'cleared_total' => (is => 'rw');
+has 'outstanding_total' => (is => 'rw');
+has 'statement_gl_calc' => (is => 'rw');
+has 'their_total' => (is => 'rw');
+has 'variance' => (is => 'rw');
+has 'our_total' => (is => 'rw');
+has 'beginning_balance' => (is => 'rw');
+
 
 # don't need new
 
@@ -72,21 +86,6 @@ sub update {
     return;
 }
 
-sub _pre_save {
-    my $self = shift @_;
-    my $i = 1;
-    my $ids = ();
-    $self->{line_ids} = '{';
-    while (my $id = $self->{"id_$i"}){
-        if ($self->{"cleared_$id"}){
-            push @$ids, $id;
-            $self->{line_ids} =~ s/$/$id,/;
-        }
-        ++ $i;
-    }
-    return $self->{line_ids} =~ s/,?$/}/;
-}
-
 =item submit
 
 Submits the reconciliation set for approval.
@@ -95,7 +94,6 @@ Submits the reconciliation set for approval.
 
 sub submit {
     my $self = shift @_;
-    $self->_pre_save;
     return $self->call_dbmethod(funcname=>'reconciliation__submit_set');
 }
 
@@ -109,7 +107,6 @@ Saves the reconciliation set for later work
 
 sub save {
     my $self = shift @_;
-    $self->_pre_save;
     return $self->call_dbmethod(funcname=>'reconciliation__save_set');
 }
 

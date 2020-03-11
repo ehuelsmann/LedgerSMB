@@ -427,7 +427,7 @@ Given qr/^(a reconciliation report|reconciliation reports) with these properties
         ) or die 'Failed to find account number ' . $report_spec->{'Account Number'};
 
         my $recon_data = {
-            dbh => S->{ext_lsmb}->admin_dbh,
+            _dbh => S->{ext_lsmb}->admin_dbh,
             chart_id => $account->{id},
             total => $report_spec->{'Statement Balance'},
             end_date => $report_spec->{'Statement Date'},
