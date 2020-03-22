@@ -8,9 +8,10 @@
 <body class="login, <?lsmb dojo_theme ?>"
       id="app-login">
   <br /><br />
-  <center>
-    <form data-dojo-type="lsmb/Form" method="post" action="login.pl" name="login"
-          onsubmit="return submit_form()">
+  <center id="app">
+    <form method="post" action="login.pl" name="login"
+          v-on:submit.prevent="greet"
+          >
       <?lsmb INCLUDE input element_data = {
              type = "hidden",
              name = "menubar",
@@ -29,7 +30,8 @@
                  class="logo"
                  alt="LedgerSMB Logo" /></a>
           <div style="position:relative; width:100%; height:15em;">
-            <div id="loading" style="z-index:100;position:absolute;top:0;left:0;width:100%;height:100%;background:white">
+            <div id="loading" style="z-index:100;position:absolute;top:0;left:0;width:100%;height:100%;background:white"
+                 v-bind:style="{ display: loading ? 'block' : 'none' }">
               <img
                  style="display: block; margin: auto auto; font-family: "
                  src="js/dijit/icons/images/loadingAnimation.gif"
@@ -48,43 +50,23 @@
                  data-dojo-props="cols:1">
               <div class="noshow">
                 <div>
-                  <?lsmb PROCESS input
-                         element_data = {
-                         type="text"
-                         name="login"
-                         size="20"
-                         id="username"
-                         label='_none_'
-                         title=text('User Name')
-                         value = login
-                         accesskey="l"
-                         tabindex=1 } #' ?>
+                  <dojo-text-input name="login" accesskey="l" type="text"
+                                   tabindex="1"
+                                   title="<?lsmb text('User Name') ?>"
+                                   v-model="username" />
                 </div>
                 <div>
-                  <?lsmb PROCESS input
-                         element_data = {
-                         type="password"
-                         name="password"
-                         size="20"
-                         id="password"
-                         label='_none_'
-                         title=text('Password')
-                         value = ''
-                         accesskey="p"
-                         tabindex=2 } ?>
+                  <dojo-text-input name="password" accesskey="p" type="password"
+                                   tabindex="2"
+                                   title="<?lsmb text('Password') ?>"
+                                   v-model="password" />
                 </div>
               </div>
-              <?lsmb PROCESS input
-                     element_data = {
-                     type="text"
-                     name="company"
-                     size="20"
-                     id="company"
-                     label='_none_'
-                     title=text('Company')
-                     value = company
-                     accesskey="c"
-                     tabindex=3 } ?>
+              <dojo-text-input name="company" accesskey="c" type="text"
+                               tabindex="3"
+                               title="<?lsmb text('Company') ?>"
+                               v-model="company" />
+
             </div>
           </div>
           <?lsmb PROCESS button
@@ -99,19 +81,39 @@
           </div>
           </div>
         </div>
-        <div id="login-indicator">
+        <div id="login-indicator" v-bind:style="{ visibility: loggingIn ? 'visible' : 'hidden' }">
           <span><?lsmb text('Logging in.  Please wait.') ?></span>
         </div>
+        {{ password }}
       </div>
     </form>
   </center>
 <script>
+  var app = new Vue({
+  el: '#app',
+  data: {
+  loading: true,
+  loggingIn: false,
+  username: '',
+  password: '',
+  company: ''
+  },
+  methods: {
+  greet: function(evt) {
+     this.loggingIn = true;
+  }
+  }
+  });
+</script>
+
+<script>
   require(['dojo/dom', 'dojo/dom-style', 'dojo/ready'],
   function(dom, style, ready) {
     ready(80, function() {
-  style.set(dom.byId('loading'), 'display', 'none');
+      Vue.set(app, 'loading', false);
   });
   });
 </script>
+
 </body>
 </html>

@@ -4,7 +4,7 @@
    # Defaults for input attributes
   input_keys = ['type', 'name', 'disabled', 'size', 'value',
                 'data-dojo-type','data-dojo-props', 'data-dojo-attach-point',
-                'required', 'tabindex']
+                'required', 'tabindex', 'v-model', 'on:click.prevent']
 
   # ELEMENT DEFAULTS
 
@@ -313,13 +313,13 @@
             attribute_data=element_data
             attribute_defaults = button_defaults
             element_keys=['name', 'value', 'accesskey', 'type', 'disabled',
-                 'tabindex', 'data-dojo-type', 'data-dojo-props']  # Attributes that apply to buttons.
+                 'tabindex' ]  # Attributes that apply to buttons.
           ?>
           <?lsmb PROCESS custom_attributes  # Process custom attributes.
             custom_attribute_data=element_data.attributes
           ?>
           <?lsmb PROCESS auto_label  # Process element label. ?>
-          <button<?lsmb all_attributes ?><?lsmb all_custom_attributes ?>><?lsmb element_data.text ?></button>
+          <dojo-button<?lsmb all_attributes ?><?lsmb all_custom_attributes ?>><?lsmb element_data.text ?></dojo-button>
           <?lsmb IF element_data.tooltip.msg;
                 INCLUDE tooltip element_data = {
                 id       => element_data.tooltip.id,
