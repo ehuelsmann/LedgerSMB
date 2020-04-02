@@ -1,38 +1,25 @@
 /** @format */
 /* globals dijit */
 
-define([
-    "dojo/_base/declare",
-    "dojo/on",
-    "dojo/_base/lang",
-    "dojo/_base/event",
-    "dojo/mouse",
-    "dojo/store/JsonRest",
-    "dojo/store/Observable",
-    "dojo/store/Memory",
-    "dijit/Tree",
-    "dijit/tree/ObjectStoreModel",
-    "dijit/registry",
-    "dojo/topic"
-], function (
-    declare,
-    on,
-    lang,
-    event,
-    mouse,
-    JsonRest,
-    Observable,
-    Memory,
-    Tree,
-    ObjectStoreModel,
-    registry,
-    topic
-) {
-    // set up the store to get the tree data, plus define the method
-    // to query the children of a node
-    var restStore = new Observable(
-        new JsonRest({
-            target: "erp/api/v0/menu-nodes/",
+Vue.component('dojo-menu-tree', function(resolve) {
+define(["dojo/_base/declare",
+        "dojo/on",
+        "dojo/_base/lang",
+        "dojo/_base/event",
+        "dojo/mouse",
+        "dojo/_base/array",
+        "dojo/store/JsonRest", "dojo/store/Observable",
+        "dojo/store/Memory",
+        "dijit/Tree", "dijit/tree/ObjectStoreModel",
+        "dijit/registry"
+       ], function(declare, on, lang, event, mouse, array,
+                   JsonRest, Observable, Memory, Tree, ObjectStoreModel,
+                   registry
+){
+        // set up the store to get the tree data, plus define the method
+        // to query the children of a node
+        var restStore = new JsonRest({
+            target:      "erp/api/v0/menu-nodes/",
             idProperty: "id"
         })
     );
@@ -167,4 +154,6 @@ define([
             this.onClick(item, node, e);
         }
     });
+});
+
 });

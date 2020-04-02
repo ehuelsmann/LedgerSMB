@@ -38,13 +38,56 @@
       </table>
       <hr>
 
-      <div id="top_menu" data-dojo-type="lsmb/menus/Tree">
-      </div>
-    </div>
-    <div id="errorDialog" title="An error occurred!"
-         style="display:none;min-width:40ex"
-         data-dojo-type="dijit/Dialog"></div>
+        <div style="text-align: center"><a target="_blank" rel="noopener noreferrer"
+                                           href="http://ledgersmb.org/">
+            <img class="cornerlogo" src="images/ledgersmb_small-trans.png"
+                 width="100" height="50" style="border:1px" alt="LedgerSMB" />
+          </a>
+        </div>
+        <div id="version_info"><?lsmb text("LedgerSMB [_1]", version) ?></div>
+        <table id="header_info" class="header_table">
+          <tr>
+            <td id="login_info_header" class="header_left">
+              <?lsmb text("User") ?>
+            </td>
+            <td id="company_info_header"
+                class="header_right">
+              <?lsmb text("Company") ?>
+            </td>
+          </tr>
+          <tr>
+            <td id="login_info" class="header_left"><?lsmb login ?></td>
+            <td id="company_info" class="header_right"><?lsmb company ?></td>
+          </tr>
+        </table>
+        <hr>
+
+        <dojo-menu-tree id="top_menu"></dojo-menu-tree>
+      </dojo-content-pane>
+
+    </dojo-border-container>
+    <dojo-dialog id="errorDialog" title="An error occurred!"
+                 style="display:none;min-width:40ex"></dojo-dialog>
   </div>
-  </div>
+  <script>
+    require(['DojoMenuTree', 'DojoDeclarativeContent', 'DojoContentPane',
+             'DojoBorderContainer', 'DojoDialog'
+    ],
+    function(DojoMenuTree, DojoDeclarativeContent, DojoContentPane,
+             DojoBorderContainer, DojoDialog
+    ) {
+    var router = new VueRouter({ routes: [
+    { path: '*', component: DojoDeclarativeContent }
+    ] });
+    router.afterEach(function() {
+    console.log('afterEach');
+    });
+
+    var app = new Vue({ el: '#app', data: {}, router: router,
+    components: { 'dojo-dialog': DojoDialog,
+    'dojo-border-container': DojoBorderContainer,
+    'dojo-content-pane': DojoContentPane } });
+    });
+  </script>
 </body>
 [% end_html %]
