@@ -14,8 +14,12 @@ BEGIN;
 -- application handling this.
 
 DROP FUNCTION IF EXISTS pnl__product(in_from_date date, in_to_date date, in_parts_id integer, in_business_units integer[]);
+
+
 DROP TYPE IF EXISTS pnl_line CASCADE;
+DROP TYPE IF EXISTS balance_sheet_line CASCADE;
 DROP TYPE IF EXISTS financial_statement_line CASCADE;
+
 CREATE TYPE financial_statement_line AS (
     account_id int,
     account_number text,
