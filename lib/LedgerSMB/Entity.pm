@@ -67,6 +67,9 @@ Name of country (optional)
 
 has 'country_name' => (is => 'rw', isa => 'Str', required => 0);
 
+
+=back
+
 =head1 METHODS
 
 =over
