@@ -32,7 +32,7 @@ $pghost = ";host=" . $ENV{PGHOST}
 $lsmb->{dbh} = DBI->connect("dbi:Pg:dbname=$pgdatabase$pghost",
         undef, undef, {AutoCommit => 0 });
 ok($lsmb->{dbh},"Connected to $pgdatabase");
-LedgerSMB::App_State::set_DBH($lsmb->{dbh});
+# LedgerSMB::App_State::set_DBH($lsmb->{dbh});
 @r = $lsmb->call_procedure('procname' => 'character_length',
         'funcschema' => 'pg_catalog',
         'args' => ['month']);

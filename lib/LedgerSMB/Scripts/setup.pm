@@ -35,6 +35,7 @@ use Scope::Guard;
 use Syntax::Keyword::Try qw|try :experimental(typed)|;
 
 use LedgerSMB;
+use LedgerSMB::App_State;
 use LedgerSMB::Company;
 use LedgerSMB::Database;
 use LedgerSMB::Database::Config;
