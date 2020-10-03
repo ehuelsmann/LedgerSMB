@@ -198,9 +198,9 @@ LedgerSMB::Budget properties required.  Lines represented by
 
 sub save {
     my ($request) = @_;
-    my $budget = LedgerSMB::Budget->from_input($request);
+    my $budget = LedgerSMB::Budget->new(%$request);
     $budget->save();
-    return view_budget($budget);
+    return view_budget($request);
 }
 
 =item approve
