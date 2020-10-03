@@ -195,6 +195,7 @@ SELECT lsmb__create_role('budget_obsolete');
 SELECT lsmb__grant_role('budget_obsolete', 'budget_view');
 SELECT lsmb__grant_perms('budget_view', 'budget_info', 'SELECT');
 SELECT lsmb__grant_perms('budget_view', 'budget_line', 'SELECT');
+SELECT lsmb__grant_perms('budget_view', 'budget_note', 'SELECT');
 SELECT lsmb__grant_perms('budget_enter', 'budget_info', 'INSERT');
 SELECT lsmb__grant_perms('budget_enter', 'budget_to_business_unit', 'INSERT');
 SELECT lsmb__grant_perms('budget_enter', 'budget_line', 'INSERT');
