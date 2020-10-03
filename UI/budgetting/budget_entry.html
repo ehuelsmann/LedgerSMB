@@ -2,7 +2,7 @@
        PROCESS report_base.html; %]
 <body class="lsmb [% dojo_theme %]">
 <div id="budgets">
-<form data-dojo-type="lsmb/Form" method="post" action="[% request.script %]">
+<form data-dojo-type="lsmb/Form" method="post" action="[% script %]">
 <div id="budget-header">
 <div class="listtop">[% title %]</div>
 <div class="input_row" id = "reference_row">
@@ -73,7 +73,8 @@
                                       initial_value = displayrow.accno
                                       class = 'AccountBox'
                                       "data-dojo-type" = "lsmb/accounts/AccountSelector"
-                              } %]
+                                      "data-dojo-props" = "required: false"
+                        } %]
 
                           [% ELSE %]
 
@@ -134,7 +135,7 @@
 [% FOREACH button IN buttons; PROCESS button element_data=button; END %]
 </form>
 [% IF id %]
-<form data-dojo-type="lsmb/Form" name="note" action="[% request.script %]" method="POST">
+<form data-dojo-type="lsmb/Form" name="note" action="[% script %]" method="POST">
 [% PROCESS input element_data = {
        name = "id"
       value = id

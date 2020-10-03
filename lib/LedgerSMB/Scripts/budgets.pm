@@ -136,6 +136,7 @@ sub _render_screen {
            rowcount => $budget->{rowcount},
                  id => $budget->{id},
     };
+    $budget->{script} = $request->{script};
     my $template = LedgerSMB::Template::UI->new_UI;
     return $template->render($request, 'budgetting/budget_entry', $budget);
 }
