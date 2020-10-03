@@ -14,11 +14,13 @@ LedgerSMB::Budget_Report.
 
 =cut
 
-use LedgerSMB::PGDate;
 use strict;
 use warnings;
 
 our $VERSION = 0.1;
+
+use LedgerSMB::MooseTypes;
+use LedgerSMB::PGDate;
 
 
 use Moose;
@@ -41,14 +43,14 @@ has 'id' => (is => 'rw', isa => 'Maybe[Int]');
 
 =cut
 
-has 'start_date' => (is => 'rw', isa => 'Maybe[LedgerSMB::PGDate]');
+has 'start_date' => (is => 'rw', isa => 'LedgerSMB::Moose::Date', coerce => 1);
 
 =item   $end_date date
    The end date of the budget, inclusive
 
 =cut
 
-has 'end_date' => (is => 'rw', isa => 'Maybe[LedgerSMB::PGDate]');
+has 'end_date' => (is => 'rw', isa => 'LedgerSMB::Moose::Date', coerce => 1);
 
 =item   $reference text
    This is a text reference identifier for the budget
@@ -90,21 +92,21 @@ has 'obsolete_by' => (is => 'rw', isa => 'Maybe[Int]');
 
 =cut
 
-has 'entered_at' => (is => 'rw', isa => 'Maybe[LedgerSMB::PGDate]');
+has 'entered_at' => (is => 'rw', isa => 'Maybe[LedgerSMB::PGTimestamp]');
 
 =item   $approved_at timestamp
    Time the budget was approved
 
 =cut
 
-has 'approved_at' => (is => 'rw', isa => 'Maybe[LedgerSMB::PGDate]');
+has 'approved_at' => (is => 'rw', isa => 'Maybe[LedgerSMB::PGTimestamp]');
 
 =item   $obsolete_at timestamp
    Time the budget was deleted
 
 =cut
 
-has 'obsolete_at' => (is => 'rw', isa => 'Maybe[LedgerSMB::PGDate]');
+has 'obsolete_at' => (is => 'rw', isa => 'Maybe[LedgerSMB::PGTimestamp]');
 
 =item   $entered_by_name text
    Name of entity who entered the budget.
