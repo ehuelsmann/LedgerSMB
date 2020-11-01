@@ -105,7 +105,7 @@ Retrieves information for a specific timecard type
 
 sub get {
     my ($self, $id) = @_;
-    my ($ref) = __PACKAGE__->call_procedure(
+    my ($ref) = $self->call_procedure(
          funcname => 'timecard_type__get', args => [$id]
     );
     return __PACKAGE__->new($ref);
@@ -118,7 +118,7 @@ Retrieves a list of all timecard types.
 =cut
 
 sub list {
-    my @results = __PACKAGE__->call_procedure(
+    my @results = $_[0]->call_procedure(
             funcname => 'timecard_type__list'
     );
     my @types;

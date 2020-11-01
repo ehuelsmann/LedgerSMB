@@ -201,7 +201,7 @@ class (useful for retrieving billing info only).
 sub get_active {
     my ($self, $args) = @_;
     my @results;
-    for my $ref (__PACKAGE__->call_procedure(funcname => 'entity__list_locations',
+    for my $ref ($self->call_procedure(funcname => 'entity__list_locations',
                                            args => [$args->{entity_id}]))
     {
        next if ($args->{only_class})
@@ -210,7 +210,7 @@ sub get_active {
     }
     return @results unless $args->{credit_id};
 
-    for my $ref (__PACKAGE__->call_procedure(funcname => 'eca__list_locations',
+    for my $ref ($self->call_procedure(funcname => 'eca__list_locations',
                                            args => [$args->{credit_id}]))
     {
        next if ($args->{only_class})
@@ -245,28 +245,24 @@ sub save {
 
 Deletes the current location
 
-This can be called from $self->delete() if you have  a location object, or it
-can be called as LedgerSMB::Entity::Location::delete($hashref) if the hashref
-contains either entity_id or credit_id, and location_id, and location class.
-
 =cut
 
 sub delete{
-    my ($ref) = @_;
+    my ($self) = @_;
     my $procname;
     my $args;
-    if ($ref->{credit_id}){
+    if ($self->{credit_id}){
         $procname = 'eca__delete_location';
         $args = [
-           $ref->{credit_id}, $ref->{location_id}, $ref->{location_class}
+           $self->{credit_id}, $self->{location_id}, $self->{location_class}
         ];
     } else {
         $procname = 'entity__delete_location';
         $args = [
-           $ref->{entity_id}, $ref->{location_id}, $ref->{location_class}
+           $self->{entity_id}, $self->{location_id}, $self->{location_class}
         ];
     }
-    return __PACKAGE__->call_procedure(funcname => $procname, args => $args );
+    return $self->call_procedure(funcname => $procname, args => $args );
 }
 
 =back

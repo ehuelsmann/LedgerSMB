@@ -17,6 +17,7 @@ use warnings;
 use LedgerSMB::Company;
 use LedgerSMB::Database;
 use LedgerSMB::PGDate;
+use LedgerSMB::Entity::Credit_Account;
 use LedgerSMB::Entity::Person::Employee;
 use LedgerSMB::Entity::User;
 use LedgerSMB::Sysconfig;
@@ -457,7 +458,7 @@ sub create_vc {
         legal_name   => $vc_name,
         name         => $vc_name,
         entity_class => ($vc eq 'vendor' ? 1 : 2),
-        _dbh         => $admin_dbh,
+        dbh         => $admin_dbh,
         );
     $company = $company->save;
 
@@ -470,7 +471,7 @@ sub create_vc {
     LedgerSMB::Entity::Credit_Account->new(
         entity_id        => $company->entity_id,
         entity_class     => ($vc eq 'vendor' ? 1 : 2),
-        _dbh             => $admin_dbh,
+        dbh              => $admin_dbh,
         ar_ap_account_id => $accno_ids{($vc eq 'vendor' ? '2100' : '1200')},
         meta_number      => $vc_name,
         curr             => 'USD',

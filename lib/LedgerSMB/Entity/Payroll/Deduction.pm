@@ -80,7 +80,7 @@ Retrns a list of  deduction objects for entity
 
 sub list {
     my ($self, $entity_id) = @_;
-    return __PACKAGE__->call_procedure(funcname => 'deduction__list_for_entity',
+    return $self->call_procedure(funcname => 'deduction__list_for_entity',
                                      args => [$entity_id]);
 }
 
@@ -92,7 +92,7 @@ Returns a list of deduction classes
 
 sub types {
     my ($self, $country_id) = @_;
-    return __PACKAGE__->call_procedure(funcname => 'deduction__list_types',
+    return $self->call_procedure(funcname => 'deduction__list_types',
                                      args => [$country_id]);
 }
 

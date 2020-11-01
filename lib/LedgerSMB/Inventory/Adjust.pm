@@ -123,6 +123,7 @@ sub get {
     my %args = @_;
 
     my @dblines = __PACKAGE__->call_dbmethod( funcname => 'get_lines',
+                                              dbh => $args{dbh},
                                                 args => $args{key} );
     my @lines = map { LedgerSMB::Inventory::Adjust_Line->new(%$_) } @dblines;
 

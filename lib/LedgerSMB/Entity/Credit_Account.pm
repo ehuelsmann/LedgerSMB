@@ -285,7 +285,7 @@ mentioned.
 
 sub get_by_id {
     my ($self, $id) = @_;
-    my ($ref) = __PACKAGE__->call_procedure(funcname => 'entity_credit__get',
+    my ($ref) = $self->call_procedure(funcname => 'entity_credit__get',
                                           args => [$id]);
     $ref->{tax_ids} = $self->_get_tax_ids($id);
     for (keys %$ref) {
@@ -304,10 +304,10 @@ identified by $meta_number
 
 sub get_by_meta_number {
     my ($self, $meta_number, $entity_class) = @_;
-    my ($ref) = __PACKAGE__->call_procedure(funcname => 'eca__get_by_meta_number',
+    my ($ref) = $self->call_procedure(funcname => 'eca__get_by_meta_number',
                                           args => [$meta_number,
                                                    $entity_class]);
-    $ref->{tax_ids} = __PACKAGE__->_get_tax_ids($ref->{id});
+    $ref->{tax_ids} = $self->_get_tax_ids($ref->{id});
     return __PACKAGE__->new(%$ref, entity_class => $entity_class);
 }
 
@@ -317,7 +317,7 @@ sub get_by_meta_number {
 sub _get_tax_ids {
     my ($self, $id) = @_;
     my @tax_ids;
-    my @results = __PACKAGE__->call_procedure(funcname => 'eca__get_taxes',
+    my @results = $self->call_procedure(funcname => 'eca__get_taxes',
                                             args => [$id]);
     for my $ref (@results){
         push @tax_ids, $ref->{chart_id};
@@ -334,7 +334,7 @@ identified by $entity_id
 
 sub list_for_entity {
     my ($self, $entity_id, $entity_class) = @_;
-    my @results = __PACKAGE__->call_procedure(funcname => 'entity__list_credit',
+    my @results = $self->call_procedure(funcname => 'entity__list_credit',
                                             args => [$entity_id, $entity_class]
     );
     for my $ref (@results){

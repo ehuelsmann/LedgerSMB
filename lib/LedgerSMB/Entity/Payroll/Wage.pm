@@ -75,7 +75,7 @@ Retrns a list of wage objects for entity
 
 sub list {
     my ($self, $entity_id) = @_;
-    return __PACKAGE__->call_procedure(funcname => 'wage__list_for_entity',
+    return $self->call_procedure(funcname => 'wage__list_for_entity',
                                      args => [$entity_id]);
 }
 
@@ -87,7 +87,7 @@ Returns a list of wage types
 
 sub types{
     my ($self, $country_id) = @_;
-    return __PACKAGE__->call_procedure(funcname => 'wage__list_types',
+    return $self->call_procedure(funcname => 'wage__list_types',
                                      args => [$country_id]);
 }
 

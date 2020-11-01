@@ -205,9 +205,9 @@ Retrieves the timecard with the specified ID and returns it.
 
 sub get {
     my ($self, $id) = @_;
-    my ($retval) = __PACKAGE__->call_procedure(
+    my ($retval) = $self->call_procedure(
          funcname => 'timecard__get', args => [$id]);
-    my ($buclass) = __PACKAGE__->call_procedure(
+    my ($buclass) = $self->call_procedure(
          funcname => 'timecard__bu_class', args => [$id]);
 
     $retval->{bu_class_id} = $buclass->{id};
@@ -222,7 +222,7 @@ Returns the part id for the given partnumber
 
 sub get_part_id {
     my ($self, $partnumber) = @_;
-    my ($ref) = __PACKAGE__->call_procedure(
+    my ($ref) = $self->call_procedure(
                     funcname => 'inventory__get_item_by_partnumber',
                         args => [$partnumber]
     );
@@ -249,7 +249,7 @@ Returns a list of parts matching the criteria requested
 
 sub find_part {
     my ($self, $args) = @_;
-    return __PACKAGE__->call_procedure(
+    return $self->call_procedure(
                  funcname => 'timecard__part',
                      args => [$args->{is_timecard},
                               $args->{is_service},

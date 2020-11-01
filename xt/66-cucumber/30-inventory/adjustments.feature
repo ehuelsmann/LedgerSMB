@@ -1,4 +1,4 @@
-@weasel
+@weasel @wip @app-dbh-todo
 Feature: Adjusting stock levels
   As a trading or manufacturing company, I want to be able to
   adjust inventory when inventory counts don't correspond to the

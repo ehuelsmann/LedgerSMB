@@ -4,6 +4,8 @@
 use strict;
 use warnings;
 
+use Carp::Always;
+
 use LedgerSMB::App_State;
 use LedgerSMB::Batch;
 use LedgerSMB::IR;
@@ -309,6 +311,7 @@ Given qr/inventory has been built up for '(.*)' from these transactions:$/, sub 
     for my $trans (@{C->data}) {
         $trans->{invnumber} //= 'I-' . $invnumber++;
         my $vendor = LedgerSMB::Entity::Credit_Account->new(
+            dbh => S->{ext_lsmb}->admin_dbh,
             entity_class => 1);
         $vendor = $vendor->get_by_meta_number($trans->{vendor}, 1);
 

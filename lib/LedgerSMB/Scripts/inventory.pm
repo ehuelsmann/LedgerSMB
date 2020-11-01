@@ -91,6 +91,7 @@ sub _lines_from_form {
         next
           if $hashref->{"id_$ln"} eq 'new';
         my $line = LedgerSMB::Inventory::Adjust_Line->new(
+             dbh => $hashref->{dbh},
           parts_id => $hashref->{"id_$ln"},
          partnumber => $hashref->{"partnumber_$ln"},
             counted => $hashref->{"counted_$ln"},

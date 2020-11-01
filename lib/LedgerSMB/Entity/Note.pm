@@ -119,10 +119,10 @@ sub list{
     my ($self, $entity_id, $credit_id) = @_;
     my @results;
     if ($credit_id){
-        @results = __PACKAGE__->call_procedure(funcname =>
+        @results = $self->call_procedure(funcname =>
              'eca__list_notes', args => [$credit_id]);
     } else {
-        @results = __PACKAGE__->call_procedure(funcname =>
+        @results = $self->call_procedure(funcname =>
              'entity__list_notes', args => [$entity_id]);
     }
     for my $row(@results){

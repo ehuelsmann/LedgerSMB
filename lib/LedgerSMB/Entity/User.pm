@@ -94,11 +94,11 @@ Returns the user object for that entity id.
 
 sub get {
     my ($self, $entity_id) = @_;
-    my ($ref) = __PACKAGE__->call_procedure(
+    my ($ref) = $self->call_procedure(
                  funcname => 'admin__get_user_by_entity', args => [$entity_id]
     );
     return unless $ref->{entity_id};
-    my @roles = __PACKAGE__->call_procedure(
+    my @roles = $self->call_procedure(
                  funcname => 'admin__get_roles_for_user_by_entity', args => [$entity_id]
         );
 

@@ -163,6 +163,9 @@ sub psgi_app {
             );
         }
         else {
+            $env->{'psgix.logger'}->({
+                level => 'error',
+                message => $error });
             $res = [ '500', [ 'Content-Type' => 'text/plain' ], [ $error ]];
         }
     }

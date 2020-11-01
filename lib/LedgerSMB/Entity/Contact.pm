@@ -134,13 +134,13 @@ sub list {
 
     my @results;
 
-    for my $ref (__PACKAGE__->call_procedure(funcname => 'entity__list_contacts',
+    for my $ref ($self->call_procedure(funcname => 'entity__list_contacts',
                                              args => [$args->{entity_id}])
     ){
        push @results, $self->new($ref);
     }
 
-    for my $ref (__PACKAGE__->call_procedure(funcname => 'eca__list_contacts',
+    for my $ref ($self->call_procedure(funcname => 'eca__list_contacts',
                                              args => [$args->{credit_id}])
     ){
        $ref->{credit_id} = $args->{credit_id};
@@ -174,24 +174,20 @@ sub save {
 
 deletes the record
 
-This can be called from $self->delete() if you have  a contact object, or it
-can be called as LedgerSMB::Entity::Contact::delete($hashref) if the hashref
-contains either entity_id or credit_id, and location_id, and location class.
-
 =cut
 
 sub delete {
-    my ($ref) = @_;
-    if ($ref->{for_credit}){
-        return __PACKAGE__->call_procedure(
+    my ($self) = @_;
+    if ($self->{for_credit}){
+        return $self->call_procedure(
                         funcname => 'eca__delete_contact',
-                            args => [$ref->{credit_id},
-                $ref->{class_id},   $ref->{contact}]);
+                            args => [$self->{credit_id},
+                $self->{class_id},   $self->{contact}]);
     } else {
-        return __PACKAGE__->call_procedure(
+        return $self->call_procedure(
                         funcname => 'entity__delete_contact',
-                            args => [$ref->{entity_id},
-                $ref->{class_id},   $ref->{contact}]);
+                            args => [$self->{entity_id},
+                $self->{class_id},   $self->{contact}]);
     }
 }
 
@@ -202,7 +198,7 @@ Lists classes as unblessed hashrefs
 =cut
 
 sub list_classes {
-    return __PACKAGE__->call_procedure(
+    return $_[0]->call_procedure(
           funcname => 'contact_class__list'
     );
 }

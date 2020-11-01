@@ -161,7 +161,10 @@ point where caching becomes unsafe.
 sub approve {
     my ($self) = @_;
 
-    my $adjust = LedgerSMB::Inventory::Adjust->get( key => { id => $self->id } );
+    my $adjust = LedgerSMB::Inventory::Adjust->get(
+        dbh => $self->{_dbh},
+        key => { id => $self->id }
+        );
     return $adjust->approve;
 }
 
@@ -174,7 +177,10 @@ Deletes the inventory report
 sub delete {
     my ($self) = @_;
 
-    my $adjust = LedgerSMB::Inventory::Adjust->get( key => { id => $self->id } );
+    my $adjust = LedgerSMB::Inventory::Adjust->get(
+        dbh => $self->{_dbh},
+        key => { id => $self->id }
+        );
     return $adjust->delete;
 }
 

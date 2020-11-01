@@ -122,7 +122,7 @@ application.
 
 sub get {
     my ($self, $id) = @_;
-    my ($ref) = __PACKAGE__->call_procedure(
+    my ($ref) = $self->call_procedure(
               funcname => 'payroll_deduction_type__get', args => [$id]
     );
     return __PACKAGE__->new(%$ref);

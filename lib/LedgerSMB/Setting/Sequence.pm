@@ -105,11 +105,11 @@ sub get{
    my ($self, $label, $setting_key) = @_;
 
    if (defined $label){
-       my ($ref) = __PACKAGE__->call_procedure(funcname => 'sequence__get', args => [$label]);
+       my ($ref) = $self->call_procedure(funcname => 'sequence__get', args => [$label]);
        croak 'Sequence does not exist: ' . $label unless $ref;
        return $self->new(%$ref);
    } elsif (defined $setting_key){
-       my ($ref) = __PACKAGE__->call_procedure(funcname => 'setting_get', args => [$setting_key]);
+       my ($ref) = $self->call_procedure(funcname => 'setting_get', args => [$setting_key]);
        croak 'Setting does not exist: ' . $setting_key unless $ref;
        return LedgerSMB::Setting->new($ref);
    } else {
@@ -128,11 +128,11 @@ sub list{
     my ($self, $setting_key) = @_;
     my @setting_list;
     if (defined $setting_key){
-       @setting_list = __PACKAGE__->call_procedure(
+       @setting_list = $self->call_procedure(
               funcname => 'sequence__list_by_key', args => [$setting_key]
        );
     } else {
-       @setting_list = __PACKAGE__->call_procedure(funcname => 'sequence__list');
+       @setting_list = $self->call_procedure(funcname => 'sequence__list');
     }
     for my $s (@setting_list){
        $s = __PACKAGE__->new(%$s);
@@ -172,7 +172,7 @@ sub increment {
        $label = $val1;
        $vars = $val2;
     }
-    my ($ref) = __PACKAGE__->call_procedure(funcname => 'sequence__increment',
+    my ($ref) = $self->call_procedure(funcname => 'sequence__increment',
                                             args => [$label]);
     return increment_process($ref->{value}, $vars);
 }
@@ -211,7 +211,7 @@ Deletes a sequence.
 
 sub delete {
     my ($self, $label) = @_;
-    return __PACKAGE__->call_procedure(funcname => 'sequence__delete',
+    return $self->call_procedure(funcname => 'sequence__delete',
                                      args => [$label]);
 }
 
