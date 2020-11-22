@@ -22,7 +22,7 @@ use warnings;
 
 use LedgerSMB::AA;
 use LedgerSMB::Batch;
-use LedgerSMB::DBObject::Account;
+use LedgerSMB::Company;
 use LedgerSMB::Form;
 use LedgerSMB::GL;
 use LedgerSMB::Inventory::Adjust;
@@ -355,53 +355,119 @@ sub _process_gl {
 
 sub _process_chart {
     my ($request, $entries) = @_;
+    my $company = LedgerSMB::Company->new(dbh => $request->{dbh});
+    my $config  = $company->configuration;
+    my $coa     = $company->coa_nodes;
 
-    my %imported;
-    foreach my $entry (@$entries){
+    foreach my $entry ($entries->@*){
         my %settings;
 
         @settings{qw( accno description charttype
                       category contra tax link heading gifi_accno )} = @$entry;
+        $entry = \%settings;
+        $entry->{errors} = [];
 
-        my @link = split /:/, $settings{link};
-        @settings{ @link } = ( (1) x @link);
+        push $entry->{errors}->@*, 'Row missing description'
+            if not $entry->{description};
+        push $entry->{errors}->@*, 'Row missing account number'
+            if not $entry->{accno};
+        push $entry->{errors}->@*, 'Row missing type ("A" or "H" expected)'
+            if not $entry->{charttype};
 
-        die "Unable to resolve heading $settings{heading} to its id; available: " . join(' ', sort keys %imported)
-            if ($settings{heading}
-                and not exists $imported{$settings{heading}});
-        $settings{heading} = $imported{$settings{heading}}->{id};
-
-        my $account =
-            LedgerSMB::DBObject::Account->new(%settings,
-                                              dbh => $request->{dbh});
-        $account->save();
-        $imported{$settings{accno}} = $account;
+        push $entry->{errors}->@*,
+            'Account with invalid category (expected one of A, L, Q, Qt, E, I)'
+            if ($entry->{charttype} eq 'A'
+                and not any { $_ eq $entry->{category} } qw/A L Q Qt E I/);
+        push $entry->{errors}->@*, 'Account missing heading'
+            if ($entry->{charttype} eq 'A'
+                and not $entry->{heading});
     }
+
+    my @other_errors = ();
+    my %accno_count  = ();
+    $accno_count{$_->{accno}}++ for ($entries->@*);
+    for my $k (keys %accno_count) {
+        push @other_errors, "Account number $k specified $accno_count{$k} times"
+            if $accno_count{$k} > 1;
+    }
+    for my $e ($entries->@*) {
+        push $e->{errors}->@*,
+            "Account number $e->{accno} refers to unknown heading $e->{heading}"
+            unless exists $accno_count{$e->{heading}}
+    }
+
+    if (@other_errors
+        or any { $_->{errors}->@* > 0 } $entries->@*) {
+        ### TODO: generate meaningful error response explaining what we found
+        die 'Errors found checking the uploaded entries';
+    }
+
+
+    my @layer = grep { not $_->{heading} } $entries->@*;
+    my %created = ();
+    while (@layer) {
+        for my $entry (@layer) {
+            $entry->{gifi_id}    = $entry->{gifi};
+            $entry->{heading_id} = $created{$entry->{heading}}->id;
+            $entry->{link}       = [ split /:/, $entry->{link} ];
+            my $node = $coa->create(
+                type   => ($entry->{category} eq 'A') ? 'account' : 'heading',
+                $entry->%*,
+                );
+            $node->save;
+            $created{$entry->{accno}} = $node;
+
+            $entry->{saved} = 1;
+        }
+
+        # get the items for which we just saved the parents
+        @layer = grep {
+            my $n = $_->{heading};
+            any {; $_->{accno} eq $n } @layer
+        } $entries->@*;
+    }
+
+    die 'Inconsistent state: unsaved entries remain after completion'
+        if any { not $_->{saved} } $entries->@*;
+
     return;
 }
 
 sub _process_gifi {
     my ($request, $entries) = @_;
-    my $dbh = $request->{dbh};
-    my $sth =
-        $dbh->prepare('INSERT INTO gifi (accno, description) VALUES (?, ?)')
-        || die $dbh->errstr;;
+    my $company = LedgerSMB::Company->new(dbh => $request->{dbh});
+    my $config  = $company->configuration;
+    my $gifis   = $config->gifi_codes;
 
-    foreach my $entry (@$entries) {
-        $sth->execute($entry->[0], $entry->[1]) || die $sth->errstr();
+    foreach my $entry ($entries->@*) {
+        die "Entry $entry->[1] missing code"
+            unless $entry->[0];
+
+        my $g = $gifis->create(
+            code        => $entry->[0],
+            description => $entry->[1],
+            );
+        $g->save;
     }
     return;
 }
 
 sub _process_sic {
     my ($request, $entries) = @_;
-    my $dbh = $request->{dbh};
-    my $sth =
-        $dbh->prepare('INSERT INTO sic (code, sictype, description) VALUES (?, ?, ?)') || die $dbh->errstr;;
+    my $company = LedgerSMB::Company->new(dbh => $request->{dbh});
+    my $config  = $company->configuration;
+    my $sics    = $config->industry_codes;
 
-    foreach my $entry (@$entries) {
-        $sth->execute($entry->[0], $entry->[1], $entry->[2])
-            || die $sth->errstr();
+    foreach my $entry ($entries->@*) {
+        die "Entry $entry->[2] missing code"
+            unless $entry->[0];
+
+        my $s = $sics->create(
+            code        => $entry->[0],
+            sictype     => $entry->[1],
+            description => $entry->[2],
+            );
+        $s->save;
     }
     return;
 }
