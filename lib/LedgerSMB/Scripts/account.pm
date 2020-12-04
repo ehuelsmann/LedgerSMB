@@ -154,21 +154,21 @@ sub save_as_new {
 sub _display_account_screen {
     my ($form, $account) = @_;
 
-    @{$account->{all_headings}} = $account->list_headings();
-    $account->is_recon;
-    $account->gifi_list;
-
-    foreach my $item ( split( /:/, $account->{link} ) ) {
-        $account->{$item} = 1;
-    }
-
     my @languages = $form->call_procedure(
         funcname => 'person__list_languages'
     );
 
     my $template = LedgerSMB::Template::UI->new_UI;
     return $template->render($form, 'accounts/edit', {
-        form => $account,
+        form => {
+            $account->%*,
+            all_headings => [ $account->list_headings() ],
+            gifi_list    => [ $account->gifi_list ],
+            is_recon     => $account->is_recon,
+            links        => {
+                map { $_ => 1 } split(/:/, $account->{link})
+            },
+        },
         languages => \@languages,
     });
 }
