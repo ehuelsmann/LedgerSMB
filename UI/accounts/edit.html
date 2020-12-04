@@ -314,225 +314,73 @@
 <div class="subsectionhead">
    [% text('Include in drop-down menus') %]
 </div>
-<div class="inputline" id="ar-line">
-   <label class="line">[% text('Receivables') %]</label>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'AR_amount',
+[%
+   FOR line IN [
+      { heading => text('Receivables'),
+        id      => 'ar-line',
+        options => [
+           { name => 'AR_amount',      label =>  text('Income') },
+           { name => 'AR_paid',        label =>  text('Payment') },
+           { name => 'AR_tax',         label =>  text('Tax') },
+           { name => 'AR_overpayment', label =>  text('Overpayment') },
+           { name => 'AR_discount'   , label =>  text('Discount') },
+        ],
+      },
+      { heading => text('Payables'),
+        id      => 'ap-line',
+        options => [
+           { name => 'AP_amount',      label =>  text('Expense/Asset') },
+           { name => 'AP_paid',        label =>  text('Payment') },
+           { name => 'AP_tax',         label =>  text('Tax') },
+           { name => 'AP_overpayment', label =>  text('Overpayment') },
+           { name => 'AP_discount'   , label =>  text('Discount') },
+        ],
+      },
+      { heading => text('Tracking items'),
+        id      => 'goods-line',
+        options => [
+           { name => 'IC_sale',        label =>  text('Income') },
+           { name => 'IC_cogs',        label =>  text('COGS') },
+           { name => 'IC_taxpart',     label =>  text('Tax') },
+           { name => 'IC_returns',     label =>  text('Returns') },
+        ],
+      },
+      { heading => text('Non-tracking items'),
+        id      => 'services-line',
+        options => [
+           { name => 'IC_income',      label =>  text('Income') },
+           { name => 'IC_expense',     label =>  text('Expense') },
+           { name => 'IC_taxservice',  label =>  text('Tax') },
+        ],
+      },
+      { heading => text('Fixed Assets'),
+        id      => 'assets-line',
+        options => [
+           { name => 'Fixed_Asset',    label =>  text('Fixed Asset') },
+           { name => 'Asset_Dep',      label =>  text('Depreciation') },
+           { name => 'asset_expense',  label =>  text('Expense') },
+           { name => 'asset_gain',     label =>  text('Gain') },
+           { name => 'asset_loss',     label =>  text('Loss') },
+        ],
+      },
+   ];
+%]
+<div class="inputline" id="[% line.id %]">
+  <label class="line">[% line.heading %]</label>
+  [%
+  FOR option IN line.options ; %]
+  <div class="inputgroup">
+    [% INCLUDE input element_data={
+              name = option.name
               type = 'checkbox',
-             label = text('Income'),
-           checked = form.links.AR_amount ? 'CHECKED' : '',
-             value = 'AR_amount'
+             label = option.label
+           checked = form.links.${option.name} ? 'CHECKED' : '',
+             value = option.name
          } %]
-   </div>
-   <div class="inputgroup">
-      [%
-          INCLUDE input element_data={
-              name = 'AR_paid',
-              type = 'checkbox',
-             label = text('Payment'),
-           checked = form.links.AR_paid ? 'CHECKED' : '',
-             value = 'AR_paid'
-     } %]
-   </div>
-   <div class="inputgroup">
-      [%
-          INCLUDE input element_data={
-              name = 'AR_tax',
-              type = 'checkbox',
-             label = text('Tax'),
-           checked = form.links.AR_tax ? 'CHECKED' : '',
-             value = 'AR_tax'
-     } %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'AR_overpayment',
-              type = 'checkbox',
-             label = text('Overpayment'),
-           checked = form.links.AR_overpayment ? 'CHECKED' : '',
-             value = 'AR_overpayment'
-       } %]
-   </div>
-   <div class="inputgroup">
-       [%
-         INCLUDE input element_data={
-              name = 'AR_discount',
-              type = 'checkbox',
-             label = text('Discount'),
-           checked = form.links.AR_discount ? 'CHECKED' : '',
-             value = 'AR_discount'
-        } %]
-   </div>
+  </div>
+  [% END %]
 </div>
-<div class="inputline" id="ap-line">
-   <label class="line">[% text('Payables') %]</label>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'AP_amount',
-              type = 'checkbox',
-             label = text('Expense/Asset'),
-           checked = form.links.AP_amount ? 'CHECKED' : '',
-             value = 'AP_amount'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'AP_paid',
-              type = 'checkbox',
-             label = text('Payment'),
-           checked = form.links.AP_paid ? 'CHECKED' : '',
-             value = 'AP_paid'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-          INCLUDE input element_data={
-              name = 'AP_tax',
-              type = 'checkbox',
-             label = text('Tax'),
-           checked = form.links.AP_tax ? 'CHECKED' : '',
-             value = 'AP_tax'
-     } %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'AP_overpayment',
-              type = 'checkbox',
-             label = text('Overpayment'),
-           checked = form.links.AP_overpayment ? 'CHECKED' : '',
-             value = 'AP_overpayment'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'AP_discount',
-              type = 'checkbox',
-             label = text('Discount'),
-           checked = form.links.AP_discount ? 'CHECKED' : '',
-             value = 'AP_discount'} %]
-   </div>
-</div>
-<div class="inputline" id="goods-line">
-   <label class="line">[% text('Tracking Items') %]</label>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'IC_sale',
-              type = 'checkbox',
-             label = text('Income'),
-           checked = form.links.IC_sale ? 'CHECKED' : '',
-             value = 'IC_sale'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'IC_cogs',
-              type = 'checkbox',
-             label = text('COGS'),
-           checked = form.links.IC_cogs ? 'CHECKED' : '',
-             value = 'IC_cogs'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'IC_taxpart',
-              type = 'checkbox',
-             label = text('Tax'),
-           checked = form.links.IC_taxpart ? 'CHECKED' : '',
-             value = 'IC_taxpart'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'IC_returns',
-              type = 'checkbox',
-             label = text('Returns'),
-           checked = form.links.IC_returns ? 'CHECKED' : '',
-             value = 'IC_returns'} %]
-   </div>
-</div>
-<div class="inputline" id="services-line">
-   <label class="line">[% text('Non-tracking Items') %]</label>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'IC_income',
-              type = 'checkbox',
-             label = text('Income'),
-           checked = form.links.IC_income ? 'CHECKED' : '',
-             value = 'IC_income'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'IC_expense',
-              type = 'checkbox',
-             label = text('Expense'),
-           checked = form.links.IC_expense ? 'CHECKED' : '',
-             value = 'IC_expense'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'IC_taxservice',
-              type = 'checkbox',
-             label = text('Tax'),
-           checked = form.links.IC_taxservice ? 'CHECKED' : '',
-             value = 'IC_taxservice'} %]
-   </div>
-</div>
-<div class="inputline" id="assets-line">
-   <label class="line">[% text('Fixed Assets') %]</label>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'Fixed_Asset',
-              type = 'checkbox',
-             label = text('Fixed Asset'),
-           checked = form.links.Fixed_Asset ? 'CHECKED' : '',
-             value = 'Fixed_Asset'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'Asset_Dep',
-              type = 'checkbox',
-             label = text('Depreciation'),
-           checked = form.links.Asset_Dep ? 'CHECKED' : '',
-             value = 'Asset_Dep'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'asset_expense',
-              type = 'checkbox',
-             label = text('Expense'),
-           checked = form.links.asset_expense ? 'CHECKED' : '',
-             value = 'asset_expense'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'asset_gain',
-              type = 'checkbox',
-             label = text('Gain'),
-           checked = form.links.asset_gain ? 'CHECKED' : '',
-             value = 'asset_gain'} %]
-   </div>
-   <div class="inputgroup">
-      [%
-         INCLUDE input element_data={
-              name = 'asset_loss',
-              type = 'checkbox',
-             label = text('Loss'),
-           checked = form.links.asset_loss ? 'CHECKED' : '',
-             value = 'asset_loss'} %]
-   </div>
-</div>
+[% END %]
 </div> <!-- dropdown div -->
 
 <hr size="3" noshade="noshade" />
