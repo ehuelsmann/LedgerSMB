@@ -34,7 +34,7 @@ use LedgerSMB::Setting::Sequence;
 use LedgerSMB::Template::UI;
 use LedgerSMB::Timecard;
 
-use List::MoreUtils qw{ any };
+use List::MoreUtils qw{ any pairwise };
 use Text::CSV;
 
 our $cols = {
@@ -523,89 +523,106 @@ sub _process_inventory_multi {
 }
 
 sub _process_parts {
-    my ($request, $entries, $columns, $acc_types) = @_;
-    my %table_columns =
-        map { $_ => ($_ =~ s/(_accno|partsgroup)$/$1_id/r) }
-        grep { $_ ne 'taxaccnos' }
-        @{$columns};
-    my %column_placeholders =
-        map { $_ => (
-                  m/_accno$/ ?
-                   '(SELECT id FROM account
-                     WHERE accno = ?
-                           AND EXISTS (SELECT 1 FROM account_link al
-                                        WHERE al.account_id = account.id
-                                              AND al.description = ? ))'
-                  : ($_ eq 'partsgroup' ?
-                     '(SELECT id FROM partsgroup WHERE partsgroup = ?)'
-                     : '?'))}
-        keys %table_columns;
+    my ($request, $entries, $settings) = @_;
+    my $company = LedgerSMB::Company->new(dbh => $request->{dbh});
+    my $config  = $company->configuration;
+    my $coa     = $config->coa_nodes;
+    my $parts   = $config->parts;
 
-    my $stmt =
-        'INSERT INTO parts (' . join(', ',
-                                     map { $table_columns{$_} }
-                                     keys %table_columns)
-                            . ')
-         VALUES (' .
-                 join(', ',
-                      map { $column_placeholders{$_} }
-                      keys %table_columns)
-                 . ')';
-    my $i_sth = $request->{dbh}->prepare($stmt)
-        or die $request->{dbh}->errstr;
-
-    my $ti_sth = $request->{dbh}->prepare(
-        q{INSERT INTO partstax (parts_id, chart_id)
-          VALUES (currval('parts_id_seq'),
-                  (SELECT id FROM account
-                    WHERE accno = ?
-                          AND EXISTS (SELECT 1 FROM account_link al
-                                       WHERE al.account_id = account.id
-                                             AND al.description = ? )))});
-
-    @$entries =
-        map { map_columns_into_hash($columns, $_) }
-        @$entries;
-
-    for my $entry (@$entries) {
-        for my $k (keys %$entry) {
-            delete $entry->{$k}
-            if defined $entry->{$k} and $entry->{$k} eq '';
-        }
-        $i_sth->execute(map { m/_accno$/ ?
-                                  ($entry->{$_}, $acc_types->{$_})
-                                  : $entry->{$_} }
-                        keys %table_columns)
-            or die $i_sth->errstr;
-
-        if (exists $acc_types->{tax_accno}) {
-            for my $taxaccno (split /:/, $entry->{taxaccnos}) {
-                $ti_sth->execute($taxaccno, $acc_types->{tax_accno});
+    my %accounts =
+        map {
+            $_ => {
+                map { $_->accno => $_ }
+                $coa->get(filter =>
+                          [ q{ ? = ANY(link) },
+                            $settings->{links}->{$_},
+                          ])
+            }
+    } $settings->{accounts}->@*;
+    # my $headers = shift $entries->@*;
+    my @entries;
+    use Data::Dumper;
+    for my $entry ($entries->@*) {
+        $entry = {
+            pairwise {
+                $a => $b
+            }
+            $settings->{columns}->@*, $entry->@*
+        };
+        for my $account (keys %accounts) {
+            my $entry_acc = $entry->{"${account}_accno"};
+            if (not exists $accounts{$account}->{$entry_acc}) {
+                $entry->{errors} //= [];
+                push $entry->{errors}->@*,
+                    "Account number '$entry_acc' isn't allocated to category '$account'";
+            }
+            else {
+                $entry->{"${account}_accno_id"} =
+                    ($accounts{$account}->{$entry_acc}->id =~ s/^A-//r);
             }
         }
+        push @entries, $entry;
     }
+
+    for my $entry ($entries->@*) {
+        if (exists $entry->{errors}) {
+            $request->{_req}->env->{'psgix.logger'}->(
+                {
+                    level   => 'info',
+                    message => $_,
+                }) for ($entry->{errors}->@*);
+        }
+    }
+    die 'Errors while processing input data'
+        if any { exists $_->{errors} } $entries->@*;
+
+    for my $entry (@entries) {
+        my $part = $parts->create(type => $settings->{type},
+                                  $entry->%*);
+        $part->save;
+    }
+
+    return;
 }
 
 sub _process_goods {
-    return _process_parts(@_, $cols->{goods},
-        { income_accno    => 'IC_sale',
-          expense_accno   => 'IC_cogs',
-          inventory_accno => 'IC',
-          return_accno    => 'IC_returns',
-          tax_accno       => 'IC_taxpart' });
+    return _process_parts(@_, {
+        accounts => [ qw(income expense inventory return tax) ],
+        links    => {
+            income    => 'IC_sale',
+            expense   => 'IC_cogs',
+            inventory => 'IC',
+            'return'  => 'IC_returns',
+            tax       => 'IC_taxpart',
+        },
+        columns => $cols->{goods},
+        type    => 'part',
+                          });
 }
 
 sub _process_services {
-    return _process_parts(@_, $cols->{services},
-        { income_accno  => 'IC_income',
-          expense_accno => 'IC_expense',
-          tax_accno     => 'IC_taxservice' });
+    return _process_parts(@_, {
+        accounts => [ qw(income expense tax) ],
+        links    => {
+            income  => 'IC_income',
+            expense => 'IC_expense',
+            tax     => 'IC_taxservice',
+        },
+        columns => $cols->{services},
+        type    => 'service',
+                          });
 }
 
 sub _process_overhead {
-    return _process_parts(@_, $cols->{overhead},
-        { inventory_accno => 'IC',
-          expense_accno   => 'IC_expense' });
+    return _process_parts(@_, {
+        accounts => [ qw(inventory expense) ],
+        links    => {
+            inventory => 'IC',
+            expense   => 'IC_expense',
+        },
+        columns => $cols->{overhead},
+        type    => 'overhead',
+                          });
 }
 
 our $process = {
