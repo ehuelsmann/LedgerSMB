@@ -139,13 +139,13 @@ sub get {
             }
         }
         elsif ($key eq 'limit') {
-            $limit = pop @args;
+            $limit = $val;
         }
         elsif ($key eq 'offset') {
-            $offset = pop @args;
+            $offset = $val;
         }
         elsif ($key eq 'filter') {
-            my $filter = pop @args;
+            my $filter = $val;
             $where .= ' AND (' . (shift @$filter) . ')';
             push @qargs, @$filter;
         }
