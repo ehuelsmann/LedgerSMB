@@ -48,13 +48,16 @@ sub _resultset {
         SELECT 'A-'||id as id,
                accno, description, category, gifi_accno,
                'H-'||heading as heading_id, contra,
-               tax, obsolete, false as is_heading
+               tax, obsolete, false as is_heading,
+               (select array_agg(description) from account_link al
+                 where al.account_id = account.id
+                group by al.account_id)::text[] as link
         FROM account
         UNION ALL
         SELECT 'H-'||id as id,
                accno, description, category, null,
                'H-'||parent_id, null,
-               null, null, true
+               null, null, true, null
         FROM account_heading
 };
 }

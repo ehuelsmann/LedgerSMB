@@ -42,6 +42,7 @@ use Log::Any qw($log);
 use LedgerSMB::Company::Configuration::COANodes;
 use LedgerSMB::Company::Configuration::Currencies;
 use LedgerSMB::Company::Configuration::GIFIs;
+use LedgerSMB::Company::Configuration::Parts;
 use LedgerSMB::Company::Configuration::SICs;
 
 use Moose;
@@ -147,6 +148,27 @@ has 'industry_codes' => (
 sub _build_industry_codes {
     my $self = shift;
     return LedgerSMB::Company::Configuration::SICs->new(
+        dbh => $self->dbh
+        );
+}
+
+=head2 parts
+
+Holds a L<LedgerSMB::Company::Configuration::Parts> instance, providing
+access to the setup of Goods and Services.
+
+This attribute cannot be set at object instantiation.
+
+=cut
+
+has 'parts' => (
+    is => 'ro',
+    init_arg => undef,
+    builder => '_build_parts');
+
+sub _build_parts {
+    my $self = shift;
+    return LedgerSMB::Company::Configuration::Parts->new(
         dbh => $self->dbh
         );
 }
