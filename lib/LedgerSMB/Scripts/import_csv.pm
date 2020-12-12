@@ -541,7 +541,6 @@ sub _process_parts {
     } $settings->{accounts}->@*;
     # my $headers = shift $entries->@*;
     my @entries;
-    use Data::Dumper;
     for my $entry ($entries->@*) {
         $entry = {
             pairwise {

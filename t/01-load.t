@@ -74,6 +74,7 @@ my @modules =
      'LedgerSMB::Company::Configuration::Currencies',
      'LedgerSMB::Company::Configuration::Currency',
      'LedgerSMB::Company::Configuration::Account',
+     'LedgerSMB::Company::Configuration::Assembly',
      'LedgerSMB::Company::Configuration::Heading',
      'LedgerSMB::Company::Configuration::GIFI',
      'LedgerSMB::Company::Configuration::GIFIs',

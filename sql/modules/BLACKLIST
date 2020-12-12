@@ -323,8 +323,12 @@ order__search
 overpayment__reverse
 parse_date
 part__get_by_id
+parts__delete
 parts__get_by_id
 parts__get_by_partnumber
+parts__save_good
+parts__save_overhead
+parts__save_service
 parts__search_lite
 partsgroup__search
 payment__get_gl

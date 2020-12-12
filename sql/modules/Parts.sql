@@ -185,12 +185,18 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION parts__delete(in_id int)
+RETURNS parts LANGUAGE sql AS
+$$
+  DELETE FROM parts WHERE id = in_id
+  RETURNING *;
+$$;
+
 
 CREATE OR REPLACE FUNCTION pricegroups__list() RETURNS SETOF pricegroup
 LANGUAGE SQL AS $$
 SELECT * FROM pricegroup;
 $$;
-
 
 
 
