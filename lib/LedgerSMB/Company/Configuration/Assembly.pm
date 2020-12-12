@@ -1,8 +1,8 @@
-package LedgerSMB::Company::Configuration::Overhead;
+package LedgerSMB::Company::Configuration::Assembly;
 
 =head1 NAME
 
-LedgerSMB::Company::Configuration::Overhead - Overhead or Labor part
+LedgerSMB::Company::Configuration::Assembly - Assembly invoice item (tracking)
 
 =head1 SYNOPSIS
 
@@ -21,8 +21,8 @@ LedgerSMB::Company::Configuration::Overhead - Overhead or Labor part
 
 =head1 DESCRIPTION
 
-Configuration of goods and services Overhead (or Labor) for use with the
-Bill Of Materials for assemblies.
+Configuration of goods and services Assembly (inventory-tracking invoice
+item, assembled/produced).
 
 Read-write fields are synced back to the database by calling the C<save>
 method.
@@ -37,100 +37,11 @@ use Log::Any qw($log);
 
 use Moose;
 use namespace::autoclean;
-with 'PGObject::Simple::Role';
+extends 'LedgerSMB::Company::Configuration::Part';
 
 =head1 ATTRIBUTES
 
-=head2 id
-
-Internal identification of the overhead item. Read-only.
-
-=cut
-
-has id => (is => 'rw', reader => 'id', writer => '_id');
-
-
-=head2 partnumber (required)
-
-User defined number identifying the part. Must be unique. Read-only.
-
-=cut
-
-has partnumber => (is => 'ro', required => 1);
-
-=head2 description
-
-One-line description of the part. Read-write.
-
-=cut
-
-has description => (is => 'rw');
-
-=head2 notes
-
-Multi-line description/remarks of the part. Read-write.
-
-=cut
-
-has notes => (is => 'rw');
-
-=head2 expense_accno_id
-
-
-=cut
-
-has expense_accno_id => (is => 'ro', default => 0);
-
-=head2 inventory_accno_id
-
-
-=cut
-
-###TODO: rw/ro: rw poses a challenge to move posted inventory around..
-has inventory_accno_id => (is => 'ro', default => 0);
-
-=head2 listprice
-
-=cut
-
-has listprice => (is => 'rw', default => 0);
-
-=head2 sellprice
-
-
-=cut
-
-has sellprice => (is => 'rw', default => 0);
-
-=head2 lastcost
-
-
-=cut
-
-has lastcost => (is => 'rw', default => 0);
-
-=head2 updated
-
-
-=cut
-
-###TODO: named 'priceupdate' in the parts table!!!
-has updated => (is => 'rw');
-
-=head2 unit
-
-
-=cut
-
-has unit => (is => 'rw');
-
-=head2 obsolete
-
-
-=cut
-
-has obsolete => (is => 'rw', default => 0);
-
+None (for now) other than those inhertited from Part.
 
 =head1 CONSTRUCTOR ARGUMENTS
 
@@ -168,10 +79,25 @@ sub save {
     my $self = shift;
 
     $log->infof('Saving part %s (%s)', $self->partnumber, $self->description);
-    my ($row) = $self->call_dbmethod(funcname => 'parts__save_overhead');
+    my ($row) = $self->call_dbmethod(funcname => 'parts__save_part');
     return $self->_id($row->{id});
 }
 
+=head2 onhand
+
+=cut
+
+sub onhand {
+    ...;
+}
+
+=head2 avgcost
+
+=cut
+
+sub avgcost {
+    ...;
+}
 
 =head1 LICENSE AND COPYRIGHT
 

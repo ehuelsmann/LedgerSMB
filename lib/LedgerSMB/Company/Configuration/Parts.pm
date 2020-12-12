@@ -100,7 +100,7 @@ sub _instantiate {
 
 
 
-#use LedgerSMB::Company::Configuration::Assembly;
+use LedgerSMB::Company::Configuration::Assembly;
 use LedgerSMB::Company::Configuration::Overhead;
 use LedgerSMB::Company::Configuration::Part;
 use LedgerSMB::Company::Configuration::Service;

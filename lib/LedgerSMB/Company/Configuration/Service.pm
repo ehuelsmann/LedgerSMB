@@ -160,8 +160,7 @@ items.
 sub delete {
     my $self = shift;
 
-    ###TODO: implement part deletion function!!!
-    $self->call_dbmethod(funcname => 'part__delete');
+    $self->call_dbmethod(funcname => 'parts__delete');
 }
 
 =head2 save
