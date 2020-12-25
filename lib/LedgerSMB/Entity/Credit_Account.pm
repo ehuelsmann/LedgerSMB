@@ -120,7 +120,8 @@ The total debt that is acceptable for the account
 
 =cut
 
-has 'creditlimit' => (is => 'rw', coerce => 1, isa => 'LedgerSMB::Moose::Number');
+has 'creditlimit' => (is => 'rw', coerce => 1,
+                      isa => 'LedgerSMB::Moose::Number');
 
 =item current_debt
 

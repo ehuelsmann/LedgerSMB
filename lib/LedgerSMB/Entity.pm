@@ -24,9 +24,9 @@ with 'LedgerSMB::PGObject';
 
 =item id
 
-This is the internal, system id, which is a surrogate key.  This will be undefined when
-the entity has not yet been saved to the database and set once it has been saved or
-retrieved.
+This is the internal, system id, which is a surrogate key.  This will be
+undefined when the entity has not yet been saved to the database and set
+once it has been saved or retrieved.
 
 =cut
 
@@ -34,8 +34,8 @@ has 'id' => (is => 'rw', isa => 'Str', required => '0');
 
 =item control_code
 
-The control code is the internal handling number for the operator to use to pull up
-an entity,
+The control code is the internal handling number for the operator to use
+to pull up an entity,
 
 =cut
 
@@ -43,9 +43,9 @@ has 'control_code' => (is => 'rw', isa => 'Str', required => 1);
 
 =item name
 
-The unofficial name of the entity.  This is usually copied in from company.legal_name
-or prepared (using some sort of locale-specific logic) from person.first_name and
-person.last_name.
+The unofficial name of the entity.  This is usually copied in from
+company.legal_name or prepared (using some sort of locale-specific logic)
+from person.first_name and person.last_name.
 
 =cut
 
@@ -69,9 +69,9 @@ has 'country_name' => (is => 'rw', isa => 'Str', required => 0);
 
 =item entity_class
 
-Primary class of entity.  This is mostly for reporting purposes.  See entity_class
-table in database for list of valid values, but 1 is for vendors, 2 for customers,
-3 for employees, etc.
+Primary class of entity.  This is mostly for reporting purposes.  See
+entity_class table in database for list of valid values, but 1 is for
+vendors, 2 for customers, 3 for employees, etc.
 
 =back
 

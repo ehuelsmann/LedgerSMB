@@ -106,8 +106,8 @@ has 'contact' => (is => 'rw', isa => 'Str', required => 1);
 
 =item old_class_id
 
-If this is set, along with old_contact (below), then saving will try to overwrite
-if possible.
+If this is set, along with old_contact (below), then saving will try to
+overwrite if possible.
 
 =item old_contact
 
