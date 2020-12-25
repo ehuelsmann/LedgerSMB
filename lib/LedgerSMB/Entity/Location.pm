@@ -190,8 +190,9 @@ Retrieves locations and returns them.  Args include:
 
 =back
 
-This function returns all locations attached to the entity_id and, if the credit_id is provided, all locations attached to the credit_id as well.  The two
-are appended together with the ones at the entity level coming first.
+This function returns all locations attached to the entity_id and, if the
+credit_id is provided, all locations attached to the credit_id as well.  The
+two are appended together with the ones at the entity level coming first.
 
 If only_class is set, all results will be discarded that are not a specific
 class (useful for retrieving billing info only).
