@@ -78,6 +78,7 @@ This attribute cannot be set at object instantiation.
 has coa_nodes => (
     is => 'ro',
     init_arg => undef,
+    lazy => 1,
     builder => '_build_coa');
 
 sub _build_coa {
@@ -99,6 +100,7 @@ This attribute cannot be set at object instantiation.
 has currencies => (
     is => 'ro',
     init_arg => undef,
+    lazy => 1,
     builder => '_build_currencies');
 
 sub _build_currencies {
@@ -121,6 +123,7 @@ This attribute cannot be set at object instantiation.
 has gifi_codes => (
     is => 'ro',
     init_arg => undef,
+    lazy => 1,
     builder => '_build_gifi_codes');
 
 sub _build_gifi_codes {
@@ -142,6 +145,7 @@ This attribute cannot be set at object instantiation.
 has 'industry_codes' => (
     is => 'ro',
     init_arg => undef,
+    lazy => 1,
     builder => '_build_industry_codes');
 
 sub _build_industry_codes {
