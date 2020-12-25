@@ -189,7 +189,7 @@
    <div class="inputgroup">
        [%
           FOREACH g IN form.gifi_list;
-             g.text = g.accno _ '--' _ g.description;
+             g.text = g.code _ '--' _ g.description;
           END;
 
           INCLUDE select element_data={
@@ -198,7 +198,7 @@
               default_blank = 1
               options = form.gifi_list
               text_attr = 'text'
-              value_attr = 'accno'
+              value_attr = 'code'
               id = 'gifi-a'
           };
        %]

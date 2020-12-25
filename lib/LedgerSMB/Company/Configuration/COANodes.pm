@@ -48,13 +48,15 @@ sub _resultset {
         SELECT 'A-'||id as id,
                accno, description, category, gifi_accno,
                'H-'||heading as heading_id, contra,
-               tax, obsolete, false as is_heading
-        FROM account
+               tax, obsolete, false as is_heading,
+               exists (select 1 from cr_coa_to_account c
+                        where c.chart_id = a.id) as recon
+        FROM account a
         UNION ALL
         SELECT 'H-'||id as id,
                accno, description, category, null,
                'H-'||parent_id, null,
-               null, null, true
+               null, null, true, null
         FROM account_heading
 };
 }

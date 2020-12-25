@@ -25,6 +25,7 @@ use warnings;
 use Log::Log4perl;
 
 use LedgerSMB;
+use LedgerSMB::Company;
 use LedgerSMB::DBObject::Account;
 use LedgerSMB::DBObject::EOY;
 use LedgerSMB::Template::UI;
@@ -110,8 +111,11 @@ sub save {
     }
     die $request->{_locale}->text('Please select a valid heading')
        if (defined $request->{heading}
-           and $request->{heading} =~ /\D/);
-    my $account = LedgerSMB::DBObject::Account->new(%$request);
+           and $request->{heading} !~ /H-\d+/);
+    my $company   = LedgerSMB::Company->new(dbh => $form->{dbh});
+    my $config    = $company->configuration;
+    my $account   = $config->coa_nodes->create(type => 'account',
+                                               %$request);
     $account->{$account->{summary}}=$account->{summary};
     $account->save;
     return edit($account);
@@ -154,6 +158,8 @@ sub save_as_new {
 sub _display_account_screen {
     my ($form, $account) = @_;
 
+    my $company   = LedgerSMB::Company->new(dbh => $form->{dbh});
+    my $config    = $company->configuration;
     my @languages = $form->call_procedure(
         funcname => 'person__list_languages'
     );
@@ -162,8 +168,9 @@ sub _display_account_screen {
     return $template->render($form, 'accounts/edit', {
         form => {
             $account->%*,
-            all_headings => [ $account->list_headings() ],
-            gifi_list    => [ $account->gifi_list ],
+            all_headings =>
+                [ $config->coa_nodes->get(by => (is_heading => 1)) ],
+            gifi_list    => [ $config->gifi_codes->get() ],
             is_recon     => $account->is_recon,
             links        => {
                 map { $_ => 1 } split(/:/, $account->{link})
