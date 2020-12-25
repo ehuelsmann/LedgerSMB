@@ -14,7 +14,6 @@ DROP TYPE IF EXISTS payment_vc_info CASCADE;
 CREATE TYPE payment_vc_info AS (
         id int,
         name text,
-        entity_class int,
         discount int,
         meta_number character varying(32)
 );
@@ -42,7 +41,7 @@ CREATE OR REPLACE FUNCTION payment_get_entity_accounts
  $$
               SELECT ec.id, coalesce(ec.pay_to_name, e.name ||
                      coalesce(':' || ec.description,'')) as name,
-                     e.entity_class, ec.discount_account_id, ec.meta_number
+                     ec.discount_account_id, ec.meta_number
                 FROM entity_credit_account ec
                 JOIN entity e ON (ec.entity_id = e.id)
                 WHERE ec.entity_class = in_account_class
@@ -70,10 +69,9 @@ RETURNS payment_vc_info
 AS $$
  SELECT ec.id, coalesce(ec.pay_to_name, cp.legal_name ||
         coalesce(':' || ec.description,'')) as name,
-        e.entity_class, ec.discount_account_id, ec.meta_number
+        ec.discount_account_id, ec.meta_number
  FROM entity_credit_account ec
- JOIN entity e ON (ec.entity_id = e.id)
- JOIN company cp ON (cp.entity_id = e.id)
+ JOIN company cp ON (cp.entity_id = ec.entity_id)
  WHERE ec.id = $1;
 $$ LANGUAGE SQL;
 
@@ -141,7 +139,7 @@ $$
                         e.name, ec.entity_class
                 FROM entity e
                 JOIN entity_credit_account ec ON (ec.entity_id = e.id)
-                                WHERE e.entity_class = in_account_class
+                                WHERE ec.entity_class = in_account_class
 $$ LANGUAGE SQL;
 
 COMMENT ON FUNCTION payment_get_all_accounts(int) IS
@@ -1436,7 +1434,7 @@ GROUP BY p.id, c.accno, p.reference, p.payment_class, p.closed, p.payment_date,
 CREATE OR REPLACE FUNCTION payment_get_open_overpayment_entities(in_account_class int)
  returns SETOF payment_vc_info AS
  $$
-                SELECT DISTINCT entity_credit_id, legal_name, e.entity_class, null::int, o.meta_number
+                SELECT DISTINCT entity_credit_id, legal_name, null::int, o.meta_number
                 FROM overpayments o
                 JOIN entity e ON (e.id=o.entity_id)
                 WHERE available <> 0 AND in_account_class = payment_class;

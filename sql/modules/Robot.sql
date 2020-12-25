@@ -45,7 +45,7 @@ CREATE FUNCTION robot__get_by_cc(in_control_code text)
 RETURNS robot_entity AS
 $$
 SELECT e.id, e.control_code, e.name, e.country_id, c.name,
-       p.first_name, p.middle_name, p.last_name, e.entity_class
+       p.first_name, p.middle_name, p.last_name
   FROM entity e
   JOIN country c ON c.id = e.country_id
   JOIN robot p ON p.entity_id = e.id
