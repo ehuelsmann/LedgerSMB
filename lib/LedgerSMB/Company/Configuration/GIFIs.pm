@@ -34,13 +34,28 @@ with 'LedgerSMB::Company::Configuration::Collection';
 # required methods from Collection:
 
 sub _resultset {
-    return 'gifi';
+    return 'select * from gifi';
 }
 
 sub _class {
     return 'LedgerSMB::Company::Configuration::GIFI';
 }
 
+my %fieldmap = (
+    code => 'accno'
+    );
+
+sub _map_field {
+    my ($self, $field) = @_;
+    return $fieldmap{$field} // $field;
+}
+
+sub _instantiate {
+    my ($self, $row, @args) = @_;
+    my $class = $self->_class;
+    my %args = @args;
+    return $class->new(%args, code => $args{accno});
+}
 
 use LedgerSMB::Company::Configuration::GIFI;
 
@@ -73,7 +88,7 @@ constructor.
 
 sub create {
     my $self = shift;
-
+    my %args = @_;
     my $v = LedgerSMB::Company::Configuration::GIFI->new(
         _dbh => $self->dbh,
         @_
