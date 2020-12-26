@@ -66,7 +66,7 @@ One-line description of the heading. Read-write.
 has description => (is => 'rw');
 
 ###???? Category???
-has category => (is => 'ro', required => 1);
+has category => (is => 'ro', required => 0);
 
 =head2 heading_id
 
