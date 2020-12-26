@@ -133,7 +133,6 @@ sub save {
     my ($self) = @_;
     my ($ref) = $self->call_dbmethod(funcname => 'company__save');
     $ref->{control_code} = $self->{control_code};
-    $ref->{entity_class} = $self->{entity_class};
     $ref->{country_id} = $self->{country_id};
     $ref->{name} = $ref->{legal_name};
     $self = $self->new(%$ref);

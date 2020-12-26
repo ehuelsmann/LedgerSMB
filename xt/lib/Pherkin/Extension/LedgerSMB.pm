@@ -453,7 +453,6 @@ sub create_vc {
         control_code => $control_code,
         legal_name   => $vc_name,
         name         => $vc_name,
-        entity_class => ($vc eq 'vendor' ? 1 : 2),
         _dbh         => $admin_dbh,
         );
     $company = $company->save;
