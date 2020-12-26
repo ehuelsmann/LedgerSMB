@@ -8,8 +8,8 @@ INSERT INTO account(id, accno, description, category, heading, contra)
 values (-201, '-11112', 'Test Act 1', 'A',
         (select id from account_heading WHERE accno  = '000000000000000000000'), false);
 
-INSERT INTO entity (id, control_code, name, entity_class, country_id)
-values (-201, '-11111', 'Test 1', 1, 242);
+INSERT INTO entity (id, control_code, name, country_id)
+values (-201, '-11111', 'Test 1', 242);
 
 INSERT INTO entity_credit_account (entity_id, id, meta_number, entity_class, ar_ap_account_id, curr)
 values (-201, -200, 'T-11111', 1, -1000, 'XTS');

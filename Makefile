@@ -17,7 +17,7 @@ DIST_DEPS=dojo
 endif
 
 ifneq ($(origin CONTAINER),undefined)
-DOCKER_CMD=docker exec -ti $(CONTAINER)
+DOCKER_CMD=docker exec -ti $(DOCKER_OPTIONS) $(CONTAINER)
 endif
 
 PHERKIN_OPTS ?= --tags ~@wip $(PHERKIN_EXTRA_OPTS)
