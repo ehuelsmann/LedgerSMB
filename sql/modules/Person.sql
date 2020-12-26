@@ -119,8 +119,8 @@ RETURNS INT AS $$
 
         RETURN in_entity_id;
     ELSE
-        INSERT INTO entity (name, entity_class, country_id)
-        values (in_first_name || ' ' || in_last_name, 3, in_country_id);
+        INSERT INTO entity (name, country_id)
+        values (in_first_name || ' ' || in_last_name, in_country_id);
         e_id := currval('entity_id_seq');
 
         INSERT INTO person (salutation_id, first_name, last_name, entity_id,
