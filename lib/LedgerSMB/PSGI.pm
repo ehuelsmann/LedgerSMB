@@ -30,6 +30,7 @@ use LedgerSMB::PSGI::Util;
 use LedgerSMB::Router keywords => [ qw( router ) ];
 use LedgerSMB::Routes::ERP::API::Accounts;
 use LedgerSMB::Routes::ERP::API::Goods;
+use LedgerSMB::Routes::ERP::API::Invoices;
 use LedgerSMB::Routes::ERP::API::MenuNodes;
 use LedgerSMB::Routes::ERP::API::Templates;
 use LedgerSMB::Setting;
