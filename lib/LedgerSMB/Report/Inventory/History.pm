@@ -109,7 +109,18 @@ has inc_rfq => (is => 'ro', isa => 'Bool', required => 0);
 
 sub columns {
     my ($self) = @_;
-   return [
+
+    my @warehouses =
+        ({},
+         map {
+             {
+                 value => $_->{id},
+                 text  => $_->{description}
+             }
+         } $self->call_dbmethod(funcname => 'warehouse__list')
+        );
+
+    return [
     {col_id => 'id',
        type => 'href',
   href_base => 'ic.pl?action=edit&id=',
@@ -123,6 +134,11 @@ sub columns {
     {col_id => 'description',
        type => 'text',
        name => $self->Text('Description'),},
+
+    {col_id => 'warehouse',
+       type => 'select',
+     options => \@warehouses,
+       name => $self->Text('Warehouse'),},
 
     {col_id => 'onhand',
        type => 'text',

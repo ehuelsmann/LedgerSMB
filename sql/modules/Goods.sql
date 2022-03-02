@@ -96,6 +96,7 @@ CREATE TYPE goods_search_result AS (
 partnumber text,
 id int,
 description text,
+warehouse int,
 onhand numeric,
 unit text,
 priceupdate date,
@@ -145,8 +146,21 @@ CREATE OR REPLACE FUNCTION goods__search
  in_status text, in_date_from date, in_date_to date)
 RETURNS SETOF goods_search_result
 LANGUAGE SQL STABLE AS $$
+       WITH parts_per_warehouse AS (
+         SELECT warehouse_id, parts_id, sum(qty) as onhand
+           FROM warehouse_inventory
+         GROUP BY warehouse_id, parts_id
+       ),
+       parts_per_warehouse_incl_unalloc AS (
+         SELECT * FROM parts_per_warehouse
+         UNION ALL
+         SELECT NULL AS warehouse_id, parts.id AS parts_id,
+                onhand - (select sum(qty) from warehouse_inventory wi
+                           where wi.parts_id = parts.id) AS onhand
+           FROM parts
+       )
        SELECT p.partnumber,
-              p.id, p.description, p.onhand, p.unit::text, p.priceupdate,
+              p.id, p.description, ppw.warehouse_id, ppw.onhand, p.unit::text, p.priceupdate,
               pg.partsgroup,
               p.listprice, p.sellprice, p.lastcost, p.avgcost,
               CASE WHEN p.lastcost = 0 THEN NULL
@@ -155,6 +169,7 @@ LANGUAGE SQL STABLE AS $$
               p.bin, p.rop, p.weight, p.notes, p.image, p.drawing, p.microfiche,
               m.make, m.model
          FROM parts p
+         JOIN parts_per_warehouse_incl_unalloc ppw ON p.id = ppw.parts_id
     LEFT JOIN makemodel m ON m.parts_id = p.id
     LEFT JOIN partsgroup pg ON p.partsgroup_id = pg.id
         WHERE (in_partnumber is null or p.partnumber ilike in_partnumber || '%')
@@ -487,6 +502,7 @@ id int,
 partnumber text,
 transdate date,
 description text,
+warehouse int,
 bin text,
 ord_id int,
 ordnumber text,
@@ -513,7 +529,8 @@ CREATE OR REPLACE FUNCTION goods__history(
   in_inc_is bool, in_inc_ir bool
 ) RETURNS SETOF parts_history_result LANGUAGE SQL AS
 $$
-  SELECT p.id, p.partnumber, o.transdate, p.description, p.bin,
+  --TODO: add warehouses here...
+  SELECT p.id, p.partnumber, o.transdate, p.description, null::int as warehouse, p.bin,
          o.id as ord_id, o.ordnumber, o.oe_class, eca.meta_number::text, e.name,
          i.sellprice, i.qty, i.discount, i.serialnumber
     FROM parts p
@@ -535,7 +552,9 @@ $$
            UNION
           SELECT id, 'ap' as o_table, invnumber as ordnumber, 'ir' as oe_class,
                  null, transdate, entity_credit_account, 'i' as expected_line
-            FROM ap) o ON o.id = i.trans_id
+            FROM ap) o
+                       --BUG: This join is problematic; see issue #5295
+                       ON o.id = i.trans_id
                           AND o.expected_line = i.i_type
     JOIN entity_credit_account eca ON o.entity_credit_account = eca.id
     JOIN entity e ON e.id = eca.entity_id

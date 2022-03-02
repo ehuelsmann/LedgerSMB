@@ -206,7 +206,19 @@ has rfqs => (is => 'ro', isa => 'Bool', required => 0);
 =cut
 
 sub columns {
-    my ($self) = @_;
+    my ($self, $request) = @_;
+
+
+    my @warehouses =
+        ({},
+         map {
+             {
+                 value => $_->{id},
+                 text  => $_->{description}
+             }
+         } $self->call_dbmethod(funcname => 'warehouse__list')
+        );
+
    return [
     {col_id => 'id',
        type => 'href',
@@ -221,6 +233,11 @@ sub columns {
     {col_id => 'description',
        type => 'text',
        name => $self->Text('Description'),},
+
+    {col_id => 'warehouse',
+       type => 'select',
+     options => \@warehouses,
+       name => $self->Text('Warehouse'),},
 
     {col_id => 'onhand',
        type => 'text',
