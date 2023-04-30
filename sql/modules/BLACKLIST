@@ -469,6 +469,12 @@ track_global_sequence
 trial_balance__generate
 trial_balance__heading_accounts
 trial_balance__list_headings
+trigger_ap_delete
+trigger_ap_insert
+trigger_ap_update
+trigger_ar_delete
+trigger_ar_insert
+trigger_ar_update
 trigger_parts_short
 trigger_workflow_user
 unlock

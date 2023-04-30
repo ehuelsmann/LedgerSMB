@@ -129,6 +129,233 @@ BEGIN
 END;
 $$ language plpgsql;
 
+
+CREATE OR REPLACE FUNCTION trigger_ar_delete() RETURNS trigger AS $BODY$
+BEGIN
+  DELETE FROM aa WHERE id = NEW.id AND entity_class = 2;
+END;
+$BODY$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION trigger_ap_delete() RETURNS trigger AS $BODY$
+BEGIN
+  DELETE FROM aa WHERE id = NEW.id AND entity_class = 1;
+END;
+$BODY$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION trigger_ar_insert() RETURNS trigger AS $BODY$
+BEGIN
+  INSERT INTO aa (
+      id,
+      entity_credit_account,
+      entity_class,
+      amount_bc,
+      amount_tc,
+      netamount_bc,
+      netamount_tc,
+      curr,
+      invnumber,
+      quonumber,
+      ordnumber,
+      counterparty_reference,
+      crdate,
+      transdate,
+      duedate,
+      description,
+      notes,
+      intnotes,
+      taxincluded,
+      terms,
+      person_id,
+      shippingpoint,
+      shipvia,
+      language_code,
+      invoice,
+      reverse,
+      is_return,
+      approved,
+      on_hold,
+      force_closed
+  )
+  VALUES (
+    NEW.id,
+    NEW.entity_credit_account,
+    2, -- as entity_class,
+    NEW.amount_bc,
+    NEW.amount_tc,
+    NEW.netamount_bc,
+    NEW.netamount_tc,
+    NEW.curr,
+    NEW.invnumber,
+    NEW.quonumber,
+    NEW.ordnumber,
+    NEW.ponumber, -- as counterparty_reference,
+    NEW.crdate,
+    NEW.transdate,
+    NEW.duedate,
+    NEW.description,
+    NEW.notes,
+    NEW.intnotes,
+    NEW.taxincluded,
+    NEW.terms,
+    NEW.person_id,
+    NEW.shippingpoint,
+    NEW.shipvia,
+    NEW.language_code,
+    NEW.invoice,
+    NEW.reverse,
+    NEW.is_return,
+    NEW.approved,
+    NEW.on_hold,
+    NEW.force_closed
+  );
+END;
+$BODY$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION trigger_ap_insert() RETURNS trigger AS $BODY$
+BEGIN
+  INSERT INTO aa (
+      id,
+      entity_credit_account,
+      entity_class,
+      amount_bc,
+      amount_tc,
+      netamount_bc,
+      netamount_tc,
+      curr,
+      invnumber,
+      quonumber,
+      ordnumber,
+      counterparty_reference,
+      crdate,
+      transdate,
+      duedate,
+      description,
+      notes,
+      intnotes,
+      taxincluded,
+      terms,
+      person_id,
+      shippingpoint,
+      shipvia,
+      language_code,
+      invoice,
+      reverse,
+      is_return,
+      approved,
+      on_hold,
+      force_closed
+  )
+  VALUES (
+    NEW.id,
+    NEW.entity_credit_account,
+    1, -- as entity_class,
+    NEW.amount_bc,
+    NEW.amount_tc,
+    NEW.netamount_bc,
+    NEW.netamount_tc,
+    NEW.curr,
+    NEW.invnumber,
+    NEW.quonumber,
+    NEW.ordnumber,
+    NEW.ponumber, -- as counterparty_reference,
+    NEW.crdate,
+    NEW.transdate,
+    NEW.duedate,
+    NEW.description,
+    NEW.notes,
+    NEW.intnotes,
+    NEW.taxincluded,
+    NEW.terms,
+    NEW.person_id,
+    NEW.shippingpoint,
+    NEW.shipvia,
+    NEW.language_code,
+    NEW.invoice,
+    NEW.reverse,
+    NEW.is_return,
+    NEW.approved,
+    NEW.on_hold,
+    NEW.force_closed
+  );
+END;
+$BODY$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION trigger_ar_update() RETURNS trigger AS $BODY$
+BEGIN
+  UPDATE aa
+     SET id = NEW.id,
+         entity_credit_account = NEW.entity_credit_account,
+         amount_bc = NEW.amount_bc,
+         amount_tc = NEW.amount_tc,
+         netamount_bc = NEW.netamount_bc,
+         netamount_tc = NEW.netamount_tc,
+         curr = NEW.curr,
+         invnumber = NEW.invnumber,
+         quonumber = NEW.quonumber,
+         ordnumber = NEW.ordnumber,
+         counterparty_reference = NEW.ponumber,
+         crdate = NEW.crdate,
+         transdate = NEW.transdate,
+         duedate = NEW.duedate,
+         description = NEW.description,
+         notes = NEW.notes,
+         intnotes = NEW.intnotes,
+         taxincluded = NEW.taxincluded,
+         terms = NEW.terms,
+         person_id = NEW.person_id,
+         shippingpoint = NEW.shippingpoint,
+         shipvia = NEW.shipvia,
+         language_code = NEW.language_code,
+         invoice = NEW.invoice,
+         reverse = NEW.reverse,
+         is_return = NEW.is_return,
+         approved = NEW.approved,
+         on_hold = NEW.on_hold,
+         force_closed = NEW.force_closed
+   WHERE id = OLD.id
+     AND entity_class = 2;
+END;
+$BODY$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION trigger_ap_update() RETURNS trigger AS $BODY$
+BEGIN
+  UPDATE aa
+     SET id = NEW.id,
+         entity_credit_account = NEW.entity_credit_account,
+         amount_bc = NEW.amount_bc,
+         amount_tc = NEW.amount_tc,
+         netamount_bc = NEW.netamount_bc,
+         netamount_tc = NEW.netamount_tc,
+         curr = NEW.curr,
+         invnumber = NEW.invnumber,
+         quonumber = NEW.quonumber,
+         ordnumber = NEW.ordnumber,
+         counterparty_reference = NEW.ponumber,
+         crdate = NEW.crdate,
+         transdate = NEW.transdate,
+         duedate = NEW.duedate,
+         description = NEW.description,
+         notes = NEW.notes,
+         intnotes = NEW.intnotes,
+         taxincluded = NEW.taxincluded,
+         terms = NEW.terms,
+         person_id = NEW.person_id,
+         shippingpoint = NEW.shippingpoint,
+         shipvia = NEW.shipvia,
+         language_code = NEW.language_code,
+         invoice = NEW.invoice,
+         reverse = NEW.reverse,
+         is_return = NEW.is_return,
+         approved = NEW.approved,
+         on_hold = NEW.on_hold,
+         force_closed = NEW.force_closed
+   WHERE id = OLD.id
+     AND entity_class = 1;
+END;
+$BODY$ LANGUAGE plpgsql;
+
+
 update defaults set value = 'yes' where setting_key = 'module_load_ok';
 
 COMMIT;
