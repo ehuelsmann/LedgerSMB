@@ -325,7 +325,7 @@ in_retention_acc_id: Account id to post retained earnings into
 
 sub post_yearend {
     my ($request) = @_;
-    $request->call_procedure(
+    my ($row) = $request->call_procedure(
         funcname => 'eoy_close_books',
         args     => [
             $request->{end_date},
@@ -333,6 +333,13 @@ sub post_yearend {
             $request->{description},
             $request->{retention_acc_id}
         ]);
+    my $wf = $request->{_wire}->get('workflows')->create_workflow('Year-End');
+    $request->{dbh}->do(
+        q|UPDATE transactions SET workflow_id = ? WHERE id = ?|, {},
+        $wf->id,
+        $row->{eoy_close_books}
+        )
+        or die $request->{dbh}->errstr;
     my $template = $request->{_wire}->get('ui');
     return $template->render($request, 'accounts/yearend_complete', {});
 }

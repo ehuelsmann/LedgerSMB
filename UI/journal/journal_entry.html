@@ -135,7 +135,7 @@
       </a>
       <br />
       <br />
-      [% text('Status:') %] [% form.status %]
+      [% text('Status:') %] [% form.status %] ([% form.workflow_type %])
     </td>
  </tr>
 
@@ -331,9 +331,6 @@
      </table>
     </td>
 </tr>
- <tr>
-    <td colspan="2"><hr size="3" /></td>
-  </tr>
 </table>
 [% FOREACH hidden IN hiddens.keys;
         PROCESS input element_data={
@@ -360,6 +357,7 @@ END;
            } %]
 
 [% END %]
+<div style="height:2em"></div>
 [% IF form.id;
 
   PROCESS attachments attachments = {

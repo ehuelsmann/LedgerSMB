@@ -1,0 +1,7 @@
+<conditions>
+  <type>Year-End</type>
+  <condition name="complete"
+             test="$context->{transdate}"
+             class="Workflow::Condition::Evaluate"/>
+  
+</conditions>

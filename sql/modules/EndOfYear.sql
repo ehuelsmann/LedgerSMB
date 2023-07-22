@@ -139,11 +139,7 @@ BEGIN
                coalesce(sum(amount_tc) * -1, 0)
         FROM acc_trans WHERE trans_id = currval('id');
 
-
-        SELECT count(*) INTO ret_val from acc_trans
-        where trans_id = currval('id');
-
-        RETURN ret_val;
+        RETURN currval('id');
 end;
 $$ language plpgsql;
 
@@ -154,18 +150,29 @@ $$ Posts a transaction which zeroes the income and expense accounts, moving the
 net balance there into a retained earnings account identified by
 in_retention_acc_id.$$;
 
+DROP FUNCTION IF EXISTS eoy_close_books
+(in_end_date date, in_reference text, in_description text,
+in_retention_acc_id int);
+
 CREATE OR REPLACE FUNCTION eoy_close_books
 (in_end_date date, in_reference text, in_description text,
 in_retention_acc_id int)
-RETURNS bool AS
+RETURNS int AS
 $$
+DECLARE
+  t_trans_id int;
 BEGIN
-        IF eoy_zero_accounts(in_end_date, in_reference, in_description, in_retention_acc_id) > 0 THEN
-                PERFORM eoy_create_checkpoint(in_end_date);
-                RETURN TRUE;
-        ELSE
-                RETURN FALSE;
-        END IF;
+  t_trans_id := eoy_zero_accounts(
+    in_end_date,
+    in_reference,
+    in_description,
+    in_retention_acc_id
+  );
+  PERFORM * FROM acc_trans WHERE trans_id = t_trans_id;
+  IF FOUND THEN
+    PERFORM eoy_create_checkpoint(in_end_date);
+  END IF;
+  RETURN t_trans_id;
 END;
 $$ LANGUAGE PLPGSQL;
 

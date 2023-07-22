@@ -1,0 +1,55 @@
+<actions type="Year-End">
+  <!--
+
+Notes on actions for GL:
+
+* 'post' really is 'save' because 'approve' models the 'Post' button
+* 'copy_to_new' does the same thing as 'save_as_new' now that updating
+  saved invoices no longer clobbers the updated data
+
+
+TODO! Check workflow when 'separate duties' is false!
+(Do we get the correct state transitions?)
+
+  -->
+  <action name="post"
+          group="main"
+          order="07"
+          text="Save"
+          doing="Saving..."
+          done="Saved"
+          ui="none"
+          history-text="Posted"
+          class="LedgerSMB::Workflow::Action::Null" />
+  <action name="block"
+          group="main"
+          order="08"
+          text="Block"
+          doing="Blocking..."
+          done="Blocked"
+          ui="none"
+          history-text="Blocked"
+          class="LedgerSMB::Workflow::Action::Null" />
+  <action name="unblock"
+          group="main"
+          order="09"
+          text="Unblock"
+          doing="Unblocking..."
+          done="Unblocked"
+          ui="none"
+          history-text="Unblocked"
+          class="LedgerSMB::Workflow::Action::Null" />
+  <action name="reverse"
+          group="main"
+          order="18"
+          text="Reverse"
+          ui="none"
+          history-text="Reversed"
+          class="LedgerSMB::Workflow::Action::Null" />
+  <action name="save_info"
+          group="main"
+          order="19"
+          text="Save Info"
+          ui="none"
+          class="LedgerSMB::Workflow::Action::Null" />
+</actions>

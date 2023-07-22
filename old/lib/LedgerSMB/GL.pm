@@ -280,8 +280,10 @@ sub transaction {
         @{$form->{currencies}} =
             (LedgerSMB::Setting->new(%$form))->get_currencies;
 
-        $query = qq|SELECT g.*, t.workflow_id, t.reversing, t.reversing_reference, t.reversed_by, t.reversed_by_reference
-                 FROM gl g JOIN transactions_reversal t on g.id = t.id
+        $query = qq|SELECT g.*, t.workflow_id, w.type as workflow_type, t.reversing, t.reversing_reference, t.reversed_by, t.reversed_by_reference
+                 FROM gl g
+                      JOIN transactions_reversal t on g.id = t.id
+                      LEFT JOIN workflow w on t.workflow_id = w.workflow_id
                 WHERE g.id = ?|;
 
         $sth = $dbh->prepare($query) || $form->dberror($dbh->errstr);
