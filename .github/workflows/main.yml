@@ -137,7 +137,7 @@ jobs:
         uses: ./.github/workflows/Install TEX & Perl
         with:
           perl-version: ${{ matrix.perl }}
-          DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }}
+          DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }},-db,cover_db_pp
           coverage: ${{ matrix.coverage }}
 
       # Do perl tests
@@ -151,15 +151,33 @@ jobs:
           JOB_COUNT: ${{ matrix.JOB_COUNT }}
           PERL5OPT: -MSyntax::Keyword::Try::Deparse
 
-        # Upload coverage data if needed
-      - name: Upload coverage data
+      - name: Stop 'starman'
         run: |
-          unset PERL5OPT
-          cover -report coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: pure-perl
-          COVERALLS_PARALLEL: true
+          if [[ ! -e starman.pid ]]
+          then
+            echo "ERROR: Can't terminate Starman without PID file"
+          else
+            pid=$(cat starman.pid)
+            kill -quit $pid
+            echo "Waiting for Starman to terminate "
+            while kill -0 $pid >/dev/null 2>&1
+            do
+              echo -n "."
+              sleep 1
+            done
+            echo " "
+          fi
+
+      - run: |
+          find / -name cover_db_pp 2>/dev/null || true
+          pwd
+          tar cf cover_db_pp.tar ./cover_db_pp
+        if: ${{ matrix.COVERAGE }}
+      - name: Save coverage data
+        uses: actions/upload-artifact@v3
+        with:
+          name: cover_db_pp
+          path: cover_db_pp.tar
         if: ${{ matrix.COVERAGE }}
 
   test-database:
@@ -271,7 +289,7 @@ jobs:
         uses: ./.github/workflows/Install TEX & Perl
         with:
           perl-version: ${{ matrix.perl }}
-          DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }}
+          DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }},-db,cover_db_web
           coverage: ${{ matrix.coverage }}
 
       - name: Run API tests
@@ -314,16 +332,14 @@ jobs:
           file: ${{ github.workspace }}/UI/coverage/lcov.info
         if: ${{ matrix.COVERAGE }}
 
-        # Upload coverage data if needed
-      - name: Upload coverage data
-        run: |
-          unset PERL5OPT
-          cover -report coveralls
-          cover -report text > logs/coverage.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: webservices-perl
-          COVERALLS_PARALLEL: true
+      - run: |
+          tar cf cover_db_web.tar cover_db_web
+        if: ${{ matrix.COVERAGE }}
+      - name: Save coverage data
+        uses: actions/upload-artifact@v3
+        with:
+          name: cover_db_web
+          path: cover_db_web.tar
         if: ${{ matrix.COVERAGE }}
 
   test-remainder:
@@ -464,7 +480,7 @@ jobs:
         uses: ./.github/workflows/Install TEX & Perl
         with:
           perl-version: ${{ matrix.perl }}
-          DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }}
+          DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }},-db,cover_db_remainder
           coverage: ${{ matrix.coverage }}
 
       # Fix the condition to debug
@@ -500,16 +516,14 @@ jobs:
             echo " "
           fi
 
-      # Upload coverage data if needed
-      - name: Upload coverage data
-        run: |
-          unset PERL5OPT
-          cover -report coveralls
-          cover -report text > logs/coverage.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: remainder-perl
-          COVERALLS_PARALLEL: true
+      - run: |
+          tar cf cover_db_remainder.tar cover_db_remainder
+        if: ${{ matrix.COVERAGE }}
+      - name: Save coverage data
+        uses: actions/upload-artifact@v3
+        with:
+          name: cover_db_remainder
+          path: cover_db_remainder.tar
         if: ${{ matrix.COVERAGE }}
 
       # Send logs & artifacts
@@ -520,7 +534,7 @@ jobs:
         if: always()
 
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: logs-and-screens ${{ matrix.perl }} ${{ matrix.BROWSER }}
           path: |
@@ -532,6 +546,49 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ test-pure-perl, test-remainder, test-webservices ]
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Perl environment & start starman
+        uses: ./.github/workflows/Install TEX & Perl
+        with:
+          perl-version: "5.34"
+
+      - name: Download pure perl test coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: cover_db_pp
+          path: ./
+
+      - name: Download pure perl test coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: cover_db_web
+          path: ./
+
+      - name: Download remainder test coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: cover_db_remainder
+          path: ./
+
+      - run: |
+          tar xvf cover_db_pp.tar
+          tar xvf cover_db_web.tar
+          tar xvf cover_db_remainder.tar
+          find . -name cover_db_pp* 2>/dev/null || ls -l .
+
+        # Upload coverage data if needed
+      - name: Upload coverage data
+        run: |
+          unset PERL5OPT
+          cover -report coveralls cover_db_pp cover_db_web cover_db_remainder
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: perl
+          COVERALLS_PARALLEL: true
+
       - name: Close parallel UI coverage data
         uses: coverallsapp/github-action@v2.2.3
         with:
