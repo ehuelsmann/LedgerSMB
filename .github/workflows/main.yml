@@ -577,7 +577,9 @@ jobs:
           tar xvf cover_db_pp.tar
           tar xvf cover_db_web.tar
           tar xvf cover_db_remainder.tar
-          find . -name cover_db_pp* 2>/dev/null || ls -l .
+          mv cover_db_pp cover_db
+          mv cover_db_web/* cover_db
+          mv cover_db_remainder/* cover_db
 
         # Upload coverage data if needed
       - name: Upload coverage data
