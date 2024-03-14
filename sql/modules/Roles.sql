@@ -313,16 +313,17 @@ SELECT lsmb__create_role('file_read',
                          This role allows reading of files attachments and files uploaded through the system menu.
                          $DOC$
 );
-SELECT lsmb__grant_perms('file_read', 'file_base', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_eca', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_entity', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_incoming', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_internal', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_links', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_order', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_part', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_secondary_attachment', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_transaction', 'SELECT');
+
+SELECT lsmb__grant_perms('file_read', 'file_content', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_eca_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_email_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_entity_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_incoming_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_internal_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_order_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_parts_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_reconciliation_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_transaction_links', 'SELECT');
 
 SELECT lsmb__create_role('file_upload',
                          $DOC$
@@ -337,22 +338,16 @@ SELECT lsmb__create_role('file_attach_tx',
                          This role allows attaching files to transactions and invoices.
                          $DOC$
 );
-SELECT lsmb__grant_perms('file_attach_tx', 'file_transaction', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_tx', 'file_transaction', 'UPDATE');
-SELECT lsmb__grant_perms('file_attach_tx', 'file_order_to_tx', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_tx', 'file_order_to_tx', 'UPDATE');
+SELECT lsmb__grant_perms('file_attach_tx', 'file_transaction_links', 'INSERT');
+SELECT lsmb__grant_perms('file_attach_tx', 'file_transaction_links', 'UPDATE');
 
 SELECT lsmb__create_role('file_attach_order',
                          $DOC$
                          This role allows attaching files to orders and quotes.
                          $DOC$
 );
-SELECT lsmb__grant_perms('file_attach_order', 'file_order', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_order', 'file_order', 'UPDATE');
-SELECT lsmb__grant_perms('file_attach_order', 'file_order_to_order', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_order', 'file_order_to_order', 'UPDATE');
-SELECT lsmb__grant_perms('file_attach_order', 'file_tx_to_order', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_order', 'file_tx_to_order', 'UPDATE');
+SELECT lsmb__grant_perms('file_attach_order', 'file_order_links', 'INSERT');
+SELECT lsmb__grant_perms('file_attach_order', 'file_order_links', 'UPDATE');
 
 SELECT lsmb__create_role('file_attach_part',
                          $DOC$

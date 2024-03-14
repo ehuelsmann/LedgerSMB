@@ -32,6 +32,33 @@ Note that the reference data isn''t created when in_mime_type_id is
 not null or that in_mime_type_text is null.
 $$;
 
+CREATE OR REPLACE FUNCTION file__store(in_content bytea,
+                                       in_mime_type_id int)
+  RETURNS int AS
+  $$
+  DECLARE
+    content_id int;
+  BEGIN
+    select id into content_id
+      from file_content
+     where sha512(in_content) = sha512sum
+       and in_content = content;
+
+    if found then
+      return content_id;
+    end if;
+
+    insert into file_content (content, mime_type_id)
+       values (in_content, in_mime_type_id)
+              returning id into content_id;
+
+    return content_id;
+  END;
+  $$ language plpgsql;
+
+COMMENT ON FUNCTION file__store(bytea, int) IS
+  $$ $$;
+
 CREATE OR REPLACE FUNCTION file__attach_to_tx
 (in_content bytea, in_mime_type_id int, in_file_name text,
 in_description text, in_id int, in_ref_key int, in_file_class int)
@@ -271,13 +298,12 @@ $$ LANGUAGE PLPGSQL;
 CREATE OR REPLACE FUNCTION file__save_incoming
 (in_content bytea, in_mime_type_id int, in_file_name text,
 in_description text)
-RETURNS file_base LANGUAGE SQL AS
-$$
-INSERT INTO file_incoming(content, mime_type_id, file_name, description,
-                          ref_key, file_class, uploaded_by)
-SELECT $1, $2, $3, $4, 0, 7, entity_id
-  FROM users where username = SESSION_USER
- RETURNING *;
+RETURNS file_incoming_links LANGUAGE SQL AS
+  $$
+  insert into file_incoming_links (file_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
 $$;
 
 COMMENT ON FUNCTION file__save_incoming
@@ -289,29 +315,20 @@ $$;
 CREATE OR REPLACE FUNCTION file__save_internal
 (in_content bytea, in_mime_type_id int, in_file_name text,
 in_description text)
-RETURNS file_base LANGUAGE SQL AS
-$$
-WITH up AS (
-    UPDATE file_internal
-       SET content = $1, uploaded_at = now(),
-           uploaded_by = (select entity_id from users
-                           where username = session_user)
-     WHERE file_name = $3
- RETURNING true as found_it
-)
-INSERT INTO file_internal (content, mime_type_id, file_name, description,
-                          ref_key, file_class, uploaded_by)
-SELECT $1, $2, $3, $4, 0, 6, entity_id
-  FROM users
- where username = SESSION_USER
-       AND NOT EXISTS (select 1 from up)
-RETURNING *;
+RETURNS file_internal_links LANGUAGE SQL AS
+  $$
+  delete from file_internal_links where file_name = in_file_name;
+
+  insert into file_internal_links (file_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
 $$;
 
 COMMENT ON FUNCTION file__save_internal
 (in_content bytea, in_mime_type_id int, in_file_name text,
 in_description text) IS
-$$If the file_name is not unique, this will overwrite the previous stored file.
+$$If the file_name is not unique, this overwrites the existing file.
 $$;
 
 COMMENT ON FUNCTION file__attach_to_order
@@ -448,76 +465,6 @@ COMMENT ON FUNCTION file__get_by_name(in_file_name text, in_ref_key int, in_file
 $$ Retrieves the file information specified including content.$$;
 
 
-DELETE FROM file_view_catalog WHERE file_class in (1, 2);
-
-CREATE OR REPLACE view file_tx_links AS
-SELECT file_id, ref_key, gl.reference, gl.type, dest_class, source_class,
-       sl.ref_key as dest_ref
-  FROM file_secondary_attachment sl
-  JOIN (select id, reference, 'gl' as type
-          FROM gl
-         UNION
-        SELECT id, invnumber, case when invoice then 'is' else 'ar' end as type
-          FROM ar
-         UNION
-        SELECT id, invnumber, case when invoice then 'ir' else 'ap' end as type
-          FROM ap) gl ON sl.ref_key = gl.id and sl.source_class = 1;
--- view of links FROM transactions
-
-INSERT INTO file_view_catalog (file_class, view_name)
-     VALUES (1, 'file_tx_links');
-
-CREATE OR REPLACE view file_order_links AS
-SELECT file_id, ref_key, oe.ordnumber as reference, oc.oe_class, dest_class,
-       source_class, sl.ref_key as dest_ref
-  FROM file_secondary_attachment sl
-  JOIN oe ON sl.ref_key = oe.id
-  JOIN oe_class oc ON oe.oe_class_id = oc.id
- WHERE sl.source_class = 2;
-
-
--- view of links FROM orders
-
-INSERT INTO file_view_catalog (file_class, view_name)
-     VALUES (2, 'file_order_links');
-
-
-CREATE OR REPLACE FUNCTION file_links_vrebuild()
-RETURNS bool AS
-$$
-DECLARE
-   viewline file_view_catalog%rowtype;
-   stmt text;
-BEGIN
-   stmt := '';
-   FOR viewline IN
-       select * from file_view_catalog
-   LOOP
-       IF stmt = '' THEN
-           stmt := 'SELECT * FROM ' || quote_ident(viewline.view_name) || '
-';
-       ELSE
-           stmt := stmt || ' UNION
-SELECT * FROM '|| quote_ident(viewline.view_name) || '
-';
-       END IF;
-   END LOOP;
-   EXECUTE 'CREATE OR REPLACE VIEW file_links AS
-' || stmt;
-   RETURN TRUE;
-END;
-$$ LANGUAGE PLPGSQL;
-
-select * from file_links_vrebuild();
-
-
-CREATE OR REPLACE FUNCTION file__list_links(in_ref_key int, in_file_class int)
-RETURNS setof file_links AS
-$$ select * from file_links where ref_key = $1 and dest_class = $2;
-$$ language sql;
-
-COMMENT ON FUNCTION file__list_links(in_ref_key int, in_file_class int) IS
-$$ This function retrieves a list of file attachments on a specified object.$$;
 
 update defaults set value = 'yes' where setting_key = 'module_load_ok';
 
