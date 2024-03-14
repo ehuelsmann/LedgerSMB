@@ -318,7 +318,6 @@ SELECT lsmb__grant_perms('file_read', 'file_eca', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_entity', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_incoming', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_internal', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_links', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_order', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_part', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_secondary_attachment', 'SELECT');

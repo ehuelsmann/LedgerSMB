@@ -249,10 +249,8 @@ file__get_by_name
 file__get_for_template
 file__get_mime_type
 file__list_by
-file__list_links
 file__save_incoming
 file__save_internal
-file_links_vrebuild
 form_check
 form_close
 form_open
