@@ -505,15 +505,15 @@ jobs:
           fi
 
       # Upload coverage data if needed
-      - name: Upload coverage data
+      - name: tar coverage data for artifact upload
         run: |
-          unset PERL5OPT
-          cover -report coveralls cover_db_remain
-          cover -report text cover_db_remain > logs/coverage.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: remainder-perl
-          COVERALLS_PARALLEL: true
+          tar czf cover_db_remain.tar.gz cover_db_remain/
+        if: ${{ matrix.COVERAGE }}
+      - name: Upload coverage data as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cover_db_remain
+          path: cover_db_remain.tar.gz
         if: ${{ matrix.COVERAGE }}
 
       # Send logs & artifacts
@@ -553,17 +553,23 @@ jobs:
         with:
           name: cover_db_ws
           path: ./
+      - name: Download remaining Perl coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: cover_db_remain
+          path: ./
 
       - name: Extract coverage data
         run: |
           tar xzf cover_db_pp.tar.gz
           tar xzf cover_db_ws.tar.gz
+          tar xzf cover_db_remain.tar.gz
 
       - name: Upload coverage data to coveralls
         run: |
           unset PERL5OPT
-          cover -report coveralls cover_db_pp cover_db_ws
-          cover -report text cover_db_pp cover_db_ws > logs/coverage.txt
+          cover -report coveralls cover_db_pp cover_db_ws cover_db_remain
+          cover -report text cover_db_pp cover_db_ws cover_db_remain > logs/coverage.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: perl
@@ -574,6 +580,12 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
+
+      - name: Upload coverage text log
+        uses: actions/upload-artifact@v4
+        with:
+          name: Perl coverage text report
+          path: logs/coverage.txt
 
       # Run the build hook again (Coveralls suggested patch)
       - name: Rerun Build Webhook
