@@ -568,8 +568,9 @@ jobs:
       - name: Upload coverage data to coveralls
         run: |
           unset PERL5OPT
-          cover -report coveralls cover_db_pp cover_db_ws cover_db_remain
-          cover -report text cover_db_pp cover_db_ws cover_db_remain > logs/coverage.txt
+          cover -write cover_db_total cover_db_pp cover_db_ws cover_db_remain
+          cover -report coveralls cover_db_total
+          cover -report text cover_db_total > logs/coverage.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: perl
