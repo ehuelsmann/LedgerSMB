@@ -152,8 +152,19 @@ jobs:
           JOB_COUNT: ${{ matrix.JOB_COUNT }}
           PERL5OPT: -MSyntax::Keyword::Try::Deparse
 
-        # Upload coverage data if needed
-      - name: Upload coverage data
+      # Upload coverage data if needed
+      - name: tar coverage data for artifact upload
+        run: |
+          tar czf cover_db_pp.tar.gz cover_db_pp/
+        if: ${{ matrix.COVERAGE }}
+      - name: Upload coverage data as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cover_db_pp
+          path: cover_db_pp.tar.gz
+        if: ${{ matrix.COVERAGE }}
+
+      - name: Upload coverage data to coveralls
         run: |
           unset PERL5OPT
           cover -report coveralls cover_db_pp
@@ -534,6 +545,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ test-pure-perl, test-remainder, test-webservices ]
     steps:
+      - name: Download Pure Perl coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: cover_db_pp
+          path: cover_db_pp
+
       - name: Close parallel UI coverage data
         uses: coverallsapp/github-action@v2.2.3
         with:
