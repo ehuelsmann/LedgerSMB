@@ -139,6 +139,7 @@ jobs:
           perl-version: ${{ matrix.perl }}
           DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }}
           coverage: ${{ matrix.coverage }}
+          cover_db: "cover_db_pp"
 
       # Do perl tests
       - name: Run Pure Perl tests
@@ -155,7 +156,7 @@ jobs:
       - name: Upload coverage data
         run: |
           unset PERL5OPT
-          cover -report coveralls
+          cover -report coveralls cover_db_pp
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: pure-perl
@@ -273,6 +274,7 @@ jobs:
           perl-version: ${{ matrix.perl }}
           DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }}
           coverage: ${{ matrix.coverage }}
+          cover_db: "cover_db_ws"
 
       - name: Run API tests
         run: |
@@ -318,8 +320,8 @@ jobs:
       - name: Upload coverage data
         run: |
           unset PERL5OPT
-          cover -report coveralls
-          cover -report text > logs/coverage.txt
+          cover -report coveralls cover_db_ws
+          cover -report text cover_db_ws > logs/coverage.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: webservices-perl
@@ -466,6 +468,7 @@ jobs:
           perl-version: ${{ matrix.perl }}
           DEVEL_COVER_OPTIONS: ${{ env.DEVEL_COVER_OPTIONS }}
           coverage: ${{ matrix.coverage }}
+          cover_db: "cover_db_remain"
 
       # Fix the condition to debug
       - name: Setup upterm session
@@ -504,8 +507,8 @@ jobs:
       - name: Upload coverage data
         run: |
           unset PERL5OPT
-          cover -report coveralls
-          cover -report text > logs/coverage.txt
+          cover -report coveralls cover_db_remain
+          cover -report text cover_db_remain > logs/coverage.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: remainder-perl
