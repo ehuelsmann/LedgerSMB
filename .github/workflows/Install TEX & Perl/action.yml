@@ -11,6 +11,9 @@ inputs:
   coverage:
     description: "Coverage indicator"
     default: ''
+  cover_db:
+    description: "Name of output directory for Perl coverage data"
+    default: 'cover_db'
 
 runs:
   using: "composite"
@@ -50,8 +53,8 @@ runs:
     - name: Setup coverage
       shell: bash
       run: |
-        echo "PERL5OPT=-MDevel::Cover=${{ inputs.DEVEL_COVER_OPTIONS }} -MSyntax::Keyword::Try::Deparse" >> $GITHUB_ENV
-        echo "YATH_DEVEL_COVER_OPTIONS=--cover=${{ inputs.DEVEL_COVER_OPTIONS }}" >> $GITHUB_ENV
+        echo "PERL5OPT=-MDevel::Cover=${{ inputs.DEVEL_COVER_OPTIONS }},-db,${{ inputs.cover_db }} -MSyntax::Keyword::Try::Deparse" >> $GITHUB_ENV
+        echo "YATH_DEVEL_COVER_OPTIONS=--cover=${{ inputs.DEVEL_COVER_OPTIONS }},-db,${{ inputs.cover_db }}" >> $GITHUB_ENV
         echo "JSCOVERAGE=--coverage" >> $GITHUB_ENV
       if: ${{ inputs.coverage }}
 
