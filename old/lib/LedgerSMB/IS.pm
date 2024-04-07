@@ -37,6 +37,9 @@ LedgerSMB::IS - Inventory Invoicing
 #======================================================================
 
 package IS;
+
+use v5.36;
+
 use LedgerSMB::Tax;
 use LedgerSMB::PriceMatrix;
 use LedgerSMB::Setting;
@@ -787,7 +790,7 @@ sub post_invoice {
     my $invoice_id;
     my $ndx;
     for (keys %$form) {
-        if (UNIVERSAL::isa( $form->{$_}, 'LedgerSMB::PGNumber' )){
+        if ($form->{$_} isa 'LedgerSMB::PGNumber') {
             $form->{$_} = $form->{$_}->bstr();
         }
     }
