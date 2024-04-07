@@ -164,16 +164,6 @@ jobs:
           path: cover_db_pp.tar.gz
         if: ${{ matrix.COVERAGE }}
 
-      - name: Upload coverage data to coveralls
-        run: |
-          unset PERL5OPT
-          cover -report coveralls cover_db_pp
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: pure-perl
-          COVERALLS_PARALLEL: true
-        if: ${{ matrix.COVERAGE }}
-
   test-database:
     runs-on: ubuntu-latest
     needs: build-perl-env
@@ -327,16 +317,16 @@ jobs:
           file: ${{ github.workspace }}/UI/coverage/lcov.info
         if: ${{ matrix.COVERAGE }}
 
-        # Upload coverage data if needed
-      - name: Upload coverage data
+      # Upload coverage data if needed
+      - name: tar coverage data for artifact upload
         run: |
-          unset PERL5OPT
-          cover -report coveralls cover_db_ws
-          cover -report text cover_db_ws > logs/coverage.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: webservices-perl
-          COVERALLS_PARALLEL: true
+          tar czf cover_db_ws.tar.gz cover_db_ws/
+        if: ${{ matrix.COVERAGE }}
+      - name: Upload coverage data as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cover_db_ws
+          path: cover_db_ws.tar.gz
         if: ${{ matrix.COVERAGE }}
 
   test-remainder:
@@ -545,13 +535,41 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ test-pure-perl, test-remainder, test-webservices ]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Perl environment & start starman
+        uses: ./.github/workflows/Install TEX & Perl
+        with:
+          perl-version: "5.34"
+
       - name: Download Pure Perl coverage
         uses: actions/download-artifact@v4
         with:
           name: cover_db_pp
-          path: cover_db_pp
+          path: ./
+      - name: Download webservices Perl coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: cover_db_ws
+          path: ./
 
-      - name: Close parallel UI coverage data
+      - name: Extract coverage data
+        run: |
+          tar xzf cover_db_pp.tar.gz
+          tar xzf cover_db_ws.tar.gz
+
+      - name: Upload coverage data to coveralls
+        run: |
+          unset PERL5OPT
+          cover -report coveralls cover_db_pp cover_db_ws
+          cover -report text cover_db_pp cover_db_ws > logs/coverage.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: perl
+          COVERALLS_PARALLEL: true
+
+      - name: Close parallel coverage data
         uses: coverallsapp/github-action@v2.2.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
