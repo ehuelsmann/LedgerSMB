@@ -541,7 +541,7 @@ jobs:
       - name: Setup Perl environment & start starman
         uses: ./.github/workflows/Install TEX & Perl
         with:
-          perl-version: "5.34"
+          perl-version: "5.38"
 
       - name: Download Pure Perl coverage
         uses: actions/download-artifact@v4
