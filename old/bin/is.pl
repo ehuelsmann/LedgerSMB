@@ -487,6 +487,7 @@ sub form_header {
     $business //= '';
     $department //= '';
     $exchangerate //= '';
+    $form->get_shipto( $form->{shiptolocationid} );
     print qq|
             $business
           </table>
@@ -508,6 +509,15 @@ sub form_header {
           <tr>
         <th align=right nowrap><label for="shippingpoint">| . $locale->text('Shipping Point') . qq|</label></th>
         <td colspan=3><input data-dojo-type="dijit/form/TextBox" id="shippingpoint" name="shippingpoint" size="35" value="$form->{shippingpoint}" $readonly></td>
+          </tr>
+          <tr>
+            <th align=right nowrap>| . $locale->text('Shipping Address') . qq|</th>
+            <td>$form->{shiptoaddress1} <br/>
+                $form->{shiptoaddress2} <br/>
+                $form->{shiptocity}, $form->{shiptostate} <br/>
+                $form->{shiptozipcode} <br/>
+                $form->{shiptocountry}
+                </td>
           </tr>
           <tr>
         <th align=right nowrap><label for="shipvia">| . $locale->text('Ship via') . qq|</label></th>
