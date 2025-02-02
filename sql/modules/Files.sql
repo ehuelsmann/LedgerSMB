@@ -59,117 +59,78 @@ CREATE OR REPLACE FUNCTION file__store(in_content bytea,
 COMMENT ON FUNCTION file__store(bytea, int) IS
   $$ $$;
 
+DROP FUNCTION IF EXISTS file__attach_to_tx
+(in_content bytea, in_mime_type_id int, in_file_name text,
+in_description text, in_id int, in_ref_key int, in_file_class int);
+
 CREATE OR REPLACE FUNCTION file__attach_to_tx
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int)
-RETURNS file_base
+in_description text, in_trans_id int)
+RETURNS file_transaction_links
 AS
 $$
-DECLARE retval file_base;
-BEGIN
-   IF in_id IS NOT NULL THEN
-       IF in_content THEN
-          RAISE EXCEPTION $e$Can't specify id and content in attachment$e$;--'
-       END IF;
-       INSERT INTO file_order_to_tx
-              (file_id, source_class, ref_key, dest_class, attached_by,
-              attached_at)
-       VALUES (in_id, 2, in_ref_key, 1, person__get_my_entity_id(), now());
+  delete from file_parts_links where file_name = in_file_name;
 
-       SELECT * INTO retval FROM file_base where id = in_id;
-       RETURN retval;
-   ELSE
-       INSERT INTO file_transaction
-                   (content, mime_type_id, file_name, description, ref_key,
-                   file_class, uploaded_by, uploaded_at)
-            VALUES (in_content, in_mime_type_id, in_file_name, in_description,
-                   in_ref_key, in_file_class, person__get_my_entity_id(),
-                   now());
-        SELECT * INTO retval FROM file_base
-         where id = currval('file_base_id_seq');
-
-        RETURN retval;
-    END IF;
-END;
-$$ LANGUAGE PLPGSQL;
+  insert into file_parts_links (file_content_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
+$$ LANGUAGE SQL;
 
 COMMENT ON FUNCTION file__attach_to_tx
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int) IS
+in_description text, in_trans_id int) IS
 $$ Attaches or links a file to a transaction.  in_content OR id can be set.
 Setting both raises an exception.$$;
 
+DROP FUNCTION IF EXISTS file__attach_to_part
+(in_content bytea, in_mime_type_id int, in_file_name text,
+in_description text, in_id int, in_ref_key int, in_file_class int)
 
 CREATE OR REPLACE FUNCTION file__attach_to_part
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int)
-RETURNS file_base
+in_description text, in_parts_id int)
+RETURNS file_parts_links
 AS
 $$
-DECLARE retval file_base;
-BEGIN
-   IF in_id IS NOT NULL THEN
-       IF in_content THEN
-          RAISE EXCEPTION $e$Can't specify id and content in attachment$e$;--'
-       END IF;
-       RAISE EXCEPTION 'links not implemented';
-       RETURN retval;
-   ELSE
-       INSERT INTO file_part
-                   (content, mime_type_id, file_name, description, ref_key,
-                   file_class, uploaded_by, uploaded_at)
-            VALUES (in_content, in_mime_type_id, in_file_name, in_description,
-                   in_ref_key, in_file_class, person__get_my_entity_id(),
-                   now());
-        SELECT * INTO retval FROM file_base
-         where id = currval('file_base_id_seq');
+  delete from file_parts_links where file_name = in_file_name;
 
-        RETURN retval;
-    END IF;
-END;
-$$ LANGUAGE PLPGSQL;
+  insert into file_parts_links (file_content_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
+$$ LANGUAGE SQL;
 
 COMMENT ON FUNCTION file__attach_to_part
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int) IS
+in_description text, in_parts_id int) IS
 $$ Attaches or links a file to a good or service.  in_content OR id can be set.
 Setting both raises an exception.
 
 Note that currently links (setting id) is NOT supported because we dont have a
 use case of linking files to parts$$;
 
+DROP FUNCTION IF EXISTS file__attach_to_email
+(in_content bytea, in_mime_type_id int, in_file_name text,
+in_description text, in_id int, in_ref_key int, in_file_class int);
+
 CREATE OR REPLACE FUNCTION file__attach_to_email
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int)
-RETURNS file_base
+in_description text, in_email_id int)
+RETURNS file_email_links
 AS
 $$
-DECLARE retval file_base;
-BEGIN
-   IF in_id IS NOT NULL THEN
-       IF in_content THEN
-          RAISE EXCEPTION $e$Can't specify id and content in attachment$e$;--'
-       END IF;
-       RAISE EXCEPTION 'links not implemented';
-       RETURN retval;
-   ELSE
-       INSERT INTO file_email
-                   (content, mime_type_id, file_name, description, ref_key,
-                   file_class, uploaded_by, uploaded_at)
-            VALUES (in_content, in_mime_type_id, in_file_name, in_description,
-                   in_ref_key, in_file_class, person__get_my_entity_id(),
-                   now());
-        SELECT * INTO retval FROM file_base
-         where id = currval('file_base_id_seq');
+  delete from file_email_links where file_name = in_file_name;
 
-        RETURN retval;
-    END IF;
-END;
-$$ LANGUAGE PLPGSQL;
+  insert into file_email_links (file_content_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
+$$ LANGUAGE SQL;
 
 COMMENT ON FUNCTION file__attach_to_email
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int) IS
+in_description text, in_email_id int) IS
 $$ Attaches or links a file to an e-mail.  in_content OR id can be set.
 Setting both raises an exception.
 
@@ -177,123 +138,83 @@ Note that currently links (setting id) is NOT supported because we dont have a
 use case of linking files to e-mails$$;
 
 
+DROP FUNCTION IF EXISTS file__attach_to_entity
+(in_content bytea, in_mime_type_id int, in_file_name text,
+in_description text, in_id int, in_ref_key int, in_file_class int);
+
 CREATE OR REPLACE FUNCTION file__attach_to_entity
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int)
-RETURNS file_base
+in_description text, in_entity_id int)
+RETURNS file_entity_links
 AS
 $$
-DECLARE retval file_base;
-BEGIN
-   IF in_id IS NOT NULL THEN
-       IF in_content THEN
-          RAISE EXCEPTION $e$Can't specify id and content in attachment$e$;--'
-       END IF;
-       RAISE EXCEPTION 'links not implemented';
-       RETURN retval;
-   ELSE
-       INSERT INTO file_entity
-                   (content, mime_type_id, file_name, description, ref_key,
-                   file_class, uploaded_by, uploaded_at)
-            VALUES (in_content, in_mime_type_id, in_file_name, in_description,
-                   in_ref_key, in_file_class, person__get_my_entity_id(),
-                   now());
-        SELECT * INTO retval FROM file_base
-         where id = currval('file_base_id_seq');
+  delete from file_entity_links where file_name = in_file_name;
 
-        RETURN retval;
-    END IF;
-END;
-$$ LANGUAGE PLPGSQL;
+  insert into file_entity_links (file_content_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
+$$ LANGUAGE SQL;
 
 COMMENT ON FUNCTION file__attach_to_entity
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int) IS
+in_description text, in_entity_id int) IS
 $$ Attaches or links a file to a contact or entity.  in_content OR id can be
 set. Setting both raises an exception.
 
 Note that currently links (setting id) is NOT supported because we dont have a
 use case of linking files to entities$$;
 
+DROP FUNCTION IF EXISTS file__attach_to_eca
+(in_content bytea, in_mime_type_id int, in_file_name text,
+in_description text, in_id int, in_ref_key int, in_file_class int);
+
 CREATE OR REPLACE FUNCTION file__attach_to_eca
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int)
-RETURNS file_base
+in_description text, in_eca_id int)
+RETURNS file_eca_links
 AS
 $$
-DECLARE retval file_base;
-BEGIN
-   IF in_id IS NOT NULL THEN
-       IF in_content THEN
-          RAISE EXCEPTION $e$Can't specify id and content in attachment$e$;--'
-       END IF;
-       RAISE EXCEPTION 'links not implemented';
-       RETURN retval;
-   ELSE
-       INSERT INTO file_eca
-                   (content, mime_type_id, file_name, description, ref_key,
-                   file_class, uploaded_by, uploaded_at)
-            VALUES (in_content, in_mime_type_id, in_file_name, in_description,
-                   in_ref_key, in_file_class, person__get_my_entity_id(),
-                   now());
-        SELECT * INTO retval FROM file_base
-         where id = currval('file_base_id_seq');
+  delete from file_eca_links where file_name = in_file_name;
 
-        RETURN retval;
-    END IF;
-END;
-$$ LANGUAGE PLPGSQL;
+  insert into file_eca_links (file_content_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
+$$ LANGUAGE SQL;
 
 COMMENT ON FUNCTION file__attach_to_eca
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int) IS
+in_description text, in_eca_id int) IS
 $$ Attaches or links a file to a good or service.  in_content OR id can be set.
 Setting both raises an exception.
 
 Note that currently links (setting id) is NOT supported because we dont have a
 use case of linking files to entity credit accounts.$$;
 
+DROP FUNCTION IF EXISTS file__attach_to_order
+(in_content bytea, in_mime_type_id int, in_file_name text,
+in_description text, in_id int, in_ref_key int, in_file_class int);
+
 CREATE OR REPLACE FUNCTION file__attach_to_order
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int)
-RETURNS file_base
+in_description text, in_oe_id int)
+RETURNS file_oe_links
 AS
 $$
-DECLARE retval file_base;
-BEGIN
-   IF in_id IS NOT NULL THEN
-       IF in_content THEN
-          RAISE EXCEPTION $e$Conflicting options file_id and content$e$;
-       END IF;
-       IF in_file_class = 1 THEN
-           INSERT INTO file_tx_to_order
-                  (file_id, source_class, ref_key, dest_class, attached_by,
-                  attached_at)
-           VALUES (in_id, 1, in_ref_key, 2, person__get_my_entity_id(), now());
-       ELSIF in_file_class = 2 THEN
-           INSERT INTO file_order_to_order
-                  (file_id, source_class, ref_key, dest_class, attached_by,
-                  attached_at)
-           VALUES (in_id, 2, in_ref_key, 2, person__get_my_entity_id(), now());
-       ELSE
-           RAISE EXCEPTION $E$Invalid file class$E$;
-       END IF;
-       SELECT * INTO retval FROM file_base where id = in_id;
-       RETURN retval;
-   ELSE
-       INSERT INTO file_order
-                   (content, mime_type_id, file_name, description, ref_key,
-                   file_class, uploaded_by, uploaded_at)
-            VALUES (in_content, in_mime_type_id, in_file_name, in_description,
-                   in_ref_key, in_file_class, person__get_my_entity_id(),
-                   now());
-        SELECT * INTO retval FROM file_base
-         where id = currval('file_base_id_seq');
+  delete from file_oe_links where file_name = in_file_name;
 
-        RETURN retval;
-    END IF;
-END;
-$$ LANGUAGE PLPGSQL;
+  insert into file_oe_links (file_content_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
+$$ LANGUAGE SQL;
+
+COMMENT ON FUNCTION file__attach_to_order
+(in_content bytea, in_mime_type_id int, in_file_name text,
+in_description text, in_oe_id int) IS
+$$ Attaches or links a file to an order.  in_content OR id can be set.
+Setting both raises an exception.$$;
 
 CREATE OR REPLACE FUNCTION file__save_incoming
 (in_content bytea, in_mime_type_id int, in_file_name text,
@@ -319,7 +240,7 @@ RETURNS file_internal_links LANGUAGE SQL AS
   $$
   delete from file_internal_links where file_name = in_file_name;
 
-  insert into file_internal_links (file_id, file_name, description, uploaded_by)
+  insert into file_internal_links (file_content_id, file_name, description, uploaded_by)
   values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
           (select entity_id from users where username = SESSION_USER))
   returning *;
@@ -331,44 +252,27 @@ in_description text) IS
 $$If the file_name is not unique, this overwrites the existing file.
 $$;
 
-COMMENT ON FUNCTION file__attach_to_order
+DROP FUNCTION IF EXISTS file__attach_to_reconciliation
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int) IS
-$$ Attaches or links a file to an order.  in_content OR id can be set.
-Setting both raises an exception.$$;
+in_description text, in_id int, in_ref_key int, in_file_class int);
 
 CREATE OR REPLACE FUNCTION file__attach_to_reconciliation
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int)
-RETURNS file_base
+in_description text, in_cr_report_id int)
+RETURNS file_reconciliation_links
 AS
 $$
-DECLARE retval file_base;
-BEGIN
-   IF in_id IS NOT NULL THEN
-       IF in_content THEN
-          RAISE EXCEPTION $e$Can't specify id and content in attachment$e$;--'
-       END IF;
-       RAISE EXCEPTION 'links not implemented';
-       RETURN retval;
-   ELSE
-       INSERT INTO file_reconciliation
-                   (content, mime_type_id, file_name, description, ref_key,
-                   file_class, uploaded_by, uploaded_at)
-            VALUES (in_content, in_mime_type_id, in_file_name, in_description,
-                   in_ref_key, in_file_class, person__get_my_entity_id(),
-                   now());
-        SELECT * INTO retval FROM file_base
-         where id = currval('file_base_id_seq');
+  delete from file_reconciliation_links where file_name = in_file_name;
 
-        RETURN retval;
-    END IF;
-END;
-$$ LANGUAGE PLPGSQL;
+  insert into file_reconciliation_links (file_content_id, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+          (select entity_id from users where username = SESSION_USER))
+  returning *;
+$$ LANGUAGE SQL;
 
 COMMENT ON FUNCTION file__attach_to_reconciliation
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int) IS
+in_description text, in_cr_report_id int) IS
 $$ Attaches or links a file to an e-mail.  in_content OR id can be set.
 Setting both raises an exception.
 

@@ -180,7 +180,7 @@ select content_id, file_name, description, uploaded_by, uploaded_at
   from file_internal;
 
 
-create table file_order_links (
+create table file_oe_links (
   oe_id int references oe(id),
   file_content_id int references file_content (id),
   file_name text not null,
@@ -190,7 +190,7 @@ create table file_order_links (
   primary key (oe_id, file_content_id)
 );
 
-insert into file_order_links (
+insert into file_oe_links (
   oe_id, file_content_id, file_name, description, uploaded_by, uploaded_at)
 select ref_key, content_id, file_name, description, uploaded_by, uploaded_at
   from file_order;
@@ -262,7 +262,7 @@ select fotx.ref_key, ft.content_id, ft.file_name, ft.description,
              on ft.id = fotx.file_id;
 
 
-insert into file_order_links (
+insert into file_oe_links (
   oe_id, file_content_id, file_name, description,
   uploaded_by, uploaded_at)
 select foto.ref_key, fo.content_id, fo.file_name, fo.description,
@@ -271,7 +271,7 @@ select foto.ref_key, fo.content_id, fo.file_name, fo.description,
          join file_order fo
              on fo.id = foto.file_id;
 
-insert into file_order_links (
+insert into file_oe_links (
   oe_id, file_content_id, file_name, description,
   uploaded_by, uploaded_at)
 select ftto.ref_key, ft.content_id, ft.file_name, ft.description,
