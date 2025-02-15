@@ -85,7 +85,7 @@ Setting both raises an exception.$$;
 
 DROP FUNCTION IF EXISTS file__attach_to_part
 (in_content bytea, in_mime_type_id int, in_file_name text,
-in_description text, in_id int, in_ref_key int, in_file_class int)
+in_description text, in_id int, in_ref_key int, in_file_class int);
 
 CREATE OR REPLACE FUNCTION file__attach_to_part
 (in_content bytea, in_mime_type_id int, in_file_name text,
@@ -221,7 +221,7 @@ CREATE OR REPLACE FUNCTION file__save_incoming
 in_description text)
 RETURNS file_incoming_links LANGUAGE SQL AS
   $$
-  insert into file_incoming_links (file_id, file_name, description, uploaded_by)
+  insert into file_incoming_links (file_content_id, file_name, description, uploaded_by)
   values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
           (select entity_id from users where username = SESSION_USER))
   returning *;
