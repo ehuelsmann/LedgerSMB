@@ -46,6 +46,7 @@ use LedgerSMB::Tax;
 use LedgerSMB::Template;
 use LedgerSMB::Legacy_Util;
 use LedgerSMB::File;
+use LedgerSMB::Magic qw( FC_TRANSACTION FC_ORDER );
 use List::Util qw(max reduce);
 
 
@@ -1172,9 +1173,9 @@ sub print_form {
         my $file = LedgerSMB::File->new();
         my $fc;
         if ($inv eq 'inv') {
-           $fc = 1;
+           $fc = FC_TRANSACTION;
         } else {
-           $fc = 2;
+           $fc = FC_ORDER;
         }
         my @files = $file->get_for_template(
                 {ref_key => $form->{id}, file_class => $fc}
