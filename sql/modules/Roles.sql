@@ -320,7 +320,7 @@ SELECT lsmb__grant_perms('file_read', 'file_email_links', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_entity_links', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_incoming_links', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_internal_links', 'SELECT');
-SELECT lsmb__grant_perms('file_read', 'file_order_links', 'SELECT');
+SELECT lsmb__grant_perms('file_read', 'file_oe_links', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_parts_links', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_reconciliation_links', 'SELECT');
 SELECT lsmb__grant_perms('file_read', 'file_transaction_links', 'SELECT');
@@ -330,7 +330,7 @@ SELECT lsmb__create_role('file_upload',
                          This role allows uploading of files through the system menu.
                          $DOC$
 );
-SELECT lsmb__grant_perms('file_upload', 'file_internal', 'ALL');
+SELECT lsmb__grant_perms('file_upload', 'file_internal_links', 'ALL');
 SELECT lsmb__grant_menu('file_upload', 27, 'allow');
 
 SELECT lsmb__create_role('file_attach_tx',
@@ -346,37 +346,33 @@ SELECT lsmb__create_role('file_attach_order',
                          This role allows attaching files to orders and quotes.
                          $DOC$
 );
-SELECT lsmb__grant_perms('file_attach_order', 'file_order_links', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_order', 'file_order_links', 'UPDATE');
+SELECT lsmb__grant_perms('file_attach_order', 'file_oe_links', 'INSERT');
+SELECT lsmb__grant_perms('file_attach_order', 'file_oe_links', 'UPDATE');
 
 SELECT lsmb__create_role('file_attach_part',
                          $DOC$
                          This role allows attaching files to goods and services.
                          $DOC$
 );
-SELECT lsmb__grant_perms('file_attach_part', 'file_part', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_part', 'file_part', 'UPDATE');
+SELECT lsmb__grant_perms('file_attach_part', 'file_parts_links', 'INSERT');
+SELECT lsmb__grant_perms('file_attach_part', 'file_parts_links', 'UPDATE');
 
 SELECT lsmb__create_role('file_attach_eca',
                          $DOC$
                          This role allows attaching files to entity credit accounts (customers/vendors).
                          $DOC$
 );
-SELECT lsmb__grant_perms('file_attach_eca', 'file_eca', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_eca', 'file_eca', 'UPDATE');
+SELECT lsmb__grant_perms('file_attach_eca', 'file_eca_links', 'INSERT');
+SELECT lsmb__grant_perms('file_attach_eca', 'file_eca_links', 'UPDATE');
 
 SELECT lsmb__create_role('file_attach_entity',
                          $DOC$
                          This role allows attaching files to entities (contacts).
                          $DOC$
 );
-SELECT lsmb__grant_perms('file_attach_entity', 'file_entity', 'INSERT');
-SELECT lsmb__grant_perms('file_attach_entity', 'file_entity', 'UPDATE');
+SELECT lsmb__grant_perms('file_attach_entity', 'file_entity_links', 'INSERT');
+SELECT lsmb__grant_perms('file_attach_entity', 'file_entity_links', 'UPDATE');
 
-SELECT lsmb__grant_perms(role, 'file_incoming', 'DELETE'),
-       lsmb__grant_perms(role, 'file_base_id_seq', 'ALL')
-  FROM unnest(ARRAY['file_attach_tx'::text, 'file_attach_order',
-                    'file_attach_part', 'file_attach_eca']) role;
 
 \echo Contact Management
 SELECT lsmb__create_role('contact_read',
@@ -413,8 +409,8 @@ SELECT lsmb__grant_perms('contact_read', 'eca_to_location', 'SELECT');
 SELECT lsmb__grant_perms('contact_read', 'eca_to_contact', 'SELECT');
 SELECT lsmb__grant_perms('contact_read', 'eca_note', 'SELECT');
 SELECT lsmb__grant_perms('contact_read', 'pricegroup', 'SELECT');
-SELECT lsmb__grant_perms('contact_read', 'file_eca', 'SELECT');
-SELECT lsmb__grant_perms('contact_read', 'file_entity', 'SELECT');
+SELECT lsmb__grant_perms('contact_read', 'file_eca_links', 'SELECT');
+SELECT lsmb__grant_perms('contact_read', 'file_entity_links', 'SELECT');
 SELECT lsmb__grant_exec('contact_read', 'eca__list_notes(int)');
 SELECT lsmb__grant_menu('contact_read', 14, 'allow');
 
@@ -1065,7 +1061,7 @@ SELECT lsmb__grant_perms('reconciliation_enter', obj, 'SELECT')
   FROM unnest(array['cr_coa_to_account'::text, 'acc_trans', 'account_checkpoint'
              ]) obj;
 
-SELECT lsmb__grant_perms('reconciliation_enter', 'file_reconciliation', ptype)
+SELECT lsmb__grant_perms('reconciliation_enter', 'file_reconciliation_links', ptype)
   FROM unnest(array['SELECT'::text, 'INSERT']) ptype;
 
 SELECT lsmb__grant_perms('reconciliation_enter', obj, 'ALL')
@@ -1084,7 +1080,7 @@ SELECT lsmb__grant_perms('reconciliation_approve', obj, 'DELETE')
 SELECT lsmb__grant_perms('reconciliation_approve', 'cr_report', 'UPDATE');
 SELECT lsmb__grant_perms('reconciliation_approve', obj, 'SELECT')
   FROM unnest(array['recon_payee'::text, 'acc_trans', 'account_checkpoint']) obj;
-SELECT lsmb__grant_perms('reconciliation_approve', 'file_reconciliation', ptype)
+SELECT lsmb__grant_perms('reconciliation_approve', 'file_reconciliation_links', ptype)
   FROM unnest(array['SELECT'::text, 'INSERT', 'DELETE']) ptype;
 
 SELECT lsmb__grant_menu('reconciliation_approve', 44, 'allow');
@@ -1920,7 +1916,7 @@ SELECT lsmb__grant_perms('base_user', obj, 'UPDATE')
 SELECT lsmb__grant_perms('base_user', obj, 'SELECT')
   FROM unnest(array['workflow'::text, 'workflow_history', 'workflow_context']) obj;
 SELECT lsmb__grant_perms('base_user', obj, 'ALL')
-  FROM unnest(array['email'::text, 'file_email']) obj;
+  FROM unnest(array['email'::text, 'file_email_links']) obj;
 
 
 
@@ -1971,7 +1967,7 @@ SELECT lsmb__grant_perms('base_user', obj, 'SELECT')
                     'sic', 'voucher', 'mime_type',
                     'parts_translation', 'partsgroup_translation',
                     'asset_report_class', 'asset_rl_to_disposal_method',
-                    'asset_disposal_method', 'file_class', 'jctype']) obj;
+                    'asset_disposal_method', 'jctype']) obj;
 
 REVOKE INSERT, UPDATE, DELETE ON entity_employee FROM public; --fixing old perms
 SELECT lsmb__grant_exec('base_user', 'user__get_all_users()');
