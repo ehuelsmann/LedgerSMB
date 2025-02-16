@@ -233,9 +233,6 @@ sub _display_report {
     $recon->{files}  =
         [ $file->list({ ref_key    => $request->{report_id},
                         file_class => FC_RECONCILIATION }) ];
-    $recon->{file_links} = [ $file->list_links(
-        { ref_key    => $request->{report_id},
-          file_class => FC_RECONCILIATION }) ];
 
     $recon->{form_id} = $request->{form_id};
     $recon->{can_approve} = $request->is_allowed_role(

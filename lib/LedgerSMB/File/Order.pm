@@ -63,13 +63,6 @@ sub attach_all_from_order {
         $new_link->dbobject($self->dbobject);
         $new_link->attach;
     }
-    for my $link ($self->list_links({ref_key => $args->{int}, file_class => 2})){
-        next if !($link->{src_class} == 2 || $link->{src_class} == 1);
-        my $new_link = LedgerSMB::File::Transaction->new();
-        $new_link->merge($link);
-        $new_link->dbobject($self->dbobject);
-        $new_link->attach;
-    }
     return;
 }
 
@@ -86,13 +79,6 @@ sub attach_all_from_transaction {
     for my $attach ($self->list({ref_key => $args->{int}, file_class => 1})){
         my $new_link = LedgerSMB::File::Transaction->new();
         $new_link->merge($attach);
-        $new_link->dbobject($self->dbobject);
-        $new_link->attach;
-    }
-    for my $link ($self->list_links({ref_key => $args->{int}, file_class => 1})){
-        next if !($link->{src_class} == 2 || $link->{src_class} == 1);
-        my $new_link = LedgerSMB::File::Transaction->new();
-        $new_link->merge($link);
         $new_link->dbobject($self->dbobject);
         $new_link->attach;
     }

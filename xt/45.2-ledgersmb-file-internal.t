@@ -227,15 +227,6 @@ is($result->{ref_key}, 0, 'file list ref_key is correct for file');
 is($result->{uploaded_at}, $file->{uploaded_at}, 'file list uploaded_at is correct for file');
 
 
-# List links method
-# Internal file class does not support links, so this should return no results
-@files = $file->list_links({
-    file_class => FC_INTERNAL,
-    ref_key => 0,
-});
-is(scalar(@files), 0, 'list links method returns empty list');
-
-
 # Get for template method
 # Should only return one of the files we've added according to mime_type
 @files = $file->get_for_template({

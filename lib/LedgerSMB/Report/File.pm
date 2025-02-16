@@ -72,19 +72,6 @@ sub list_files {
     return $fh->list($self);
 }
 
-=head2 list_links
-
-Returns a list of link entries for the report
-
-=cut
-
-sub list_links {
-    my ($self) = @_;
-    $self->_set_lazy;
-    my $fh = LedgerSMB::File->new(%$self);
-    return $fh->list_links($self);
-}
-
 =head1 LICENSE AND COPYRIGHT
 
 Copyright (C) 2014 The LedgerSMB Core Team

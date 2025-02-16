@@ -64,10 +64,6 @@ sub get_files {
      return if !$form->{id};
      my $file = LedgerSMB::File->new(%$form);
      @{$form->{files}} = $file->list({ref_key => $form->{id}, file_class => 1});
-     @{$form->{file_links}} = $file->list_links(
-                  {ref_key => $form->{id}, file_class => 1}
-     );
-
 }
 
 sub add_cogs {

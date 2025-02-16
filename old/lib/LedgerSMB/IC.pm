@@ -61,10 +61,6 @@ sub get_files {
      my ($self, $form, $locale) = @_;
      my $file = LedgerSMB::File->new(%$form);
      @{$form->{files}} = $file->list({ref_key => $form->{id}, file_class => 3});
-     @{$form->{file_links}} = $file->list_links(
-                  {ref_key => $form->{id}, file_class => 3}
-     );
-
 }
 
 sub get_part {

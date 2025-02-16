@@ -867,33 +867,6 @@ sub form_footer {
 </tr>
               |;
         }
-        print qq|
-<table width="100%">
-<tr class="listheading">
-<th>| . $locale->text('File name') . qq|</th>
-<th>| . $locale->text('File type') . qq|</th>
-<th>| . $locale->text('Attached To Type') . qq|</th>
-<th>| . $locale->text('Attached To') . qq|</th>
-<th>| . $locale->text('Attached at') . qq|</th>
-<th>| . $locale->text('Attached by') . qq|</th>
-</tr>|;
-       foreach my $link (@{$form->{file_links}}){
-            $aclass="&nbsp;";
-            if ($link.src_class == 1){
-                $aclass="Transaction";
-            } elsif ($link.src_class == 2){
-                $aclass="Order";
-            }
-            print qq|
-<tr>
-<td> $file->{file_name} </td>
-<td> $file->{mime_type} </td>
-<td> $aclass </td>
-<td> $file->{reference} </td>
-<td> $file->{attached_at} </td>
-<td> $file->{attached_by} </td>
-</tr>|;
-       }
        print qq|
 </table>|;
        $callback = $form->escape(

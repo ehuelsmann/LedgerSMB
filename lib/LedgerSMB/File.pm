@@ -364,21 +364,6 @@ sub list{
     return @results;
 }
 
-=item list_links({ref_key => int, file_class => int})
-
-Lists the links directly attached to the object.
-
-=cut
-
-sub list_links{
-    my ($self, $args) = @_;
-    my @results = $self->call_procedure(
-                 funcname => 'file__list_links',
-                      args => [$args->{ref_key}, $args->{file_class}]
-     );
-    return @results;
-}
-
 =back
 
 =head1 LICENSE AND COPYRIGHT
