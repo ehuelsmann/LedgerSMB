@@ -167,22 +167,6 @@ has file_path => (
     },
 );
 
-=item _tempdir
-
-Private property holding the File::Temp::Dir object created for the
-get_for_template() method.
-
-=cut
-
-has _tempdir => (
-    is => 'ro',
-    isa => 'Maybe[Object]',
-    lazy => 1,
-    default => sub {
-        File::Temp->newdir( CLEANUP => 1 );
-    },
-);
-
 =back
 
 =cut
@@ -251,88 +235,6 @@ sub remove {
     my ($self) = @_;
     $self->call_dbmethod(funcname => 'file__delete');
     return;
-}
-
-=item get_for_template({ref_key => int, file_class => int})
-
-This is a specialised query with rather opaque logic and transformations,
-intended to extract a set of files for inclusion in LaTeX invoice templates.
-
-If results are returned, a temporary directory is created by this method,
-into which the returned files are written, for use by the template. The
-path of this temporary directory is available as the `file_path` property.
-This directory and its contents are removed when this object instance goes
-out of scope.
-
-The method returns as a list and writes to the temporary directory:
-
-  1) All files matching the specified `file_class` and `ref_key`, having a
-     `mime_type` with `invoice_include=TRUE`.
-
-AND
-
-  2) For every part on an invoice having `trans_id` equal to the specified
-     `ref_key` argument (regardless of specified file_class), the most recent
-     (by id) file associated with that part having mime_type matching
-     'image*'.
-
-If file_class is FC_PART, the returned file_name is a concatanation of
-`ref_key` and `file_name` joined by '-', rather than the raw database
-`file_name` field.
-
-All file classes have underscores stripped from their `file_name` fields.
-For FC_PART file classes, this happens after the concatanation of `ref_key`.
-
-[For FC_PART file classes, as a final step before data is returned, the
-`ref_key` field is replaced with part of the reconstructed `file_name`,
-up to the first '-' character. As `ref_key` is an integer field, this
-step appears only to restore the original `ref_key`.]
-
-Returns an array containing a list of hashes, each comprising the
-following keys:
-
-  * id
-  * uploaded_by_id    # entity_id of the user who uploaded the file
-  * uploaded_by_name  # entity name of the user who uploaded the file
-  * file_name         # NOT the filename from the database - see notes above
-  * description
-  * content           # A reference to the raw file content
-  * mime_type         # The normalised mime type (e.g. 'text/plain')
-  * file_class
-  * ref_key
-  * uploaded_at       # date/time string YYYY-MM-DD HH:MM:SS.ssssss
-
-=cut
-
-sub get_for_template{
-    my ($self, $args) = @_;
-
-    my @results = $self->call_procedure(
-        funcname => 'file__get_for_template',
-        args => [
-            $args->{ref_key},
-            $args->{file_class},
-        ],
-    );
-
-    for my $result (@results) {
-        $result->{file_name} =~ s/\_//g;
-        my $full_path = $self->file_path . "/$result->{file_name}";
-        open my $fh, '>', $full_path
-            or die "Failed to open output file $full_path : $!";
-        binmode $fh, ':bytes';
-        print $fh ${$result->{content}} or die "Cannot print to file $full_path";
-        close $fh or die "Cannot close file $full_path";
-
-        if ($result->{file_class} == FC_PART){
-           $result->{ref_key} = $result->{file_name};
-           $result->{ref_key} =~ s/-.*//;
-        }
-        else {
-           $result->{ref_key} = $args->{ref_key};
-        }
-    }
-    return @results;
 }
 
 =item list({ref_key => int, file_class => int})

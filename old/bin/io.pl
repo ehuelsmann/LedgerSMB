@@ -1068,6 +1068,102 @@ sub print {
     &print_form;
 }
 
+sub _store_file_content {
+    my $result = shift;
+    $form->{_tempdir} //= File::Temp->newdir( CLEANUP => 1 );
+
+    $result->{file_name} =~ s/\_//g;
+    my $full_path = $form->{_tempdir}->dirname . "/$result->{file_name}";
+    open my $fh, '>', $full_path
+        or die "Failed to open output file $full_path : $!";
+    binmode $fh, ':bytes';
+    print $fh ${$result->{content}} or die "Cannot print to file $full_path";
+    close $fh or die "Cannot close file $full_path";
+}
+
+sub _retrieve_order_images {
+    my $query =
+        q{select *
+            from file_oe_links l
+                 join file_content c
+                   on l.content_id = c.id
+           where oe_id = ?};
+    my $sth = $dbh->prepare( $query )
+        or $form->dberror( $query );
+    $sth->execute( $form->{id} )
+        or $form->dberror( $query );
+    while ( my $result = $sth->fetchrow_hashref( 'lc_NAME' ) ) {
+        &_store_file_content( $result );
+        $result->{ref_key} = $form->{id};
+        push @{ $form->{file_list} }, $result;
+    }
+
+    $query =
+        q{select *
+            from file_parts_links l
+                 join file_content c
+                   on l.content_id = c.id
+           where l.parts_id in (select parts_id
+                                  from orderitems oi
+                                 where oi.trans_id = ?)};
+    $sth = $dbh->prepare( $query )
+        or $form->dberror( $query );
+    $sth->execute( $form->{id} )
+        or $form->dberror( $query );
+    while ( my $result = $sth->fetchrow_hashref( 'lc_NAME' ) ) {
+        &_store_file_content( $result );
+        $result->{ref_key} = $result->{file_name};
+        $result->{ref_key} =~ s/-.*//;
+        $form->{parts_files}->{$result->{ref_key}} = $result;
+    }
+}
+
+sub _retrieve_tx_images {
+    my $query =
+        q{select *
+            from file_transaction_links l
+                 join file_content c
+                   on l.content_id = c.id
+           where trans_id = ?};
+    my $sth = $dbh->prepare( $query )
+        or $form->dberror( $query );
+    $sth->execute( $form->{id} )
+        or $form->dberror( $query );
+    while ( my $result = $sth->fetchrow_hashref( 'lc_NAME' ) ) {
+        &_store_file_content( $result );
+        $result->{ref_key} = $form->{id};
+        push @{ $form->{file_list} }, $result;
+    }
+
+    $query =
+        q{select *
+            from file_parts_links l
+                 join file_content c
+                   on l.content_id = c.id
+           where l.parts_id in (select parts_id
+                                  from invoice i
+                                 where i.trans_id = ?)};
+    $sth = $dbh->prepare( $query )
+        or $form->dberror( $query );
+    $sth->execute( $form->{id} )
+        or $form->dberror( $query );
+    while ( my $result = $sth->fetchrow_hashref( 'lc_NAME' ) ) {
+        &_store_file_content( $result );
+        $result->{ref_key} = $result->{file_name};
+        $result->{ref_key} =~ s/-.*//;
+        $form->{parts_files}->{$result->{ref_key}} = $result;
+    }
+}
+
+sub _retrieve_images {
+    if ($inv eq 'inv') {
+        &_retrieve_tx_images;
+    } else {
+        &_retrieve_order_images;
+    }
+    $form->{file_path} = $file->{_tempdir}->dirname;
+}
+
 my %copy_settings = (
     company => 'company_name',
     businessnumber => 'businessnumber',
@@ -1170,28 +1266,7 @@ sub print_form {
     }
 
     if ($form->test_should_get_images){
-        my $file = LedgerSMB::File->new();
-        my $fc;
-        if ($inv eq 'inv') {
-           $fc = FC_TRANSACTION;
-        } else {
-           $fc = FC_ORDER;
-        }
-        my @files = $file->get_for_template(
-                {ref_key => $form->{id}, file_class => $fc}
-        );
-        my @main_files;
-        my %parts_files;
-        for my $f (@files){
-            if ($f->{file_class} == 3) {
-              $parts_files{$f->{ref_key}} = $f;
-            } else {
-               push @main_files, $f;
-            }
-        }
-        $form->{file_list} = \@main_files;
-        $form->{parts_files} = \%parts_files;
-        $form->{file_path} = $file->file_path;
+        &_retrieve_images;
     }
     check_form(1);
     ++$form->{rowcount};
