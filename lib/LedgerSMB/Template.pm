@@ -288,7 +288,7 @@ use strict;
 use warnings;
 use Carp;
 
-use LedgerSMB::File;
+use LedgerSMB::File::Internal;
 use LedgerSMB::Locale;
 use LedgerSMB::Magic qw( FC_INTERNAL );
 use LedgerSMB::Template::DBProvider;
@@ -474,7 +474,7 @@ sub _dbfile_base64 {
 sub _dbfile_string {
     my ($self, $name) = @_;
 
-    my $file = LedgerSMB::File->new(
+    my $file = LedgerSMB::File::Internal->new(
         file_class => FC_INTERNAL,
         file_name  => $name,
         ref_key    => 0,
