@@ -331,13 +331,27 @@ $$ language sql;
 COMMENT ON FUNCTION file__get(in_id int, in_file_class int) IS
 $$ Retrieves the file information specified including content.$$;
 
-CREATE OR REPLACE FUNCTION file__get_by_name(in_file_name text, in_ref_key int,
-in_file_class int)
-RETURNS file_base AS
+DROP TYPE IF EXISTS file_internal CASCADE;
+CREATE OR REPLACE TYPE file_internal AS (
+  file_content_id int,
+  file_name text,
+  description text,
+  uploaded_by int,
+  uploaded_at timestamp,
+  sha512sum bytea,
+  content bytea,
+  mime_type_id int
+  );
+
+CREATE OR REPLACE FUNCTION file_internal__get_by_name(in_file_name text)
+RETURNS SET OF file_internal AS
 $$
-SELECT * FROM file_base where file_name = in_file_name
-                              and ref_key = in_ref_key
-                              and file_class = in_file_class;
+  SELECT file_content_id, file_name, description, uploaded_by,
+         uploaded_at, sha512sum, content, mime_type_id
+    FROM file_internal_links fi
+         JOIN file_content fc
+           ON fi.file_content_id = fc.id
+   WHERE file_name = in_file_name;
 $$ language sql;
 
 COMMENT ON FUNCTION file__get_by_name(in_file_name text, in_ref_key int, in_file_class int) IS
