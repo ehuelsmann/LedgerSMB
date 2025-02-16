@@ -282,45 +282,27 @@ use case of linking files to e-mails$$;
 
 DROP TYPE IF EXISTS file_list_item CASCADE;
 CREATE TYPE file_list_item AS (
-       mime_type text,
        file_name text,
        description text,
        uploaded_by_id int,
        uploaded_by_name text,
        uploaded_at timestamp,
        id int,
-       ref_key int,
-       file_class int,
-       content bytea
+       uri text
 );
 
-CREATE OR REPLACE FUNCTION file__list_by(in_ref_key int, in_file_class int)
+CREATE OR REPLACE FUNCTION file_internal__list_by()
 RETURNS SETOF file_list_item AS
 $$
-
-SELECT m.mime_type, f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.id, f.ref_key, f.file_class,
-       case when m.mime_type = 'text/x-uri' THEN f.content ELSE NULL END
-  FROM mime_type m
-  JOIN file_base f ON f.mime_type_id = m.id
-  JOIN entity e ON f.uploaded_by = e.id
- WHERE f.ref_key = $1 and f.file_class = $2;
-
+SELECT f.file_name, f.description, f.uploaded_by, e.name,
+       f.uploaded_at, f.file_content_id, f.uri
+  FROM file_internal_links f
+  JOIN entity e ON f.uploaded_by = e.id;
 $$ language sql;
 
-COMMENT ON FUNCTION file__list_by(in_ref_key int, in_file_class int) IS
-$$ Returns a list of files attached to a database object.  No content is
-retrieved.$$;
+COMMENT ON FUNCTION file_internal__list_by() IS
+$$ Returns the list of files *not* attached to any database object; f.ex. logos$$;
 
-
-CREATE OR REPLACE FUNCTION file__delete(in_id int, in_file_class int)
-RETURNS void AS
-$$
-DELETE FROM file_base where id = in_id and file_class = in_file_class;
-$$ language sql;
-
-COMMENT ON FUNCTION file__delete(in_id int, in_file_class int) IS
-$$ Deletes the file identified by in_id and in_file_class.$$;
 
 CREATE OR REPLACE FUNCTION file__get(in_id int, in_file_class int)
 RETURNS file_base AS

@@ -249,14 +249,13 @@ file__attach_to_order
 file__attach_to_part
 file__attach_to_reconciliation
 file__attach_to_tx
-file__delete
 file__get
 file__get_mime_type
-file__list_by
 file__save_incoming
 file__save_internal
 file__store
 file_internal__get_by_name
+file_internal__list_by
 form_check
 form_close
 form_open

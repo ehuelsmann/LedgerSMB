@@ -34,15 +34,15 @@ alter table file_transaction no inherit file_base;
 
 alter table file_eca
   add column content_id int references file_content (id),
-  add column uri text
+  add column uri text,
   add check ((content_id is null) != (uri is null));
 alter table file_entity
   add column content_id int references file_content (id),
-  add column uri text
+  add column uri text,
   add check ((content_id is null) != (uri is null));
 alter table file_email
   add column content_id int references file_content (id),
-  add column uri text
+  add column uri text,
   add check ((content_id is null) != (uri is null));
 alter table file_incoming
   add column content_id int not null references file_content (id);
@@ -50,19 +50,19 @@ alter table file_internal
   add column content_id int not null references file_content (id);
 alter table file_order
   add column content_id int references file_content (id),
-  add column uri text
+  add column uri text,
   add check ((content_id is null) != (uri is null));
 alter table file_part
   add column content_id int references file_content (id),
-  add column uri text
+  add column uri text,
   add check ((content_id is null) != (uri is null));
 alter table file_reconciliation
   add column content_id int references file_content (id),
-  add column uri text
+  add column uri text,
   add check ((content_id is null) != (uri is null));
 alter table file_transaction
   add column content_id int references file_content (id),
-  add column uri text
+  add column uri text,
   add check ((content_id is null) != (uri is null));
 
 -- any files in file_base initially --> problems!
@@ -140,6 +140,7 @@ update file_transaction
 -- populate file_transaction_links and file_base from file_transaction...
 
 create table file_eca_links (
+  id int not null primary key generated always as identity,
   eca_id int references entity_credit_account(id),
   file_content_id int references file_content (id),
   uri text,
@@ -147,7 +148,7 @@ create table file_eca_links (
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (eca_id, file_content_id),
+  unique nulls not distinct (eca_id, file_content_id, uri),
   check ((file_content_id is null) != (uri is null))
 );
 
@@ -158,6 +159,7 @@ select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_a
 
 
 create table file_email_links (
+  id int not null primary key generated always as identity,
   email_workflow_id int references email(workflow_id),
   file_content_id int references file_content (id),
   uri text,
@@ -165,7 +167,7 @@ create table file_email_links (
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (email_workflow_id, file_content_id),
+  unique nulls not distinct (email_workflow_id, file_content_id, uri),
   check ((file_content_id is null) != (uri is null))
 );
 
@@ -176,6 +178,7 @@ select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_a
 
 
 create table file_entity_links (
+  id int not null primary key generated always as identity,
   entity_id int references entity(id),
   file_content_id int references file_content (id),
   uri text,
@@ -183,7 +186,7 @@ create table file_entity_links (
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (entity_id, file_content_id),
+  unique nulls not distinct (entity_id, file_content_id, uri),
   check ((file_content_id is null) != (uri is null))
 );
 
@@ -194,12 +197,15 @@ select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_a
 
 
 create table file_incoming_links (
+  id int not null primary key generated always as identity,
   file_content_id int references file_content (id),
+  uri text,
   file_name text unique not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (file_content_id)
+  unique nulls not distinct (file_content_id, uri),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_incoming_links (
@@ -209,12 +215,15 @@ select content_id, file_name, description, uploaded_by, uploaded_at
 
 
 create table file_internal_links (
+  id int not null primary key generated always as identity,
   file_content_id int references file_content (id),
+  uri text,
   file_name text unique not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (file_content_id)
+  unique nulls not distinct (file_content_id, uri),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_internal_links (
@@ -224,6 +233,7 @@ select content_id, file_name, description, uploaded_by, uploaded_at
 
 
 create table file_oe_links (
+  id int not null primary key generated always as identity,
   oe_id int references oe(id),
   file_content_id int references file_content (id),
   uri text,
@@ -231,7 +241,7 @@ create table file_oe_links (
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (oe_id, file_content_id),
+  unique nulls not distinct (oe_id, file_content_id, uri),
   check ((file_content_id is null) != (uri is null))
 );
 
@@ -242,6 +252,7 @@ select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_a
 
 
 create table file_parts_links (
+  id int not null primary key generated always as identity,
   parts_id int references parts(id),
   file_content_id int references file_content (id),
   uri text,
@@ -249,7 +260,7 @@ create table file_parts_links (
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (parts_id, file_content_id),
+  unique nulls not distinct (parts_id, file_content_id, uri),
   check ((file_content_id is null) != (uri is null))
 );
 
@@ -260,6 +271,7 @@ select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_a
 
 
 create table file_reconciliation_links (
+  id int not null primary key generated always as identity,
   cr_report_id int references cr_report(id),
   file_content_id int references file_content (id),
   uri text,
@@ -267,7 +279,7 @@ create table file_reconciliation_links (
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (cr_report_id, file_content_id),
+  unique nulls not distinct (cr_report_id, file_content_id, uri),
   check ((file_content_id is null) != (uri is null))
 );
 
@@ -278,6 +290,7 @@ select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_a
 
 
 create table file_transaction_links (
+  id int not null primary key generated always as identity,
   trans_id int references transactions(id),
   file_content_id int references file_content (id),
   uri text,
@@ -285,7 +298,7 @@ create table file_transaction_links (
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (trans_id, file_content_id),
+  unique nulls not distinct (trans_id, file_content_id, uri),
   check ((file_content_id is null) != (uri is null))
 );
 
