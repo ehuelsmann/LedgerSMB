@@ -1,6 +1,8 @@
 
 -- unused views and functions
 
+drop function if exists file_get_by_name(text, int, int);
+drop function if exists file__get_for_template(int, int);
 drop function if exists file_links_vrebuild();
 drop function if exists file__list_links(int, int);
 
@@ -31,23 +33,37 @@ alter table file_reconciliation no inherit file_base;
 alter table file_transaction no inherit file_base;
 
 alter table file_eca
-  add column content_id int not null references file_content (id);
+  add column content_id int references file_content (id),
+  add column uri text
+  add check ((content_id is null) != (uri is null));
 alter table file_entity
-  add column content_id int not null references file_content (id);
+  add column content_id int references file_content (id),
+  add column uri text
+  add check ((content_id is null) != (uri is null));
 alter table file_email
-  add column content_id int not null references file_content (id);
+  add column content_id int references file_content (id),
+  add column uri text
+  add check ((content_id is null) != (uri is null));
 alter table file_incoming
   add column content_id int not null references file_content (id);
 alter table file_internal
   add column content_id int not null references file_content (id);
 alter table file_order
-  add column content_id int not null references file_content (id);
+  add column content_id int references file_content (id),
+  add column uri text
+  add check ((content_id is null) != (uri is null));
 alter table file_part
-  add column content_id int not null references file_content (id);
+  add column content_id int references file_content (id),
+  add column uri text
+  add check ((content_id is null) != (uri is null));
 alter table file_reconciliation
-  add column content_id int not null references file_content (id);
+  add column content_id int references file_content (id),
+  add column uri text
+  add check ((content_id is null) != (uri is null));
 alter table file_transaction
-  add column content_id int not null references file_content (id);
+  add column content_id int references file_content (id),
+  add column uri text
+  add check ((content_id is null) != (uri is null));
 
 -- any files in file_base initially --> problems!
 
@@ -71,18 +87,36 @@ create function pg_temp.save_file_content(in_content bytea, in_mime_type_id int)
 
     return content_id;
   end;
-  $$ language plpgsql;
+$$ language plpgsql;
 
+create function pg_temp.save_uri_content(in_content bytea, in_mime_type_id int)
+  returns text as $$
+  begin
+    perform *
+       from mime_type
+      where mime_type = 'text/x-uri'
+        and id = in_mime_type_id;
+
+    if found then
+      return content::text;
+    else
+      return null;
+    end if;
+  end;
+  $$ language plpgsql;
 
 -- Copy all files into the central file storage, deduplicating (on conflict do nothing)
 update file_eca
-   set content_id = pg_temp.save_file_content(content, mime_type_id);
+   set content_id = pg_temp.save_file_content(content, mime_type_id),
+       uri = pg_temp.save_uri_content(content, mime_type_id);
 
 update file_email
-   set content_id = pg_temp.save_file_content(content, mime_type_id);
+   set content_id = pg_temp.save_file_content(content, mime_type_id),
+       uri = pg_temp.save_uri_content(content, mime_type_id);
 
 update file_entity
-   set content_id = pg_temp.save_file_content(content, mime_type_id);
+   set content_id = pg_temp.save_file_content(content, mime_type_id),
+       uri = pg_temp.save_uri_content(content, mime_type_id);
 
 update file_incoming
    set content_id = pg_temp.save_file_content(content, mime_type_id);
@@ -91,13 +125,16 @@ update file_internal
    set content_id = pg_temp.save_file_content(content, mime_type_id);
 
 update file_order
-   set content_id = pg_temp.save_file_content(content, mime_type_id);
+   set content_id = pg_temp.save_file_content(content, mime_type_id),
+       uri = pg_temp.save_uri_content(content, mime_type_id);
 
 update file_part
-   set content_id = pg_temp.save_file_content(content, mime_type_id);
+   set content_id = pg_temp.save_file_content(content, mime_type_id),
+       uri = pg_temp.save_uri_content(content, mime_type_id);
 
 update file_transaction
-   set content_id = pg_temp.save_file_content(content, mime_type_id);
+   set content_id = pg_temp.save_file_content(content, mime_type_id),
+       uri = pg_temp.save_uri_content(content, mime_type_id);
 
 
 -- populate file_transaction_links and file_base from file_transaction...
@@ -105,48 +142,54 @@ update file_transaction
 create table file_eca_links (
   eca_id int references entity_credit_account(id),
   file_content_id int references file_content (id),
+  uri text,
   file_name text not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (eca_id, file_content_id)
+  primary key (eca_id, file_content_id),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_eca_links (
-  eca_id, file_content_id, file_name, description, uploaded_by, uploaded_at)
-select ref_key, content_id, file_name, description, uploaded_by, uploaded_at
+  eca_id, file_content_id, uri, file_name, description, uploaded_by, uploaded_at)
+select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_at
   from file_eca;
 
 
 create table file_email_links (
   email_workflow_id int references email(workflow_id),
   file_content_id int references file_content (id),
+  uri text,
   file_name text not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (email_workflow_id, file_content_id)
+  primary key (email_workflow_id, file_content_id),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_email_links (
-  email_workflow_id, file_content_id, file_name, description, uploaded_by, uploaded_at)
-select ref_key, content_id, file_name, description, uploaded_by, uploaded_at
+  email_workflow_id, file_content_id, uri, file_name, description, uploaded_by, uploaded_at)
+select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_at
   from file_email;
 
 
 create table file_entity_links (
   entity_id int references entity(id),
   file_content_id int references file_content (id),
+  uri text,
   file_name text not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (entity_id, file_content_id)
+  primary key (entity_id, file_content_id),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_entity_links (
-  entity_id, file_content_id, file_name, description, uploaded_by, uploaded_at)
-select ref_key, content_id, file_name, description, uploaded_by, uploaded_at
+  entity_id, file_content_id, uri, file_name, description, uploaded_by, uploaded_at)
+select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_at
   from file_entity;
 
 
@@ -183,64 +226,72 @@ select content_id, file_name, description, uploaded_by, uploaded_at
 create table file_oe_links (
   oe_id int references oe(id),
   file_content_id int references file_content (id),
+  uri text,
   file_name text not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (oe_id, file_content_id)
+  primary key (oe_id, file_content_id),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_oe_links (
-  oe_id, file_content_id, file_name, description, uploaded_by, uploaded_at)
-select ref_key, content_id, file_name, description, uploaded_by, uploaded_at
+  oe_id, file_content_id, uri, file_name, description, uploaded_by, uploaded_at)
+select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_at
   from file_order;
 
 
 create table file_parts_links (
   parts_id int references parts(id),
   file_content_id int references file_content (id),
+  uri text,
   file_name text not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (parts_id, file_content_id)
+  primary key (parts_id, file_content_id),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_parts_links (
-  parts_id, file_content_id, file_name, description, uploaded_by, uploaded_at)
-select ref_key, content_id, file_name, description, uploaded_by, uploaded_at
+  parts_id, file_content_id, uri, file_name, description, uploaded_by, uploaded_at)
+select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_at
   from file_part;
 
 
 create table file_reconciliation_links (
   cr_report_id int references cr_report(id),
   file_content_id int references file_content (id),
+  uri text,
   file_name text not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (cr_report_id, file_content_id)
+  primary key (cr_report_id, file_content_id),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_reconciliation_links (
-  cr_report_id, file_content_id, file_name, description, uploaded_by, uploaded_at)
-select ref_key, content_id, file_name, description, uploaded_by, uploaded_at
+  cr_report_id, file_content_id, uri, file_name, description, uploaded_by, uploaded_at)
+select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_at
   from file_reconciliation;
 
 
 create table file_transaction_links (
   trans_id int references transactions(id),
   file_content_id int references file_content (id),
+  uri text,
   file_name text not null,
   description text,
   uploaded_by int not null references entity(id),
   uploaded_at timestamp not null default now(),
-  primary key (trans_id, file_content_id)
+  primary key (trans_id, file_content_id),
+  check ((file_content_id is null) != (uri is null))
 );
 
 insert into file_transaction_links (
-  trans_id, file_content_id, file_name, description, uploaded_by, uploaded_at)
-select ref_key, content_id, file_name, description, uploaded_by, uploaded_at
+  trans_id, file_content_id, uri, file_name, description, uploaded_by, uploaded_at)
+select ref_key, content_id, uri, file_name, description, uploaded_by, uploaded_at
   from file_transaction;
 
 
