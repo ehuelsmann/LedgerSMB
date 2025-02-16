@@ -252,7 +252,6 @@ file__attach_to_tx
 file__delete
 file__get
 file__get_by_name
-file__get_for_template
 file__get_mime_type
 file__list_by
 file__save_incoming

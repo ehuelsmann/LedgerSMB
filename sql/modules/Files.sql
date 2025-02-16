@@ -294,31 +294,6 @@ CREATE TYPE file_list_item AS (
        content bytea
 );
 
-CREATE OR REPLACE FUNCTION file__get_for_template
-(in_ref_key int, in_file_class int)
-RETURNS SETOF file_list_item AS
-$$
-
-SELECT m.mime_type, CASE WHEN f.file_class = 3 THEN ref_key ||'-'|| f.file_name
-                         ELSE f.file_name END,
-       f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.id, f.ref_key, f.file_class,  f.content
-  FROM mime_type m
-  JOIN file_base f ON f.mime_type_id = m.id
-  JOIN entity e ON f.uploaded_by = e.id
- WHERE f.ref_key = $1 and f.file_class = $2
-       AND m.invoice_include
-       OR f.id IN (SELECT max(fb.id)
-                   FROM file_base fb
-                   JOIN mime_type m ON fb.mime_type_id = m.id
-                        AND m.mime_type ilike 'image%'
-                   JOIN invoice i ON i.trans_id = $1
-                        AND i.parts_id = fb.ref_key
-                  WHERE fb.file_class = 3
-               GROUP BY ref_key)
-$$ language sql;
-
-
 CREATE OR REPLACE FUNCTION file__list_by(in_ref_key int, in_file_class int)
 RETURNS SETOF file_list_item AS
 $$
