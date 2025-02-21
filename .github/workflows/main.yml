@@ -342,7 +342,7 @@ jobs:
       matrix:
         include:
           - perl: "5.38"
-            postgres: "14"
+            postgres: "16"
             BROWSER: "chrome"
             COVERAGE: 1
             JOB_COUNT: 3
@@ -354,7 +354,7 @@ jobs:
             JOB_COUNT: 7
 
           - perl: "5.40"
-            postgres: "13"
+            postgres: "17"
             BROWSER: "operablink"
             DB_TESTING: 1
             JOB_COUNT: 7
