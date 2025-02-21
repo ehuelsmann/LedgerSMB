@@ -1,6 +1,8 @@
 
 -- unused views and functions
 
+drop type if exists file_content cascade;
+drop function if exists file__get(int, int);
 drop function if exists file_get_by_name(text, int, int);
 drop function if exists file__get_for_template(int, int);
 drop function if exists file_links_vrebuild();

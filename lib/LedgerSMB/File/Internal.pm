@@ -80,6 +80,19 @@ sub attach {
     return $self->call_dbmethod(funcname => 'file__save_internal');
 }
 
+=item get
+
+Retrieves a file.  ID property must be set.
+
+=cut
+
+sub get {
+    my ($self) = @_;
+    my ($ref) = $self->call_dbmethod(funcname => 'file_internal__get');
+    $self->{$_} = $ref->{$_} for keys %$ref;
+    return;
+}
+
 =item get_by_name
 
 Retrieves a file.  name, ref_key and file_class properties must be set.
@@ -88,7 +101,7 @@ Retrieves a file.  name, ref_key and file_class properties must be set.
 
 sub get_by_name {
     my ($self) = @_;
-    my ($ref) = $self->call_dbmethod(funcname => 'file__get_by_name');
+    my ($ref) = $self->call_dbmethod(funcname => 'file_internal__get_by_name');
     $self->{$_} = $ref->{$_} for keys %$ref;
     return;
 }

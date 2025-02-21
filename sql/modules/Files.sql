@@ -304,18 +304,11 @@ COMMENT ON FUNCTION file_internal__list_by() IS
 $$ Returns the list of files *not* attached to any database object; f.ex. logos$$;
 
 
-CREATE OR REPLACE FUNCTION file__get(in_id int, in_file_class int)
-RETURNS file_base AS
-$$
-SELECT * FROM file_base where id = $1 and file_class = $2;
-$$ language sql;
-
-COMMENT ON FUNCTION file__get(in_id int, in_file_class int) IS
-$$ Retrieves the file information specified including content.$$;
-
-DROP TYPE IF EXISTS file_internal CASCADE;
-CREATE OR REPLACE TYPE file_internal AS (
-  file_content_id int,
+DROP TYPE IF EXISTS file__content CASCADE;
+CREATE TYPE file__content AS (
+  id int,
+  content_id int,
+  uri text,
   file_name text,
   description text,
   uploaded_by int,
@@ -325,10 +318,110 @@ CREATE OR REPLACE TYPE file_internal AS (
   mime_type_id int
   );
 
-CREATE OR REPLACE FUNCTION file_internal__get_by_name(in_file_name text)
-RETURNS SET OF file_internal AS
+
+CREATE OR REPLACE FUNCTION file_eca__get(in_id int)
+RETURNS SETOF file__content AS
 $$
-  SELECT file_content_id, file_name, description, uploaded_by,
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_eca_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_email__get(in_id int)
+RETURNS SETOF file__content AS
+$$
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_email_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_entity__get(in_id int)
+RETURNS SETOF file__content AS
+$$
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_entity_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_incoming__get(in_id int)
+RETURNS SETOF file__content AS
+$$
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_incoming_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_internal__get(in_id int)
+RETURNS SETOF file__content AS
+$$
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_internal_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_order__get(in_id int)
+RETURNS SETOF file__content AS
+$$
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_oe_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_parts__get(in_id int)
+RETURNS SETOF file__content AS
+$$
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_parts_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_reconciliation__get(in_id int)
+RETURNS SETOF file__content AS
+$$
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_reconciliation_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_transaction__get(in_id int)
+RETURNS SETOF file__content AS
+$$
+  SELECT l.id, file_content_id, uri, file_name,
+         description, uploaded_by, uploaded_at,
+         sha512sum, content, mime_type_id
+    FROM file_transaction_links l
+    JOIN file_content fc ON l.file_content_id = fc.id
+  where l.id = $1;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_internal__get_by_name(in_file_name text)
+RETURNS SETOF file__content AS
+$$
+  SELECT fi.id, file_content_id, uri, file_name, description, uploaded_by,
          uploaded_at, sha512sum, content, mime_type_id
     FROM file_internal_links fi
          JOIN file_content fc
@@ -336,7 +429,7 @@ $$
    WHERE file_name = in_file_name;
 $$ language sql;
 
-COMMENT ON FUNCTION file__get_by_name(in_file_name text, in_ref_key int, in_file_class int) IS
+COMMENT ON FUNCTION file_internal__get_by_name(in_file_name text) IS
 $$ Retrieves the file information specified including content.$$;
 
 

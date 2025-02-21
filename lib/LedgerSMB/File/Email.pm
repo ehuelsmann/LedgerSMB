@@ -44,6 +44,19 @@ sub attach {
     return $self->call_dbmethod(funcname => 'file__attach_to_email');
 }
 
+=item get
+
+Retrieves a file.  ID property must be set.
+
+=cut
+
+sub get {
+    my ($self) = @_;
+    my ($ref) = $self->call_dbmethod(funcname => 'file_email__get');
+    $self->{$_} = $ref->{$_} for keys %$ref;
+    return;
+}
+
 =back
 
 =head1 LICENSE AND COPYRIGHT

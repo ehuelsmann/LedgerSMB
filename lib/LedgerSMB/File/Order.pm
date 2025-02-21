@@ -85,6 +85,19 @@ sub attach_all_from_transaction {
     return;
 }
 
+=item get
+
+Retrieves a file.  ID property must be set.
+
+=cut
+
+sub get {
+    my ($self) = @_;
+    my ($ref) = $self->call_dbmethod(funcname => 'file_order__get');
+    $self->{$_} = $ref->{$_} for keys %$ref;
+    return;
+}
+
 =back
 
 =head1 LICENSE AND COPYRIGHT
