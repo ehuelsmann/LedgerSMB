@@ -37,6 +37,7 @@ LedgerSMB::IS - Inventory Invoicing
 #======================================================================
 
 package IS;
+use LedgerSMB::File::Transaction;
 use LedgerSMB::Tax;
 use LedgerSMB::PriceMatrix;
 use LedgerSMB::Num2text;
@@ -73,8 +74,8 @@ rewritten
 sub get_files {
      my ($self, $form, $locale) = @_;
      return if !$form->{id};
-     my $file = LedgerSMB::File->new(%$form);
-     @{$form->{files}} = $file->list({ref_key => $form->{id}, file_class => 1});
+     my $file = LedgerSMB::File::Transaction->new(%$form);
+     @{$form->{files}} = $file->list($form->{id});
 }
 
 sub invoice_details {

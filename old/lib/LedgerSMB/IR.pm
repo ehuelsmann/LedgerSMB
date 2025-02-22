@@ -38,6 +38,7 @@ LedgerSMB::IR - Inventory received module
 #======================================================================
 
 package IR;
+use LedgerSMB::File::Transaction;
 use LedgerSMB::Tax;
 use LedgerSMB::PriceMatrix;
 use LedgerSMB::Setting;
@@ -62,8 +63,8 @@ rewritten
 sub get_files {
      my ($self, $form, $locale) = @_;
      return if !$form->{id};
-     my $file = LedgerSMB::File->new(%$form);
-     @{$form->{files}} = $file->list({ref_key => $form->{id}, file_class => 1});
+     my $file = LedgerSMB::File::Transaction->new(%$form);
+     @{$form->{files}} = $file->list($form->{id});
 }
 
 sub add_cogs {

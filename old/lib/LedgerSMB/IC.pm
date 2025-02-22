@@ -40,7 +40,7 @@ LedgerSMB::IC - Inventory Control backend
 package IC;
 
 use Log::Any;
-use LedgerSMB::File;
+use LedgerSMB::File::Part;
 
 my $logger = Log::Any->get_logger(category => 'IC');
 
@@ -59,8 +59,8 @@ rewritten
 
 sub get_files {
      my ($self, $form, $locale) = @_;
-     my $file = LedgerSMB::File->new(%$form);
-     @{$form->{files}} = $file->list({ref_key => $form->{id}, file_class => 3});
+     my $file = LedgerSMB::File::Part->new(%$form);
+     @{$form->{files}} = $file->list($form->{id});
 }
 
 sub get_part {

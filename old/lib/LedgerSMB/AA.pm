@@ -28,7 +28,7 @@ replacement is available.
 
 package AA;
 use Log::Any;
-use LedgerSMB::File;
+use LedgerSMB::File::Transaction;
 use LedgerSMB::PGNumber;
 
 my $logger = Log::Any->get_logger(category => "AA");
@@ -538,8 +538,8 @@ rewritten
 sub get_files {
      my ($self, $form, $locale) = @_;
      return if !$form->{id};
-     my $file = LedgerSMB::File->new(%$form);
-     @{$form->{files}} = $file->list({ref_key => $form->{id}, file_class => 1});
+     my $file = LedgerSMB::File::Transaction->new(%$form);
+     @{$form->{files}} = $file->list($form->{id});
 }
 
 =item transactions(\%myconfig, $form)

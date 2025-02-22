@@ -39,7 +39,7 @@ LedgerSMB:GL - General Ledger backend code
 
 package GL;
 
-use LedgerSMB::File;
+use LedgerSMB::File::Transaction;
 
 =over
 
@@ -56,8 +56,8 @@ rewritten
 
 sub get_files {
      my ($self, $form, $locale) = @_;
-     my $file = LedgerSMB::File->new();
-     @{$form->{files}} = $file->list({ref_key => $form->{id}, file_class => 1});
+     my $file = LedgerSMB::File::Transaction->new();
+     @{$form->{files}} = $file->list($form->{id});
 }
 
 sub post_transaction {

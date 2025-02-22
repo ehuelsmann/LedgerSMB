@@ -40,6 +40,7 @@ LedgerSMB::OE - Order Entry
 
 package OE;
 
+use LedgerSMB::File::Order;
 use LedgerSMB::Magic qw(OEC_QUOTATION OEC_RFQ);
 use LedgerSMB::Num2text;
 use LedgerSMB::Tax;
@@ -62,8 +63,8 @@ rewritten
 sub get_files {
      my ($self, $form, $locale) = @_;
      return if !$form->{id};
-     my $file = LedgerSMB::File->new;
-     @{$form->{files}} = $file->list({ref_key => $form->{id}, file_class => 2});
+     my $file = LedgerSMB::File::Order->new;
+     @{$form->{files}} = $file->list($form->{id});
 }
 
 =item get_type
