@@ -22,7 +22,7 @@ use Log::Any qw($log);
 use Workflow::Context;
 
 use LedgerSMB::DBObject::Reconciliation;
-use LedgerSMB::File;
+use LedgerSMB::File::Reconciliation;
 use LedgerSMB::Magic qw( FC_RECONCILIATION );
 use LedgerSMB::PGNumber;
 use LedgerSMB::Report::Reconciliation::Summary;
@@ -225,14 +225,12 @@ sub _display_report {
     $request->close_form;
     $request->open_form;
 
-    my $file                 = LedgerSMB::File->new();
+    my $file                 = LedgerSMB::File::Reconciliation->new();
     $recon->{upload_formats} = [
         map { +{ name => $_->name } }
         $request->{_wire}->get('reconciliation_importer')->configurations->@*
         ];
-    $recon->{files}  =
-        [ $file->list({ ref_key    => $request->{report_id},
-                        file_class => FC_RECONCILIATION }) ];
+    $recon->{files}  = [ $file->list($request->{report_id}) ];
 
     $recon->{form_id} = $request->{form_id};
     $recon->{can_approve} = $request->is_allowed_role(

@@ -38,7 +38,6 @@ use LedgerSMB::IIAA;
 use LedgerSMB::IR;
 use LedgerSMB::IS;
 use LedgerSMB::PE;
-use LedgerSMB::File;
 use LedgerSMB::Form;
 use LedgerSMB::Legacy_Util;
 use LedgerSMB::PGObject;

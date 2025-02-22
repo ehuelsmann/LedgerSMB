@@ -32,7 +32,8 @@ use LedgerSMB::Entity::Contact;
 use LedgerSMB::Entity::Bank;
 use LedgerSMB::Entity::Note;
 use LedgerSMB::Entity::User;
-use LedgerSMB::File;
+use LedgerSMB::File::ECA;
+use LedgerSMB::File::Entity;
 use LedgerSMB::I18N;
 use LedgerSMB::Magic qw( EC_EMPLOYEE );
 use LedgerSMB::Part;
@@ -170,9 +171,7 @@ sub _main_screen {
           }
           unshift @DIVS, 'employee', 'user';
        }
-       @entity_files = LedgerSMB::File->list(
-               {ref_key => $entity_id, file_class => '4'}
-       );
+       @entity_files = LedgerSMB::File::Entity->list($entity_id);
        my $employee = LedgerSMB::Entity::Person::Employee->get($entity_id);
        $person = $employee if $employee;
        $user = LedgerSMB::Entity::User->get($entity_id);
@@ -229,9 +228,7 @@ sub _main_screen {
                   && $request->{meta_number} eq $ref->{meta_number})){
 
             $credit_act = $ref;
-            @eca_files = LedgerSMB::File->list(
-               {ref_key => $ref->{id}, file_class => '5'}
-             );
+            @eca_files = LedgerSMB::File::ECA->list($ref->{id});
 
         }
     }
