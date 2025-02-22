@@ -106,6 +106,32 @@ sub get_by_name {
     return;
 }
 
+=item list()
+
+Returns a list of files directly attached to the object. No content is
+returned.
+
+Returns an array of hashrefs, each representing a file and comprising:
+
+  * id
+  * uploaded_by_id    # entity_id of the user who uploaded the file
+  * uploaded_by_name  # entity name of the user who uploaded the file
+  * file_name
+  * description
+  * uri               # in case this file contains a uri reference
+  * uploaded_at       # date/time string YYYY-MM-DD HH:MM:SS.ssssss
+
+=cut
+
+sub list{
+    my ($self, $args) = @_;
+    my @results = $self->call_procedure(
+                 funcname => 'file_internal__list_by',
+                      args => []
+     );
+    return @results;
+}
+
 =back
 
 =head1 LICENSE AND COPYRIGHT

@@ -5,7 +5,7 @@ BEGIN;
 
     -- Plan the tests.
 
-    SELECT plan(175);
+    SELECT plan(170);
 
     -- Add data
 
@@ -177,31 +177,6 @@ BEGIN;
     PREPARE test AS SELECT
                  test__has_select_permission('budget_view', 'budget_line');
     SELECT results_eq('test',ARRAY[true],'budget_view can read budget_info');
-    DEALLOCATE test;
-
-    PREPARE test AS SELECT
-            test__has_select_permission('file_read', 'file_base');
-    SELECT results_eq('test',ARRAY[true],'file_read can read file_base');
-    DEALLOCATE test;
-
-    PREPARE test AS SELECT
-            test__has_select_permission('file_read', 'file_links');
-    SELECT results_eq('test',ARRAY[true],'file_read can read file_links');
-    DEALLOCATE test;
-
-    PREPARE test AS SELECT
-            test__has_select_permission('file_read', 'file_secondary_attachment');
-    SELECT results_eq('test',ARRAY[true],'file_read can read file_secondary_transaction');
-    DEALLOCATE test;
-
-    PREPARE test AS SELECT
-            test__has_select_permission('file_read', 'file_order');
-    SELECT results_eq('test',ARRAY[true],'file_read can read file_order');
-    DEALLOCATE test;
-
-    PREPARE test AS SELECT
-            test__has_select_permission('file_read', 'file_part');
-    SELECT results_eq('test',ARRAY[true],'file_read can read file_part');
     DEALLOCATE test;
 
     SELECT results_eq(

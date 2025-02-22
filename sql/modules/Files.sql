@@ -291,6 +291,36 @@ CREATE TYPE file_list_item AS (
        uri text
 );
 
+CREATE OR REPLACE FUNCTION file_eca__list_by(in_eca_id int)
+RETURNS SETOF file_list_item AS
+$$
+SELECT f.file_name, f.description, f.uploaded_by, e.name,
+       f.uploaded_at, f.file_content_id, f.uri
+  FROM file_eca_links f
+  JOIN entity e ON f.uploaded_by = e.id
+ WHERE f.eca_id = in_eca_id;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_email__list_by(in_email_id int)
+RETURNS SETOF file_list_item AS
+$$
+SELECT f.file_name, f.description, f.uploaded_by, e.name,
+       f.uploaded_at, f.file_content_id, f.uri
+  FROM file_email_links f
+  JOIN entity e ON f.uploaded_by = e.id
+ WHERE f.email_workflow_id = in_email_id;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_entity__list_by(in_entity_id int)
+RETURNS SETOF file_list_item AS
+$$
+SELECT f.file_name, f.description, f.uploaded_by, e.name,
+       f.uploaded_at, f.file_content_id, f.uri
+  FROM file_entity_links f
+  JOIN entity e ON f.uploaded_by = e.id
+ WHERE f.entity_id = in_entity_id;
+$$ language sql;
+
 CREATE OR REPLACE FUNCTION file_internal__list_by()
 RETURNS SETOF file_list_item AS
 $$
@@ -302,6 +332,46 @@ $$ language sql;
 
 COMMENT ON FUNCTION file_internal__list_by() IS
 $$ Returns the list of files *not* attached to any database object; f.ex. logos$$;
+
+CREATE OR REPLACE FUNCTION file_order__list_by(in_oe_id int)
+RETURNS SETOF file_list_item AS
+$$
+SELECT f.file_name, f.description, f.uploaded_by, e.name,
+       f.uploaded_at, f.file_content_id, f.uri
+  FROM file_oe_links f
+  JOIN entity e ON f.uploaded_by = e.id
+ WHERE f.oe_id = in_oe_id;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_parts__list_by(in_parts_id int)
+RETURNS SETOF file_list_item AS
+$$
+SELECT f.file_name, f.description, f.uploaded_by, e.name,
+       f.uploaded_at, f.file_content_id, f.uri
+  FROM file_parts_links f
+  JOIN entity e ON f.uploaded_by = e.id
+ WHERE f.parts_id = in_parts_id;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_reconciliation__list_by(in_report_id int)
+RETURNS SETOF file_list_item AS
+$$
+SELECT f.file_name, f.description, f.uploaded_by, e.name,
+       f.uploaded_at, f.file_content_id, f.uri
+  FROM file_reconciliation_links f
+  JOIN entity e ON f.uploaded_by = e.id
+ WHERE f.cr_report_id = in_report_id;
+$$ language sql;
+
+CREATE OR REPLACE FUNCTION file_transaction__list_by(in_trans_id int)
+RETURNS SETOF file_list_item AS
+$$
+SELECT f.file_name, f.description, f.uploaded_by, e.name,
+       f.uploaded_at, f.file_content_id, f.uri
+  FROM file_transaction_links f
+  JOIN entity e ON f.uploaded_by = e.id
+ WHERE f.trans_id = in_trans_id;
+$$ language sql;
 
 
 DROP TYPE IF EXISTS file__content CASCADE;

@@ -77,6 +77,32 @@ sub get {
     return;
 }
 
+=item list( $id )
+
+Returns a list of files directly attached to the object. No content is
+returned.
+
+Returns an array of hashrefs, each representing a file and comprising:
+
+  * id
+  * uploaded_by_id    # entity_id of the user who uploaded the file
+  * uploaded_by_name  # entity name of the user who uploaded the file
+  * file_name
+  * description
+  * uri               # in case this file contains a uri reference
+  * uploaded_at       # date/time string YYYY-MM-DD HH:MM:SS.ssssss
+
+=cut
+
+sub list{
+    my ($self, $arg) = @_;
+    my @results = $self->call_procedure(
+                 funcname => 'file_transaction__list_by',
+                      args => [ $arg ]
+     );
+    return @results;
+}
+
 =back
 
 =head1 LICENSE AND COPYRIGHT

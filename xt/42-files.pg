@@ -5,7 +5,7 @@ BEGIN;
 
     -- Plan the tests.
 
-    SELECT plan(10);
+    SELECT plan(9);
 
     -- Add data
 
@@ -18,15 +18,14 @@ BEGIN;
     -- Validate required functions
 
     SELECT has_function('file__get_mime_type',ARRAY['integer','text']);
-    SELECT has_function('file__attach_to_tx',ARRAY['bytea','integer','text','text','integer','integer','integer']);
-    SELECT has_function('file__attach_to_part',ARRAY['bytea','integer','text','text','integer','integer','integer']);
-    SELECT has_function('file__attach_to_entity',ARRAY['bytea','integer','text','text','integer','integer','integer']);
-    SELECT has_function('file__attach_to_eca',ARRAY['bytea','integer','text','text','integer','integer','integer']);
-    SELECT has_function('file__attach_to_order',ARRAY['bytea','integer','text','text','integer','integer','integer']);
+    SELECT has_function('file__attach_to_tx',ARRAY['bytea','integer','text','text','integer']);
+    SELECT has_function('file__attach_to_part',ARRAY['bytea','integer','text','text','integer']);
+    SELECT has_function('file__attach_to_entity',ARRAY['bytea','integer','text','text','integer']);
+    SELECT has_function('file__attach_to_eca',ARRAY['bytea','integer','text','text','integer']);
+    SELECT has_function('file__attach_to_order',ARRAY['bytea','integer','text','text','integer']);
     SELECT has_function('file__save_incoming',ARRAY['bytea','integer','text','text']);
     SELECT has_function('file__save_internal',ARRAY['bytea','integer','text','text']);
-    SELECT has_function('file_internal__list_by',ARRAY['integer','integer']);
-    SELECT has_function('file__get',ARRAY['integer','integer']);
+    SELECT has_function('file_internal__list_by',NULL);
 
     -- Run tests
 

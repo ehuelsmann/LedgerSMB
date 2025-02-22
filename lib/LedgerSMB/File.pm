@@ -224,10 +224,10 @@ sub remove {
     return;
 }
 
-=item list({ref_key => int, file_class => int})
+=item list( $id )
 
 Returns a list of files directly attached to the object. No content is
-returned, except for files with a mime type of 'text/x-uri'
+returned.
 
 Returns an array of hashrefs, each representing a file and comprising:
 
@@ -236,10 +236,7 @@ Returns an array of hashrefs, each representing a file and comprising:
   * uploaded_by_name  # entity name of the user who uploaded the file
   * file_name
   * description
-  * content           # Reference to content, undef unless mime_type='text/x-uri'
-  * mime_type         # The normalised mime type (e.g. 'text/plain')
-  * file_class
-  * ref_key
+  * uri               # in case this file contains a uri reference
   * uploaded_at       # date/time string YYYY-MM-DD HH:MM:SS.ssssss
 
 =cut
@@ -248,7 +245,7 @@ sub list{
     my ($self, $args) = @_;
     my @results = $self->call_procedure(
                  funcname => 'file__list_by',
-                      args => [$args->{ref_key}, $args->{file_class}]
+                      args => []
      );
     return @results;
 }
