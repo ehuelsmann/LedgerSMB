@@ -27,7 +27,6 @@ use warnings;
 use DBD::Pg qw(:pg_types);
 use HTTP::Status qw( HTTP_OK HTTP_SEE_OTHER );
 
-use LedgerSMB::File;
 use LedgerSMB::File::Transaction;
 use LedgerSMB::File::Order;
 use LedgerSMB::File::Part;
@@ -54,7 +53,11 @@ our $fileclassmap = {
 
 sub get {
     my ($request) = @_;
-    my $file = LedgerSMB::File->new(%$request);
+
+    die "Incorrect file_class parameter ($request->{file_class})"
+        unless exists $fileclassmap->{$request->{file_class}};
+    my $class = $fileclassmap->{$request->{file_class}};
+    my $file = $class->new(%$request);
     $file->id($request->{id});
     $file->file_class($request->{file_class});
     $file->get();
@@ -108,7 +111,7 @@ sub delete_internal_files {
     my $params = $internal_files_map->({ %$request });
     for my $row (grep { $_->{select} }
                  @{$params->{files} // []}) {
-        my $file = LedgerSMB::File->new(
+        my $file = LedgerSMB::File::Internal->new(
             id         => $row->{row},
             ref_key    => 0,
             file_class => FC_INTERNAL(),
@@ -125,7 +128,7 @@ sub delete_internal_files {
 
 sub list_internal_files {
     my ($request) = @_;
-    my $file = LedgerSMB::File->new(%$request);
+    my $file = LedgerSMB::File::Internal->new(%$request);
     my @files = $file->list(
         {
             ref_key => 0,
