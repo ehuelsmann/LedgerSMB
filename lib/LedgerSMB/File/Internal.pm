@@ -69,14 +69,14 @@ with keys:
   * description
   * content       # A reference to the raw file content
   * mime_type_id  # links to the `mime_type` table
-  * file_class    # Always set to 6 (FC_INTERNAL)
-  * ref_key       # Always set to 0
   * uploaded_at   # date/time string YYYY-MM-DD HH:MM:SS.ssssss
 
 =cut
 
 sub attach {
     my ($self, $args) = @_;
+    $self->get_mime_type
+        unless defined $self->mime_type_id;
     return $self->call_dbmethod(funcname => 'file__save_internal');
 }
 

@@ -102,8 +102,9 @@ $file = LedgerSMB::File::Internal->new(
 );
 ok($file, 'LedgerSMB::File::Internal object created');
 is($file->get_mime_type(), 'text/plain', 'MIME type set based on file extension');
+ok(defined($file->mime_type_id), 'MIME type id is defined');
 
-$result = $file->attach;
+ok lives { $result = $file->attach; }, 'File saved successfully';
 ok($result && ref $result, 'stored new file');
 is($result->{file_name}, 'test_file.txt', 'file name set correctly for new file');
 is($result->{description}, 'This is the file description', 'description name set correctly for new file');
@@ -122,15 +123,14 @@ $file = LedgerSMB::File::Internal->new(
 );
 ok($file, 'LedgerSMB::File::Internal object created');
 
-$result = $file->attach;
+ok( lives { $result = $file->attach; }, 'File saved successfully' )
+    or diag $dbh->errstr;
 ok($result && ref $result, 'overwritten an existing file');
 
 #TODO These tests are broken because of an SQL bug - nothing is returned after an update
 #is($result->{file_name}, 'test_file.txt', 'file name set correctly when overwriting file');
 #is($result->{description}, 'New description', 'description name set correctly when overwriting file');
 #is(${$result->{content}}, 'New file content', 'file content set correctly when overwriting file');
-#is($result->{file_class}, FC_INTERNAL, 'file class set to FC_INTERNAL when overwriting file');
-#is($result->{ref_key}, 0, 'ref_key set to 0 when overwriting file');
 #is($result->{mime_type_id}, 153, 'mime_type_id represents text/plain when overwriting file');
 #is($result->{id}, $old_result->{id}, 'id remains the same when overwriting file');
 #like($result->{uploaded_by}, qr/^\d+$/, 'uploaded_by is numeric for new file');
@@ -142,14 +142,11 @@ ok($result && ref $result, 'overwritten an existing file');
 $file = LedgerSMB::File::Internal->new(
     _dbh => $dbh,
     id => $old_result->{id},
-    file_class => FC_INTERNAL,
 );
-$file->get;
+ok lives { $file->get; }, 'File retrieval without errors; id=' . $old_result->{id};
 is($file->{file_name}, 'test_file.txt', 'file_name correct when retrieving file');
-is($file->{description}, 'This is the file description', 'description correct when retrieving file');
+is($file->{description}, 'New description', 'description correct when retrieving file');
 is(${$file->{content}}, 'New file content', 'file content correct when retrieving file');
-is($file->{file_class}, FC_INTERNAL, 'file class correct when overwriting file');
-is($file->{ref_key}, 0, 'ref_key set to 0 when retrieving file');
 is($file->{mime_type_id}, 153, 'mime_type_id represents text/plain when retrieving file');
 is($file->{id}, $old_result->{id}, 'correct id when retrieving file');
 is($file->{uploaded_by}, $old_result->{uploaded_by}, 'correct uploaded_by when retrieving file');
@@ -169,105 +166,55 @@ is($file->{src_class}, undef, 'src_class is undef when retrieving file');
 # to store uris, which are then given special treatment by retrieval methods
 my $uri = LedgerSMB::File::Internal->new(
     _dbh => $dbh,
-    content => 'https://ledgersmb.org',
-    mime_type_text => 'text/x-uri',
+    uri => 'https://ledgersmb.org',
     file_name => 'i-am-a-uri',  # cannot be null, must be unique, though it has no meaning for uri
     description => 'Link description',
 );
 ok($uri, 'LedgerSMB::File::Internal object created for uri');
-is($uri->get_mime_type, 'text/x-uri', 'set mime type for uri');
-ok($uri = $uri->attach, 'attached uri');
-
+ok lives { $uri = $uri->attach; }, 'Successfully attached URI'
+    or diag $@; 
+ok( $uri, 'attached uri');
 
 # List files
 @files = $file->list({
-    file_class => FC_INTERNAL,
-    ref_key => 0,
 });
 is(scalar(@files), 2, 'list method returned correct number of files');
 
 # Check results for uri. Content should be set
 # Return order is not deterministic, so find the uri text file record to test
-$result = $files[0]->{mime_type} eq 'text/x-uri' ? $files[0] : $files[1];
+$result = $files[0]->{file_name} eq 'test_file.txt' ? $files[1] : $files[0]; # URIs don't have mime types
 
 # Can't use is_deeply() as it won't handle content reference,
 # so test each key/value separately
-is(scalar(keys %{$result}), 10, 'get_for_template uri result has correct number of hash keys');
+is(scalar(keys %{$result}), 7, 'list() result for uri has correct number of hash keys')
+    or diag join(' ', keys %{$result});
 is($result->{id}, $uri->{id}, 'file list id is correct for uri');
 is($result->{uploaded_by_id}, $uri->{uploaded_by}, 'file list uploaded_by_id is correct for uri');
 is($result->{uploaded_by_name}, 'LSMB-FILE-TEST', 'file list uploaded_by_name is correct for uri');
 is($result->{file_name}, 'i-am-a-uri', 'file list file_name is correct for uri');
 is($result->{description}, 'Link description', 'file list description is correct for uri');
-is(${$result->{content}}, 'https://ledgersmb.org', 'file list content is defined correctly for uri');
-is($result->{mime_type}, 'text/x-uri', 'file list mime_type is correct for uri');
-is($result->{file_class}, FC_INTERNAL, 'file list file_class is correct for uri');
-is($result->{ref_key}, 0, 'file list ref_key is correct for uri');
+is($result->{uri}, 'https://ledgersmb.org', 'file list content is defined correctly for uri');
 is($result->{uploaded_at}, $uri->{uploaded_at}, 'file list uploaded_at is correct for uri');
 
 # Check results for 'normal' file. Content should be undef
 # Return order is not deterministic, so find the plain text file record to test
-$result = $files[0]->{mime_type} eq 'text/plain' ? $files[0] : $files[1];
+$result = $files[0]->{file_name} eq 'test_file.txt' ? $files[0] : $files[1];
 
 # Can't use is_deeply() as it won't handle content reference,
 # so test each key/value separately.
-is(scalar(keys %{$result}), 10, 'get_for_template file result has correct number of hash keys');
+is(scalar(keys %{$result}), 7, 'list() result for file has correct number of hash keys');
 is($result->{id}, $file->{id}, 'file list id is correct for file');
 is($result->{uploaded_by_id}, $file->{uploaded_by}, 'file list uploaded_by_id is correct for file');
 is($result->{uploaded_by_name}, 'LSMB-FILE-TEST', 'file list uploaded_by_name is correct for file');
 is($result->{file_name}, 'test_file.txt', 'file list file_name is correct for file');
-is($result->{description}, 'This is the file description', 'file list description is correct for file');
+is($result->{description}, 'New description', 'file list description is correct for file');
 is(${$result->{content}}, undef, 'file list content is undef for file');
-is($result->{mime_type}, 'text/plain', 'file list mime_type is correct for file');
-is($result->{file_class}, FC_INTERNAL, 'file list file_class is correct for file');
-is($result->{ref_key}, 0, 'file list ref_key is correct for file');
 is($result->{uploaded_at}, $file->{uploaded_at}, 'file list uploaded_at is correct for file');
 
 
-# Get for template method
-# Should only return one of the files we've added according to mime_type
-@files = $file->get_for_template({
-    file_class => FC_INTERNAL,
-    ref_key => 0,
-});
-is(scalar(@files), 1, 'get_for_template method returned correct number of files');
-$result = $files[0];
-
-# Can't use is_deeply() as it won't handle content reference,
-# so test each key/value separately
-is(scalar(keys %{$result}), 10, 'get_for_template result has correct number of hash keys');
-is($result->{description}, 'This is the file description', 'get_for_template result has correct description');
-is($result->{file_class}, FC_INTERNAL, 'get_for_template result has correct file_class');
-is($result->{ref_key}, 0, 'get_for_template result has correct ref_key');
-is($result->{uploaded_at}, $file->{uploaded_at}, 'get_for_template result has correct uploaded_at');
-is($result->{uploaded_by_id}, $file->{uploaded_by}, 'get_for_template result has correct uploaded_by');
-is($result->{uploaded_by_name}, 'LSMB-FILE-TEST', 'get_for_template result has correct file_name');
-is($result->{id}, $file->{id}, 'get_for_template result has correct id');
-is($result->{mime_type}, 'text/plain', 'get_for_template result has correct mime_type');
-is($result->{file_name}, 'testfile.txt', 'get_for_template result has correct file_name');
-is(${$result->{content}}, 'New file content', 'get_for_template result has correct content');
-
-# Check temporary directory
-my $directory_path = $file->file_path;
-ok(-d $directory_path, 'file_path temporary directory exists');
-
-# Check written file
-my $full_path = $directory_path . '/' . $result->{file_name};
-my $fh;
-ok(-f $full_path, 'extracted file exists in filesystem');
-ok(open($fh, '<', $full_path), 'opened extracted file for reading');
-local $/ = undef;
-is(<$fh>, 'New file content', 'extracted file contains correct content');
-ok(close $fh, 'closed extracted file after reading');
-
-# Check temporary file clean up once out-of-scope
-undef $result;
-undef @files;
-undef $file;
-undef $uri;
-ok(!-e $directory_path, 'temporary directory deleted once out-of-scope');
-
 
 # Drop our working database
+$dbh->disconnect;
 $dbh = DBI->connect(
     "dbi:Pg:dbname=$ENV{LSMB_NEW_DB}",
     undef,

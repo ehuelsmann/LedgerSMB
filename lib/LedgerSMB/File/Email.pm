@@ -41,6 +41,8 @@ Attaches or links a specific file to the given email.
 
 sub attach {
     my ($self, $args) = @_;
+    $self->get_mime_type
+        unless defined $self->mime_type_id;
     return $self->call_dbmethod(funcname => 'file__attach_to_email');
 }
 

@@ -75,6 +75,12 @@ Note: Important difference with the 1.4 series is that before
 has content => (is => 'rw', isa => 'LedgerSMB::Moose::FileContent',
                 coerce => 1);
 
+=item uri
+
+=cut
+
+has uri => (is => 'rw', isa => 'Maybe[Str]');
+
 
 =item mime_type_id
 
@@ -186,6 +192,7 @@ sets it.
 
 sub get_mime_type {
     my ($self) = @_;
+    return undef if defined( $self->uri );
     if (!($self->mime_type_id || $self->mime_type_text)){
        $self->mime_type_text(
             MIME::Types->new->mimeTypeOf($self->file_name)->type

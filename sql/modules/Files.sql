@@ -39,6 +39,10 @@ CREATE OR REPLACE FUNCTION file__store(in_content bytea,
   DECLARE
     content_id int;
   BEGIN
+    if in_content is null then
+      return null;
+    end if;
+
     select id into content_id
       from file_content
      where sha512(in_content) = sha512sum
@@ -234,20 +238,24 @@ $$If the file_name is not unique, a unique constraint violation will be thrown.
 $$;
 
 CREATE OR REPLACE FUNCTION file__save_internal
-(in_content bytea, in_mime_type_id int, in_file_name text,
+(in_content bytea, in_uri text, in_mime_type_id int, in_file_name text,
 in_description text)
 RETURNS file_internal_links LANGUAGE SQL AS
   $$
-  delete from file_internal_links where file_name = in_file_name;
-
-  insert into file_internal_links (file_content_id, file_name, description, uploaded_by)
-  values (file__store(in_content, in_mime_type_id), in_file_name, in_description,
+  insert into file_internal_links (file_content_id, uri, file_name, description, uploaded_by)
+  values (file__store(in_content, in_mime_type_id), in_uri, in_file_name, in_description,
           (select entity_id from users where username = SESSION_USER))
-  returning *;
+         on conflict (file_name) do update
+            set description = EXCLUDED.description,
+                uri = EXCLUDED.uri,
+                uploaded_by = EXCLUDED.uploaded_by,
+                uploaded_at = NOW(),
+                file_content_id = EXCLUDED.file_content_id
+         returning *;
 $$;
 
 COMMENT ON FUNCTION file__save_internal
-(in_content bytea, in_mime_type_id int, in_file_name text,
+(in_content bytea, in_uri text, in_mime_type_id int, in_file_name text,
 in_description text) IS
 $$If the file_name is not unique, this overwrites the existing file.
 $$;
@@ -295,7 +303,7 @@ CREATE OR REPLACE FUNCTION file_eca__list_by(in_eca_id int)
 RETURNS SETOF file_list_item AS
 $$
 SELECT f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.file_content_id, f.uri
+       f.uploaded_at, f.id, f.uri
   FROM file_eca_links f
   JOIN entity e ON f.uploaded_by = e.id
  WHERE f.eca_id = in_eca_id;
@@ -305,7 +313,7 @@ CREATE OR REPLACE FUNCTION file_email__list_by(in_email_id int)
 RETURNS SETOF file_list_item AS
 $$
 SELECT f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.file_content_id, f.uri
+       f.uploaded_at, f.id, f.uri
   FROM file_email_links f
   JOIN entity e ON f.uploaded_by = e.id
  WHERE f.email_workflow_id = in_email_id;
@@ -315,7 +323,7 @@ CREATE OR REPLACE FUNCTION file_entity__list_by(in_entity_id int)
 RETURNS SETOF file_list_item AS
 $$
 SELECT f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.file_content_id, f.uri
+       f.uploaded_at, f.id, f.uri
   FROM file_entity_links f
   JOIN entity e ON f.uploaded_by = e.id
  WHERE f.entity_id = in_entity_id;
@@ -325,7 +333,7 @@ CREATE OR REPLACE FUNCTION file_internal__list_by()
 RETURNS SETOF file_list_item AS
 $$
 SELECT f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.file_content_id, f.uri
+       f.uploaded_at, f.id, f.uri
   FROM file_internal_links f
   JOIN entity e ON f.uploaded_by = e.id;
 $$ language sql;
@@ -337,7 +345,7 @@ CREATE OR REPLACE FUNCTION file_order__list_by(in_oe_id int)
 RETURNS SETOF file_list_item AS
 $$
 SELECT f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.file_content_id, f.uri
+       f.uploaded_at, f.id, f.uri
   FROM file_oe_links f
   JOIN entity e ON f.uploaded_by = e.id
  WHERE f.oe_id = in_oe_id;
@@ -347,7 +355,7 @@ CREATE OR REPLACE FUNCTION file_parts__list_by(in_parts_id int)
 RETURNS SETOF file_list_item AS
 $$
 SELECT f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.file_content_id, f.uri
+       f.uploaded_at, f.id, f.uri
   FROM file_parts_links f
   JOIN entity e ON f.uploaded_by = e.id
  WHERE f.parts_id = in_parts_id;
@@ -357,7 +365,7 @@ CREATE OR REPLACE FUNCTION file_reconciliation__list_by(in_report_id int)
 RETURNS SETOF file_list_item AS
 $$
 SELECT f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.file_content_id, f.uri
+       f.uploaded_at, f.id, f.uri
   FROM file_reconciliation_links f
   JOIN entity e ON f.uploaded_by = e.id
  WHERE f.cr_report_id = in_report_id;
@@ -367,7 +375,7 @@ CREATE OR REPLACE FUNCTION file_transaction__list_by(in_trans_id int)
 RETURNS SETOF file_list_item AS
 $$
 SELECT f.file_name, f.description, f.uploaded_by, e.name,
-       f.uploaded_at, f.file_content_id, f.uri
+       f.uploaded_at, f.id, f.uri
   FROM file_transaction_links f
   JOIN entity e ON f.uploaded_by = e.id
  WHERE f.trans_id = in_trans_id;
