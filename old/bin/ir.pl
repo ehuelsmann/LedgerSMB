@@ -970,7 +970,6 @@ qq|<td align=center><input data-dojo-type="dijit/form/TextBox" name="memo_$i" id
 <th colspan="4">| . $locale->text('Attached and Linked Files') . qq|</th>
 <tr class="listheading">
 <th>| . $locale->text('File name') . qq|</th>
-<th>| . $locale->text('File type') . qq|</th>
 <th>| . $locale->text('Attached at') . qq|</th>
 <th>| . $locale->text('Attached by') . qq|</th>
 </tr> |;
@@ -979,7 +978,6 @@ qq|<td align=center><input data-dojo-type="dijit/form/TextBox" name="memo_$i" id
 <tr>
 <td><a href="file.pl?__action=get&file_class=1&ref_key=$form->{id}&id=$file->{id}"
        target="_download">$file->{file_name}</a></td>
-<td>$file->{mime_type}</td>
 <td>| . $file->{uploaded_at} . qq|</td>
 <td>$file->{uploaded_by_name}</td>
 </tr>
