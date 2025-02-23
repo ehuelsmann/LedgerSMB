@@ -24,7 +24,7 @@ BEGIN;
     SELECT has_function('file__attach_to_eca',ARRAY['bytea','integer','text','text','integer']);
     SELECT has_function('file__attach_to_order',ARRAY['bytea','integer','text','text','integer']);
     SELECT has_function('file__save_incoming',ARRAY['bytea','integer','text','text']);
-    SELECT has_function('file__save_internal',ARRAY['bytea','integer','text','text']);
+    SELECT has_function('file__save_internal',ARRAY['bytea','text','integer','text','text']);
     SELECT has_function('file_internal__list_by',NULL);
 
     -- Run tests

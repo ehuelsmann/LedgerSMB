@@ -171,8 +171,7 @@ my $uri = LedgerSMB::File::Internal->new(
     description => 'Link description',
 );
 ok($uri, 'LedgerSMB::File::Internal object created for uri');
-ok lives { $uri = $uri->attach; }, 'Successfully attached URI'
-    or diag $@; 
+ok lives { $uri = $uri->attach; }, 'Successfully attached URI';
 ok( $uri, 'attached uri');
 
 # List files
