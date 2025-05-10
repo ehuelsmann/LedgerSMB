@@ -1,6 +1,7 @@
 /** @format */
 
 import { createApp } from "vue";
+import vuetify from "./plugins/vuetify";
 import router from "@/router";
 import { createI18n } from "vue-i18n";
 import { createPinia } from "pinia";
@@ -57,6 +58,7 @@ let lsmbDirective = {
 
 if (document.getElementById("main")) {
     app = createApp(LsmbMain).use(router).use(createPinia());
+    app.use(vuetify);
 
     useSessionUserStore().initialize();
     appName = "#main";

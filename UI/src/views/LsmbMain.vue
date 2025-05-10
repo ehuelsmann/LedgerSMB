@@ -29,9 +29,10 @@ export default {
     data() {
         const cfg = window.lsmbConfig;
         return {
-            modelValue: 50,
             company: cfg.company,
             login: cfg.login,
+            pw_expiration: window.pw_expiration,
+            showExpirationDialog: window.pw_expiration !== null,
             version: cfg.version
         };
     },
@@ -114,6 +115,37 @@ export default {
 
             <div id="top_menu" data-dojo-type="lsmb/menus/Tree" />
         </div>
+        <v-dialog v-model="showExpirationDialog" max-width="500">
+            <template #default="{ isActive: showExpirationDialog }">
+                <v-card :title="$t('Password warning')">
+                    <v-card-text v-if="pw_expiration.years">
+                        Your password expires in
+                        {{ pw_expiration.years }} years!
+                    </v-card-text>
+                    <v-card-text v-else-if="pw_expiration.months">
+                        Your password expires in
+                        {{ pw_expiration.months }} months!
+                    </v-card-text>
+                    <v-card-text v-else-if="pw_expiration.weeks">
+                        Your password expires in {{ pw_expiration.weeks }} weeks
+                        !
+                    </v-card-text>
+                    <v-card-text v-else-if="pw_expiration.days">
+                        Your password expires in {{ pw_expiration.days }} days!
+                    </v-card-text>
+                    <v-card-text v-else>
+                        Your password expires today!
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn
+                            text="Close"
+                            @click="showExpirationDialog.value = false"
+                        ></v-btn>
+                    </v-card-actions>
+                </v-card>
+            </template>
+        </v-dialog>
         <div
             id="errorDialog"
             title="An error occurred!"

@@ -32,29 +32,18 @@
     [%- FOREACH s = include_stylesheet %]
     <link href="js/css/[% s %]" rel="stylesheet">
     [%- END %]
-    [%- IF warn_expire;
-       IF pw_expires.years ;
-          ALERT = text("Warning: Your password will expire in [_1] years", pw_expires.years);
-       ELSIF pw_expires.months ;
-          ALERT = text("Warning: Your password will expire in [_1] months", pw_expires.months);
-       ELSIF pw_expires.weeks ;
-          ALERT = text("Warning: Your password will expire in [_1] weeks", pw_expires.weeks);
-       ELSIF pw_expires.days ;
-          ALERT = text("Warning: Your password will expire in [_1] days", pw_expires.days);
-       ELSE ;
-          ALERT = text("Warning: Your password will expire today");
-       END;
-    %]
     <script>
-      let h;
-      h = () => {
-          window.removeEventListener('DOMContentLoaded', h);
-          window.alert("[% ALERT %]");
-      };
-      window.addEventListener('DOMContentLoaded', h);
-    </script>
+    [%- IF warn_expire %]
+        var pw_expiration = {
+            "years": [% pw_expires.years %],
+            "months": [% pw_expires.months %],
+            "weeks": [% pw_expires.weeks %],
+            "days": [% pw_expires.days %]
+        };
+    [% ELSE %]
+        var pw_expiration = null;
     [% END %]
-    <script>
+
         var dojoConfig = {
             async: 1,
             parseOnLoad: false,
