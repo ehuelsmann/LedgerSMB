@@ -10,8 +10,8 @@ services:
     #   shm_size: 2gb
     # but we use the /dev/shm mapping above
     environment:
-      - NODE_MAX_SESSION=7
-      - NODE_MAX_INSTANCES=7
+      - SE_NODE_MAX_SESSIONS=7
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
       - GRID_DEBUG=true
       - SE_EVENT_BUS_HOST=hub
       - SE_EVENT_BUS_PUBLISH=4442
