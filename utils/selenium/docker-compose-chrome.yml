@@ -4,6 +4,8 @@ services:
     image: selenium/node-chrome
     volumes:
       - /dev/shm:/dev/shm
+    ports:
+      - 5900:5900
     depends_on:
       - hub
     # the standard setup proposes:
