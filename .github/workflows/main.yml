@@ -24,6 +24,7 @@ on:
   workflow_dispatch:
 
 env:
+  VIDEO: video
   PGDB: lsmb_test
   PGHOST: localhost
   PGPASSWORD: test
@@ -457,11 +458,22 @@ jobs:
       # This will start a hub and JOB_COUNT matrix.
       - name: Starting hub with ${{ matrix.BROWSER }}
         run: |
-          docker compose \
+          if [ "$VIDEO" == "video" ]
+          then
+            BROWSER="${{ matrix.BROWSER }}" \
+            docker compose \
+              --file=utils/selenium/docker-compose.yml \
+              --file=utils/selenium/docker-compose-${{ matrix.BROWSER }}.yml \
+              --file=utils/selenium/docker-compose-video.yml \
+              up \
+              --detach
+          else
+            docker compose \
               --file=utils/selenium/docker-compose.yml \
               --file=utils/selenium/docker-compose-${{ matrix.BROWSER }}.yml \
               up \
-              --detach \
+              --detach
+          fi
 
       - name: Setup Perl environment & start starman
         uses: ./.github/workflows/Install TEX & Perl

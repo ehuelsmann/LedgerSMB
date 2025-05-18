@@ -1,0 +1,18 @@
+
+services:
+  video:
+    image: selenium/video
+    volumes:
+      - ./logs/videos:/videos
+    depends_on:
+      - ${BROWSER:-chrome}
+    environment:
+      - DISPLAY_CONTAINER_NAME=selenium-${BROWSER:-chrome}-1
+      - FILE_NAME=auto
+      - VIDEO_FILE_EXTENSION=mp4
+      - DISPLAY=:99.0
+      - SCREEN_WIDTH=1920
+      - SCREEN_HEIGHT=1080
+      - VIDEO_FRAME_RATE=24
+
+
