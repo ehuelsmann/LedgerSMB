@@ -462,7 +462,6 @@ jobs:
               --file=utils/selenium/docker-compose-${{ matrix.BROWSER }}.yml \
               up \
               --detach \
-              --scale ${{ matrix.BROWSER }}=$JOB_COUNT \
 
       - name: Setup Perl environment & start starman
         uses: ./.github/workflows/Install TEX & Perl
