@@ -6,8 +6,8 @@ services:
       - hub
     shm_size: 2gb
     environment:
-      - NODE_MAX_SESSION=5
-      - NODE_MAX_INSTANCES=5
+      - NODE_MAX_SESSION=7
+      - NODE_MAX_INSTANCES=7
       - GRID_DEBUG=true
       - SE_EVENT_BUS_HOST=hub
       - SE_EVENT_BUS_PUBLISH=4442
