@@ -343,7 +343,7 @@ jobs:
         include:
           - perl: "5.38"
             postgres: "14"
-            BROWSER: "chrome"
+            BROWSER: "firefox"
             COVERAGE: 1
             JOB_COUNT: 2
 
