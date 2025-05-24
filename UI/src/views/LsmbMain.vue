@@ -137,9 +137,6 @@ export default {
 
             this.savedSelectedMenuNode = id;
             const n = this.menuStore.nodeById(id);
-            if (!n.url) {
-                return;
-            }
             let url = n.url;
             let button = 0;
             let modifiers = {};
