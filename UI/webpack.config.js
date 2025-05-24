@@ -134,7 +134,20 @@ if (TARGET !== "readme") {
     };
     const css = {
         test: /\.css$/i,
-        use: [MiniCssExtractPlugin.loader, "css-loader"]
+        use: [
+            MiniCssExtractPlugin.loader,
+            {
+                loader: "css-loader",
+                options: {
+                    url: {
+                        filter: (url, resourcePath) => {
+                            // Fix double js path in font URLs
+                            return !url.includes('css/js/css/fonts');
+                        }
+                    }
+                }
+            }
+        ]
     };
     // Add Sass loader for Quasar
     const sass = {
@@ -174,7 +187,9 @@ if (TARGET !== "readme") {
         test: /\.(woff|woff2|eot|ttf|otf)$/i,
         type: 'asset/resource',
         generator: {
-            filename: 'fonts/[name][ext]'
+            filename: '[name][ext]',
+            outputPath: 'fonts/',
+            publicPath: 'fonts/'
         }
     };
 
@@ -311,6 +326,27 @@ if (TARGET !== "readme") {
                 "!!raw-loader!"
             );
         }),
+
+        new webpack.NormalModuleReplacementPlugin(
+            /\.css$/,
+            function(resource) {
+                // This will intercept CSS files and fix font paths
+                if (resource.request.includes('bootstrap.css')) {
+                    const originalLoader = resource.loaders;
+                    resource.loaders = [
+                        ...originalLoader,
+                        {
+                            loader: 'string-replace-loader',
+                            options: {
+                                search: /js\/css\/js\/fonts\//g,
+                                replace: 'fonts/',
+                                flags: 'g'
+                            }
+                        }
+                    ];
+                }
+            }
+        ),
 
         new VirtualModulesPlugin(VirtualModulesPluginOptions),
 
