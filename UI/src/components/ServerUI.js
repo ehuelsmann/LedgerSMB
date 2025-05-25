@@ -6,7 +6,6 @@ import { useI18n } from "vue-i18n";
 import { createServerUIMachine } from "./ServerUI.machines.js";
 
 const registry = require("dijit/registry");
-const query = require("dojo/query");
 const topic = require("dojo/topic");
 
 function domReject(response) {
@@ -106,9 +105,10 @@ export default {
                 // an error is thrown. Make sure the props are gone right after unregistering
                 // the widgets. (it may take a bit for the new content to overwrite the old
                 // content...)
-                query("*", document.getElementById("maindiv")).forEach(
-                    (n) => delete n._cssState
-                );
+                document
+                    .getElementById("maindiv")
+                    .querySelectorAll("*")
+                    .forEach((n) => delete n._cssState);
             } catch (e) {
                 this.reportError(e);
             }
