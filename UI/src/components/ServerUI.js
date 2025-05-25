@@ -6,7 +6,6 @@ import { useI18n } from "vue-i18n";
 import { createServerUIMachine } from "./ServerUI.machines.js";
 
 const registry = require("dijit/registry");
-const topic = require("dojo/topic");
 
 function domReject(response) {
     return (
@@ -127,7 +126,6 @@ export default {
             },
             ({ machine }) => {
                 if (machine.current === "idle") {
-                    topic.publish("lsmb/page-fresh-content");
                     maindiv.setAttribute("data-lsmb-done", "true");
                 }
             }
