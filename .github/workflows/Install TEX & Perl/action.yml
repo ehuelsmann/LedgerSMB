@@ -15,6 +15,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Cache TinyTex
+      uses: actions/cache@v4
+      with:
+        path: /home/runner/.TinyTeX
+        key: ${{ runner.os }}-tinytex
+
     - name: Install TinyTex
       uses: r-lib/actions/setup-tinytex@v2
 
