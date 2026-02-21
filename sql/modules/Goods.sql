@@ -31,10 +31,14 @@ BEGIN
     UPDATE parts SET onhand = onhand + t_mfg_lot.qty
      where id = t_mfg_lot.parts_id;
 
-    INSERT INTO gl (reference, description, transdate, approved,
-                   trans_type_code)
-    values ('mfg-' || $1::TEXT, 'Manufacturing lot',
-            now(), true, 'as');
+    INSERT INTO transactions (id, reference, description, transdate, approved,
+                   trans_type_code, table_name)
+    values (nextval('id'), 'mfg-' || $1::TEXT, 'Manufacturing lot',
+            now(), true, 'as', 'mfg_lot');
+
+    UPDATE mfg_lot
+       SET trans_id = currval('id')
+     WHERE id = in_id;
 
     INSERT INTO invoice (trans_id, parts_id, qty, allocated)
     SELECT currval('id')::int, parts_id, qty, 0
@@ -385,9 +389,15 @@ IF inv.trans_id IS NOT NULL THEN
    RETURN inv;
 END IF;
 
-INSERT INTO gl (description, transdate, reference, approved, trans_type_code)
-        VALUES ('Transaction due to approval of inventory adjustment',
-                inv.transdate, 'invadj-' || in_id, true, 'ia')
+  INSERT INTO transactions (
+    id,
+    description,
+    transdate, reference, approved,
+    trans_type_code, table_name)
+  VALUES (nextval('id'),
+          'Transaction due to approval of inventory adjustment',
+          inv.transdate, 'invadj-' || in_id, true,
+          'ia', 'inventory_report')
     RETURNING id INTO t_trans_id;
 
 UPDATE inventory_report

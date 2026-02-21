@@ -910,7 +910,7 @@ CREATE OR REPLACE FUNCTION payment_post
 RETURNS INT AS
 $$
 DECLARE var_payment_id int;
-DECLARE var_gl_id int;
+DECLARE var_txn_id int;
 DECLARE var_entry record;
 DECLARE var_entry_id int[];
 DECLARE out_count int;
@@ -1079,14 +1079,15 @@ BEGIN
    --
    -- HANDLE THE OVERPAYMENTS NOW
    IF (array_upper(in_op_cash_account_id, 1) > 0) THEN
-       INSERT INTO gl (reference, description, transdate,
-                       person_id, notes, approved, trans_type_code)
-              VALUES (setting_increment('glnumber'),
-                      in_gl_description, in_datepaid, var_employee,
-                      in_notes, in_approved, 'op');
-       SELECT currval('id') INTO var_gl_id;
+     INSERT INTO transactions (
+       nextval('id'), reference, description,
+       transdate, entered_by, notes, approved, trans_type_code)
+     VALUES (setting_increment('glnumber'),
+             in_gl_description, in_datepaid, var_employee,
+             in_notes, in_approved, 'op')
+     RETURNING id INTO var_txn_id;
 
-       UPDATE payment SET gl_id = var_gl_id
+       UPDATE payment SET trans_id = var_txn_id
         WHERE id = var_payment_id;
 
        FOR out_count IN
@@ -1100,7 +1101,7 @@ BEGIN
                      in_op_amount[out_count]*current_exchangerate*sign,
                      in_curr,
                      in_op_amount[out_count]*sign,
-                     var_gl_id,
+                     var_txn_id,
                      in_datepaid,
                      coalesce(in_approved, true),
                      in_op_source[out_count],
@@ -1121,7 +1122,7 @@ BEGIN
                      in_op_amount[out_count]*current_exchangerate*sign*-1,
                      in_curr,
                      in_op_amount[out_count]*sign*-1,
-                     var_gl_id,
+                     var_txn_id,
                      in_datepaid,
                      coalesce(in_approved, true),
                      in_op_source[out_count],
@@ -1345,10 +1346,10 @@ DECLARE
   t_payment_id int;
 BEGIN
   -- check against being an overpayment??
-  INSERT INTO payment (reference, gl_id, payment_class,
+  INSERT INTO payment (reference, trans_id, payment_class,
                        payment_date, closed, entity_credit_id,
                        employee_id, currency, reversing, notes)
-    SELECT reference, gl_id, payment_class,
+    SELECT reference, trans_id, payment_class,
            in_payment_date, closed, entity_credit_id,
            person__get_my_id(), currency, in_payment_id,
            'This payment reverses ' || in_payment_id
@@ -1518,7 +1519,7 @@ JOIN account c ON (c.id=ac.chart_id)
 JOIN account_link l ON l.account_id = c.id
 JOIN entity_credit_account eca ON (eca.id = p.entity_credit_id)
 JOIN company cmp ON (cmp.entity_id=eca.entity_id)
-WHERE p.gl_id IS NOT NULL
+WHERE p.trans_id IS NOT NULL
       AND (pl.type = 2 OR pl.type = 0)
       AND l.description LIKE '%overpayment'
 GROUP BY p.id, c.accno, p.reference, p.payment_class, p.closed, p.payment_date,
@@ -1617,7 +1618,7 @@ SELECT o.payment_id, e.name, o.available, g.transdate,
                AND chart_id = o.chart_id ORDER BY entry_id ASC LIMIT 1) as amount
   FROM overpayments o
   JOIN payment p ON o.payment_id = p.id
-  JOIN gl g ON g.id = p.gl_id
+  JOIN gl g ON g.id = p.trans_id
   JOIN account c ON c.id = o.chart_id
   JOIN entity_credit_account eca ON eca.id = o.entity_credit_id
   JOIN entity e ON eca.entity_id = e.id
@@ -1663,17 +1664,19 @@ BEGIN
 
   -- reverse overpayment gl
 
-  INSERT INTO gl (transdate, reference, description, approved, trans_type_code)
-  SELECT transdate, reference || '-reversal',
-         'reversal of ' || description, false, 'op'
-    FROM gl WHERE id = t_orig_payment.gl_id;
+  INSERT INTO transactions (id, transdate, reference,
+              description, approved,
+              trans_type_code, table_name)
+  SELECT nextval('id'), transdate, reference || '-reversal',
+         'reversal of ' || description, false, 'op', 'payment'
+    FROM transactions WHERE id = t_orig_payment.trans_id;
 
   t_id := currval('id');
 
 
   -- reverse payment record
 
-  INSERT INTO payment (reference, gl_id, payment_class, payment_date,
+  INSERT INTO payment (reference, trans_id, payment_class, payment_date,
               closed, entity_credit_id, employee_id, currency, reversing)
   VALUES (t_orig_payment.reference, t_id, t_orig_payment.payment_class,
          t_orig_payment.payment_date, t_orig_payment.closed,
@@ -1710,7 +1713,7 @@ SELECT in_transdate, t_id, chart_id, amount_bc * -1, curr, amount_tc * -1
 --   JOIN payment_links pl ON pl.entry_id = ac.entry_id
 --   JOIN overpayments op ON op.payment_id = pl.payment_id
 --   JOIN payment p ON p.id = op.payment_id
---  WHERE p.gl_id = in_id
+--  WHERE p.trans_id = in_id
 -- GROUP BY ac.source, ac.transdate, eca.id, eca.entity_class,
 --          at.accno, al.description;
 
