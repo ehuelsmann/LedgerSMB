@@ -108,6 +108,12 @@ Indicates that the account is set up for (bank) reconciliation.
 
 has recon => (is => 'rw', default => 0);
 
+=head2 open_item_managed
+
+=cut
+
+has open_item_managed => (is => 'ro', default => 0);
+
 =head2 obsolete
 
 Indicates that the account is obsolete; i.e. should not be used in
