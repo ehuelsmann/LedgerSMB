@@ -449,7 +449,7 @@ If not, returns false.$$;
 CREATE OR REPLACE FUNCTION account__save
 (in_id int, in_accno text, in_description text, in_category char(1),
 in_gifi_accno text, in_heading int, in_heading_negative_balance int, in_contra bool, in_tax bool,
-in_link text[], in_obsolete bool, in_is_temp bool)
+in_link text[], in_open_items bool, in_obsolete bool, in_is_temp bool)
 RETURNS int AS $$
 DECLARE
         t_link record;
@@ -482,6 +482,7 @@ BEGIN
             heading_negative_balance = in_heading_negative_balance,
             contra = in_contra,
             obsolete = coalesce(in_obsolete,'f'),
+            open_item_managed = coalesce(in_open_items, 'f'),
             tax = t_tax,
             is_temp = coalesce(in_is_temp,'f')
         WHERE id = in_id;
@@ -492,10 +493,10 @@ BEGIN
                 -- can't obsolete on insert, but this can be changed if users
                 -- request it --CT
                 INSERT INTO account (accno, description, category, gifi_accno,
-                        heading, heading_negative_balance, contra, tax, is_temp)
+                        heading, heading_negative_balance, contra, tax, open_item_managed, is_temp)
                 VALUES (in_accno, in_description, in_category, in_gifi_accno,
                         in_heading, in_heading_negative_balance, in_contra,
-                        in_tax, coalesce(in_is_temp, 'f'));
+                        in_tax, coalesce(in_open_items, 'f'), coalesce(in_is_temp, 'f'));
 
                 t_id := currval('account_id_seq');
         END IF;
@@ -517,7 +518,7 @@ $$ language plpgsql;
 COMMENT ON FUNCTION account__save
 (in_id int, in_accno text, in_description text, in_category char(1),
 in_gifi_accno text, in_heading int, in_heading_negative_balance int,
-in_contra bool, in_tax bool, in_link text[], in_obsolete bool,
+in_contra bool, in_tax bool, in_link text[], in_open_items bool, in_obsolete bool,
 in_is_temp bool) IS
 $$ This deletes existing account_link entries, where the
 account_link.description is not designated as a custom one in the

@@ -42,7 +42,7 @@ BEGIN;
     SELECT has_function('account__is_recon',ARRAY['text']);
     SELECT has_function('account__list_by_heading','{}'::text[]);
     SELECT has_function('account__list_translations',ARRAY['integer']);
-    SELECT has_function('account__save',ARRAY['integer','text','text','character','text','integer','integer','boolean','boolean','text[]','boolean','boolean']);
+    SELECT has_function('account__save',ARRAY['integer','text','text','character','text','integer','integer','boolean','boolean','text[]','boolean','boolean','boolean']);
     SELECT has_function('account__save_tax',ARRAY['integer','date','numeric','numeric','numeric','text','integer','integer','date']);
     SELECT has_function('account__save_translation',ARRAY['integer','text','text']);
     SELECT has_function('chart_get_ar_ap',ARRAY['integer']);
@@ -89,7 +89,7 @@ BEGIN;
     SELECT account__save (null, accno, description, category::char(1),
                 null, (select id from account_heading limit 1), null, false, false,
                 case when link is not null then link::text[] else '{}' END,
-                false, false)
+                false, false, false)
       FROM (VALUES ('TEST testing 1', 'A', 'A', '00001', null),
                    ('TEST testing 2', 'A', 'A', '00002', null),
                    ('TEST AP 1', 'A', 'L', '00003', '{AP}'),
