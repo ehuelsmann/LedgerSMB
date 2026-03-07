@@ -293,6 +293,16 @@
             checked = tax,
               value = '1'} %]
    </div>
+   <div class="inputgroup">
+      [%
+        IF form.open_items; open_items = 'CHECKED'; END;
+        INCLUDE input element_data={
+               name = 'open_items',
+               type = 'checkbox',
+              label = text('Open items'),
+            checked = open_items,
+              value = '1'} %]
+   </div>
 [% IF form.id %]
    <div  class="inputgroup">
      [%
