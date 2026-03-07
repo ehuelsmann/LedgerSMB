@@ -124,6 +124,7 @@ sub _default_settings {
               { name => 'customernumber', label => $locale->text('Customer Number') },
               { name => 'vendornumber', label => $locale->text('Vendor Number') },
               { name => 'paynumber', label => $locale->text('Payment Number') },
+              { name => 'openitemnumber', label => $locale->text('Open Item key') },
               { name => 'asset_report_number', label => $locale->text('Asset Report Number') },
               ] },
         { title => $locale->text('Misc Settings'),
