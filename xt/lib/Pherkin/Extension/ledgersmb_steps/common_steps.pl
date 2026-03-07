@@ -819,7 +819,7 @@ Given qr/that standard payment terms apply for "(.+)"/, sub {
               SELECT account__save(NULL, 'DISC', 'Payment discounts',
                  'E', NULL, (select id from account_heading where accno='5600'),
                  null, false, false, ARRAY['AR_discount','AP_discount']::text[],
-                 false, false);
+                 false, false, false);
             })
             or die $dbh->errstr;
     }

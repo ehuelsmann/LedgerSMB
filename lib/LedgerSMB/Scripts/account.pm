@@ -152,7 +152,7 @@ sub save {
                     $request->{contra} // '0',
                     $request->{tax} // '0',
                     _generate_links($request),
-                    $request->@{qw(obsolete is_temp)}
+                    $request->@{qw(open_items obsolete is_temp)}
                 ]);
             $request->{id} = $ref->{account__save};
         }
