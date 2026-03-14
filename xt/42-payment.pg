@@ -93,9 +93,12 @@ BEGIN;
 
     INSERT INTO transactions (transdate, table_name, trans_type_code, approved)
     VALUES (now(), 'ap', 'ap', false);
-    INSERT INTO ap (id, invnumber, entity_credit_account,
+    INSERT INTO open_item (item_number, item_type, account_id)
+    VALUES ('test_hide', 'ap', (select id from account where accno = '-2000000000'));
+    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
-            values (currval('transactions_id_seq'), 'test_hide', -101, '1', '1', '1', 'XTS');
+    values (currval('transactions_id_seq'),
+            currval('open_item_id_seq'), 'test_hide', -101, '1', '1', '1', 'XTS');
 
     INSERT INTO voucher (trans_id, batch_class, batch_id)
                  VALUES (currval('transactions_id_seq'), 1, currval('batch_id_seq'));
@@ -112,9 +115,12 @@ BEGIN;
 
     INSERT INTO transactions (transdate, table_name, trans_type_code, approved)
     VALUES (now(), 'ap', 'ap', true);
-    INSERT INTO ap (id, invnumber, entity_credit_account,
+    INSERT INTO open_item (item_number, item_type, account_id)
+    VALUES ('test_show2', 'ap', (select id from account where accno = '-2000000000'));
+    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
-            VALUES (currval('transactions_id_seq'), 'test_show2', -101, 100000, 100000, 100000,
+    VALUES (currval('transactions_id_seq'),
+            currval('open_item_id_seq'), 'test_show2', -101, 100000, 100000, 100000,
                     'XTS');
 
     INSERT INTO acc_trans (approved, transdate, amount_bc, curr,
@@ -128,9 +134,11 @@ BEGIN;
 
     INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
     VALUES (-300, now(), 'ap', 'ap', true);
-    INSERT INTO ap (id, invnumber, entity_credit_account,
+    INSERT INTO open_item (item_number, item_type, account_id)
+    VALUES ('test_show3', 'ap', (select id from account where accno = '-2000000000'));
+    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
-            VALUES (-300, 'test_show3', -101, 1000000, 1000000, 1000000,
+            VALUES (-300, currval('open_item_id_seq'), 'test_show3', -101, 1000000, 1000000, 1000000,
                     'XTS');
 
     INSERT INTO acc_trans (approved, transdate, amount_bc, curr,
@@ -146,9 +154,12 @@ BEGIN;
 
     INSERT INTO transactions (transdate, table_name, trans_type_code, approved)
     VALUES (now(), 'ap', 'ap', false);
-    INSERT INTO ap (id, invnumber, entity_credit_account,
+    INSERT INTO open_item (item_number, item_type, account_id)
+    VALUES ('test_show', 'ap', (select id from account where accno = '-2000000000'));
+    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
-            values (currval('transactions_id_seq'), 'test_show', -101, '1', '1', '1', 'XTS');
+    values (currval('transactions_id_seq'),
+            currval('open_item_id_seq'), 'test_show', -101, '1', '1', '1', 'XTS');
 
     INSERT INTO acc_trans (approved, transdate, amount_bc,
                            curr, amount_tc, trans_id, chart_id)
@@ -316,9 +327,12 @@ BEGIN;
 
     INSERT INTO transactions (transdate, table_name, trans_type_code, approved)
     VALUES (now(), 'ap', 'ap', true);
-    INSERT INTO ap (id, invnumber, entity_credit_account,
+    INSERT INTO open_item (item_number, item_type, account_id)
+    VALUES ('test_reverse', 'ap', (select id from account where accno = '-2000000000'));
+    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
-            values (currval('transactions_id_seq'), 'test_reverse', -101, '1', '1', '1',
+    values (currval('transactions_id_seq'),
+            currval('open_item_id_seq'), 'test_reverse', -101, '1', '1', '1',
                     'XTS')
        returning id as invoice_id
     \gset
@@ -388,9 +402,12 @@ BEGIN;
 
     INSERT INTO transactions (transdate, table_name, trans_type_code, approved)
     VALUES (now(), 'ap', 'ap', true);
-    INSERT INTO ap (id, invnumber, entity_credit_account,
+    INSERT INTO open_item (item_number, item_type, account_id)
+    VALUES ('test_bulk', 'ap', (select id from account where accno = '-2000000000'));
+    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
-            values (currval('transactions_id_seq'), 'test_bulk', -101, '1', '1', '1',
+    values (currval('transactions_id_seq'),
+            currval('open_item_id_seq'), 'test_bulk', -101, '1', '1', '1',
                     'XTS')
        returning id as invoice_id
     \gset
