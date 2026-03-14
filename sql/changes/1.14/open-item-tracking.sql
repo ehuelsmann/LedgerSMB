@@ -15,6 +15,13 @@ create index idx_acc_trans_open_item_id on acc_trans (open_item_id)
 alter table account
   add column open_item_managed boolean not null default false;
 
+alter table ar
+  add column open_item_id int references open_item(id);
+
+alter table ap
+  add column open_item_id int references open_item(id);
+
+
 --defer making AR/AP open item managed
 --update account
 --   set open_item_managed = true
@@ -52,4 +59,40 @@ create trigger trigger_open_item_maintenance
   before insert or update on acc_trans
   for each row
     execute function trigger_open_item_maintenance();
+
+
+insert into open_item (
+  item_number, item_type, account_id
+)
+select invnumber, lower(al.description), chart_id
+  from acc_trans
+         join (select id, invnumber
+                 from ar
+                union
+               select id, invnumber
+                 from ap) aa
+             on acc_trans.trans_id = aa.id
+         join account_link al
+             on acc_trans.chart_id = al.account_id
+ where al.description in ('AR', 'AP')
+ group by invnumber, lower(al.description), chart_id;
+
+
+update ar
+   set open_item_id = ac.open_item_id
+       from acc_trans ac
+ where ar.id = ac.trans_id
+   and ac.open_item_id is not null;
+update ap
+   set open_item_id = ac.open_item_id
+       from acc_trans ac
+ where ap.id = ac.trans_id
+   and ac.open_item_id is not null;
+
+
+alter table ar
+  alter column open_item_id set not null;
+
+alter table ap
+  alter column open_item_id set not null;
 

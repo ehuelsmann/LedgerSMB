@@ -136,9 +136,17 @@ sub post_invoice {
         $query = q{INSERT INTO transactions (table_name, trans_type_code, approved)
                    VALUES ('ap', 'ap', false)};
         $dbh->do($query) or $form->dberror($query);
+
+        ($accno) = split /--/, $form->{AP};
+        $query = q{
+            INSERT INTO open_item (item_number, item_type, account_id)
+            VALUES ('AP-' || currval('transactions_id_seq'), 'ap', (SELECT id FROM account WHERE accno = ?))
+            };
+        $dbh->do($query, {}, $accno) or $form->dberror($query);
+
         $query = qq|
-            INSERT INTO ap (id, invnumber, person_id, entity_credit_account)
-                 VALUES (currval('transactions_id_seq'), '$uid', ?, ?)|;
+            INSERT INTO ap (id, open_item_id, invnumber, person_id, entity_credit_account)
+                 VALUES (currval('transactions_id_seq'), currval('open_item_id_seq'), '$uid', ?, ?)|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{vendor_id}) || $form->dberror($query);
 

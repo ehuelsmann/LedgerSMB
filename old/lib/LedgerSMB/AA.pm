@@ -289,9 +289,16 @@ sub post_transaction {
             |;
         $dbh->do($query) or $form->dberror($query);
 
+        ($accno) = split /--/, $form->{$ARAP};
+        $query = qq{
+            INSERT INTO open_item (item_number, item_type, account_id)
+            VALUES (? || currval('transactions_id_seq'), ?, (SELECT id FROM account WHERE accno = ?))
+            };
+        $dbh->do($query, {}, $ARAP, $table, $accno) or $form->dberror($query);
+
         $query = qq|
-            INSERT INTO $table (id, invnumber, person_id, entity_credit_account)
-                 VALUES (currval('transactions_id_seq'), '$uid', ?, ?)|;
+            INSERT INTO $table (id, invnumber, open_item_id, person_id, entity_credit_account)
+                 VALUES (currval('transactions_id_seq'), '$uid', currval('open_item_id_seq'), ?, ?)|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{"$form->{vc}_id"}) || $form->dberror($query);
 

@@ -195,11 +195,16 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
       VALUES (?, 'ap', 'ap', true)
       SQL
 
+    my $oi_query = $dbh->prepare(<<~'SQL');
+      INSERT INTO open_item (item_number, item_type, account_id)
+      VALUES ('AP-' || currval('transactions_id_seq'), 'ap', ?)
+      SQL
+
     my $ap_query = $dbh->prepare("
-        INSERT INTO ap (id, invnumber, amount_bc, netamount_bc,
+        INSERT INTO ap (id, open_item_id, invnumber, amount_bc, netamount_bc,
                         duedate, curr, entity_credit_account,
                         amount_tc, netamount_tc)
-        SELECT currval('transactions_id_seq'), ?, ?, ?, ?, 'USD',
+        SELECT currval('transactions_id_seq'), currval('open_item_id_seq'), ?, ?, ?, ?, 'USD',
                entity_credit_account.id, ?, ?
         FROM entity
         JOIN entity_credit_account ON (
@@ -220,6 +225,10 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
     foreach my $data (@{C->data}) {
         $txn_query->execute(
             $data->{'Date'},
+        );
+
+        $oi_query->execute(
+            10 # 2100--Accounts payable account
         );
 
         $ap_query->execute(

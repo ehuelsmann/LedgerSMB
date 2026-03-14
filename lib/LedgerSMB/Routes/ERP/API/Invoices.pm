@@ -879,11 +879,20 @@ sub _post_invoices {
         or die $sth->errstr;
     my ($inv_id) = $sth->fetchrow_array;
 
+    $env->{'lsmb.db'}->do(
+        q{INSERT INTO open_item (item_number, item_type, account_id)
+          VALUES ('AR-' || currval('transactions_id_seq'), 'ar', ?)
+        },
+        {},
+        ($inv->{account}->{id} =~ s/^A-//r)
+        )
+        or die $env->{'lsmb.db'}->errstr;
+
     $sth = $env->{'lsmb.db'}->prepare(
         # What to do with 'setting_sequence' (for 'ar')?
         # and why does that not exist for 'ap'??
         q|
-        INSERT INTO ar (id, invoice,
+        INSERT INTO ar (id, open_item_id, invoice,
             invnumber, ordnumber, quonumber, ponumber,
             amount_bc, netamount_bc, curr, amount_tc, netamount_tc, taxincluded,
             crdate, duedate,
@@ -892,7 +901,7 @@ sub _post_invoices {
             person_id, language_code,
             entity_credit_account
             )
-        VALUES ( ?, 't'::boolean,
+        VALUES ( ?, currval('open_item_id_seq'), 't'::boolean,
                  ?, ?, ?, ?, ?, ?, ?, ?,
                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         |)

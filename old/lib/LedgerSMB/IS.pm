@@ -796,9 +796,16 @@ sub post_invoice {
             |;
         $dbh->do($query) or $form->dberror($query);
 
+        ($accno) = split /--/, $form->{AR};
+        $query = q{
+            INSERT INTO open_item (item_number, item_type, account_id)
+            VALUES ('AR-' || currval('transactions_id_seq'), 'ar', (SELECT id FROM account WHERE accno = ?))
+            };
+        $dbh->do($query, {}, $accno) or $form->dberror($query);
+
         $query = qq|
-            INSERT INTO ar (id, invnumber, person_id, entity_credit_account)
-                 VALUES (currval('transactions_id_seq'), '$uid', ?, ?)|;
+            INSERT INTO ar (id, open_item_id, invnumber, person_id, entity_credit_account)
+                 VALUES (currval('transactions_id_seq'), currval('open_item_id_seq'), '$uid', ?, ?)|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{customer_id}) || $form->dberror($query);
 
