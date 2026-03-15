@@ -809,11 +809,11 @@ sub post_invoice {
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{customer_id}) || $form->dberror($query);
 
-        $query = qq|SELECT id FROM ar WHERE invnumber = '$uid'|;
+        $query = qq|SELECT id, open_item_id FROM ar WHERE invnumber = '$uid'|;
         $sth   = $dbh->prepare($query);
         $sth->execute || $form->dberror($query);
 
-        ( $form->{id} ) = $sth->fetchrow_array;
+        ( $form->{id}, $form->{open_item_id} ) = $sth->fetchrow_array;
 
         $query = q|UPDATE transactions SET workflow_id = ?, reversing = ? WHERE id = ? AND workflow_id IS NULL|;
         $sth   = $dbh->prepare($query);
@@ -1153,14 +1153,14 @@ sub post_invoice {
 
         $query = qq|
             INSERT INTO acc_trans
-                     (trans_id, chart_id,
+                     (trans_id, chart_id, open_item_id,
                       amount_bc, curr, amount_tc, transdate, approved)
-                 VALUES (?, (SELECT id FROM account WHERE accno = ?),
+                 VALUES (?, (SELECT id FROM account WHERE accno = ?), ?,
                      ?, ?, ?, ?, ?)|;
 
         $sth = $dbh->prepare($query)
             or $form->dberror($dbh->errstr);
-        $sth->execute( $form->{id}, $accno,
+        $sth->execute( $form->{id}, $accno, $form->{open_item_id},
                        $form->{receivables}, $form->{currency},
                $form->{receivables} / $form->{exchangerate},
                        $transdate, $approved)

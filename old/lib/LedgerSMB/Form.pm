@@ -1992,7 +1992,7 @@ sub create_links {
                 txn.approved, ctf.default_reportable,
                 txn.description, a.on_hold, a.crdate,
                 a.shipto as shiptolocationid, a.shipto_attn as shiptoattn,
-                a.is_return, $seq,
+                a.is_return, $seq, a.open_item_id,
                 t.workflow_id, t.reversing, t.reversing_reference,
                 t.reversed_by, t.reversed_by_reference
             FROM $arap a

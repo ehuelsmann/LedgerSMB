@@ -302,11 +302,11 @@ sub post_transaction {
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{"$form->{vc}_id"}) || $form->dberror($query);
 
-        $query = qq|SELECT id FROM $table WHERE invnumber = '$uid'|;
+        $query = qq|SELECT id, open_item_id FROM $table WHERE invnumber = '$uid'|;
         $sth   = $dbh->prepare($query);
         $sth->execute || $form->dberror($query);
 
-        ( $form->{id} ) = $sth->fetchrow_array;
+        ( $form->{id}, $form->{open_item_id} ) = $sth->fetchrow_array;
 
         $query = <<~'SQL';
            UPDATE transactions
@@ -511,13 +511,13 @@ sub post_transaction {
         ($accno) = split /--/, $form->{$ARAP};
         $query = qq|
             INSERT INTO acc_trans
-                     (trans_id, chart_id, amount_bc, curr, amount_tc,
-                      transdate, approved)
+                     (trans_id, chart_id, open_item_id,
+                      amount_bc, curr, amount_tc, transdate, approved)
               VALUES (?, (SELECT id FROM account
-                              WHERE accno = ?),
+                              WHERE accno = ?), ?,
                            ?, ?, ?, ?, ?)|;
         @queryargs =
-            ( $form->{id}, $accno,
+            ( $form->{id}, $accno, $form->{open_item_id},
               $invamount * -1 * $ml, $form->{currency},
               $invamount * -1 * $ml / $form->{exchangerate},
               $form->{transdate},
