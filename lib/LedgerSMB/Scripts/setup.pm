@@ -717,8 +717,9 @@ my %upgrade_next_steps = (
 #   _select_templates      => '_migrate_users',
 #   _migrate_users         => '_complete',
     _select_templates      => '_create_initial_user',
-    _load_templates        => '_complete',
-    _create_initial_user   => '_complete',
+    _load_templates        => '_load_menu',
+    _create_initial_user   => '_load_menu',
+    _load_menu             => '_complete',
     );
 
 sub _dispatch_upgrade_workflow {
@@ -1164,9 +1165,6 @@ sub create_db {
 
     ($reauth) = _init_db($request);
     return $reauth if $reauth;
-    if (my $rv = _reload_menu($request, $database)) {
-        return $rv;
-    }
 
     return _dispatch_upgrade_workflow($request, '_create_db');
 }
@@ -1444,6 +1442,19 @@ sub _post_migration_schema_upgrade {
 
     return;
 }
+
+sub _load_menu {
+    my ($request) = @_;
+    my ($reauth, $database) = _init_db($request);
+    return $reauth if $reauth;
+
+    if (my $rv = _reload_menu($request, $database)) {
+        return $rv;
+    }
+
+    return _dispatch_upgrade_workflow($request, '_load_menu');
+}
+
 
 =item add_user
 
