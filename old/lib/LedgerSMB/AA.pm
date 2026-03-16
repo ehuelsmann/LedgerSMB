@@ -290,8 +290,8 @@ sub post_transaction {
         $dbh->do($query) or $form->dberror($query);
 
         $query = qq|
-            INSERT INTO $table (invnumber, person_id, entity_credit_account)
-                 VALUES ('$uid', ?, ?)|;
+            INSERT INTO $table (id, invnumber, person_id, entity_credit_account)
+                 VALUES (currval('transactions_id_seq'), '$uid', ?, ?)|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{"$form->{vc}_id"}) || $form->dberror($query);
 
@@ -319,7 +319,6 @@ sub post_transaction {
     $query = qq|
       UPDATE ar
          SET invnumber = ?,
-             description = ?,
              ordnumber = ?,
              taxincluded = ?,
              amount_bc = ?,
@@ -335,7 +334,6 @@ sub post_transaction {
              reverse = ?,
              person_id = ?,
              entity_credit_account = ?,
-             approved = ?,
              setting_sequence = ?
        WHERE id = ?
     |;
@@ -344,7 +342,6 @@ sub post_transaction {
     $query = qq|
       UPDATE $table
          SET invnumber = ?,
-             description = ?,
              ordnumber = ?,
              taxincluded = ?,
              amount_bc = ?,
@@ -360,7 +357,6 @@ sub post_transaction {
              reverse = ?,
              person_id = ?,
              entity_credit_account = ?,
-             approved = ?
        WHERE id = ?
     |;
    }
@@ -372,7 +368,7 @@ sub post_transaction {
     $approved = 0 if $form->get_setting('separate_duties');
 
     my @queryargs = (
-        $form->{invnumber},        $form->{description},
+        $form->{invnumber},
         $form->{ordnumber},
         $form->{taxincluded},
         $invamount,                $invnetamount,
@@ -383,7 +379,6 @@ sub post_transaction {
         $form->{ponumber},         $form->{crdate},
         $form->{reverse},          $form->{employee_id},
         $form->{"$form->{vc}_id"},
-        $approved
         );
     if ($table eq 'ar') {
         push @queryargs, $form->{setting_sequence}
@@ -392,6 +387,11 @@ sub post_transaction {
 
     $sth = $dbh->prepare($query) or $form->dberror($query);
     $sth->execute(@queryargs) or $form->dberror($query);
+
+    $dbh->do(q{UPDATE transactions SET description = ?, approved = ? WHERE id = ?},
+             {},
+             $form->{description}, $approved, $form->{id})
+        or die $dbh->errstr;
 
     if (defined $form->{approved}) {
         if (!$form->{approved} && $form->{batch_id}){
