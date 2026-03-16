@@ -372,7 +372,7 @@ push @tests, __PACKAGE__->new(
              where (select count(*)
                       from chart
                      where 'AR' = ANY(string_to_array(link,':'))) > 0
-            having count(*) = 0},
+            having count(*) > 0},
  display_name => marktext('AR account available when customers defined'),
  instructions => marktext(
                    q(When customers are defined, an AR account must be defined,
@@ -393,7 +393,7 @@ push @tests, __PACKAGE__->new(
              where (select count(*)
                       from chart
                      where 'AP' = ANY(string_to_array(link,':'))) > 0
-            having count(*) = 0},
+            having count(*) > 0},
  display_name => marktext('AP account available when vendors defined'),
  instructions => marktext(
                    q(When vendors are defined, an AP account must be defined,
@@ -594,7 +594,7 @@ push @tests, __PACKAGE__->new(
              where (select count(*)
                       from chart
                      where 'AR' = ANY(string_to_array(link,':'))) > 0
-            having count(*) = 0},
+            having count(*) > 0},
  display_name => marktext('AR account available when customers defined'),
  instructions => marktext(
                    q(When customers are defined, an AR account must be defined,
@@ -615,7 +615,7 @@ push @tests, __PACKAGE__->new(
              where (select count(*)
                       from chart
                      where 'AP' = ANY(string_to_array(link,':'))) > 0
-            having count(*) = 0},
+            having count(*) > 0},
  display_name => marktext('AP account available when vendors defined'),
  instructions => marktext(
                    q(When vendors are defined, an AP account must be defined,
