@@ -4,7 +4,6 @@ create or replace function pg_temp.schedule_schema_deletion(in_schema text)
 declare
   t_transdate date;
   t_cleanup_date date;
-  t_query text;
 begin
   perform *
      from information_schema.schemata
@@ -14,8 +13,7 @@ begin
     return;
   end if;
 
-  t_query := 'select max(transdate) from ' || quote_ident(in_schema) || '.acc_trans';
-  execute t_query into t_transdate;
+  execute 'select max(transdate) into t_transdate from ' || quote_ident(in_schema) || '.acc_trans';
   t_cleanup_date := greatest(
     coalesce((t_transdate + '7 years'::interval), CURRENT_DATE),
     (CURRENT_DATE + '2 years'::interval)
