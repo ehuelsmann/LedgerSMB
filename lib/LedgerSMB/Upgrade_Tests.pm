@@ -366,13 +366,12 @@ sub _get_tests {
 # 1.2-1.3 tests
 
 push @tests, __PACKAGE__->new(
-        test_query =>
-           q{select count(*) as customer_count
-              from customer
-             where (select count(*)
-                      from chart
-                     where 'AR' = ANY(string_to_array(link,':'))) > 0
-            having count(*) > 0},
+    test_query => q{select 1
+                     where (select count(*) from customer) > 0
+                       and (select count(*)
+                              from chart
+                             where 'AR' = ANY(string_to_array(link,':'))) = 0
+                   },
  display_name => marktext('AR account available when customers defined'),
  instructions => marktext(
                    q(When customers are defined, an AR account must be defined,
@@ -388,12 +387,12 @@ push @tests, __PACKAGE__->new(
 
 push @tests, __PACKAGE__->new(
         test_query =>
-           q{select count(*) as vendor_count
-              from vendor
-             where (select count(*)
-                      from chart
-                     where 'AP' = ANY(string_to_array(link,':'))) > 0
-            having count(*) > 0},
+                 q{select 1
+                    where (select count(*) from vendor) > 0
+                      and (select count(*)
+                            from chart
+                           where 'AP' = ANY(string_to_array(link,':'))) = 0
+                 },
  display_name => marktext('AP account available when vendors defined'),
  instructions => marktext(
                    q(When vendors are defined, an AP account must be defined,
@@ -610,12 +609,12 @@ push @tests, __PACKAGE__->new(
 
 push @tests, __PACKAGE__->new(
         test_query =>
-           q{select count(*) as vendor_count
-              from vendor
-             where (select count(*)
-                      from chart
-                     where 'AP' = ANY(string_to_array(link,':'))) > 0
-            having count(*) > 0},
+                 q{select 1
+                    where (select count(*) from vendor) > 0
+                      and (select count(*)
+                            from chart
+                           where 'AP' = ANY(string_to_array(link,':'))) = 0
+                 },
  display_name => marktext('AP account available when vendors defined'),
  instructions => marktext(
                    q(When vendors are defined, an AP account must be defined,
