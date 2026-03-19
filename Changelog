@@ -95,6 +95,11 @@ Updated dependencies
 Changelog for 1.12 Series
 Released 2024-12-14
 
+Changelog for 1.12.17
+* Fix migrations for LedgerSMB 1.2 without customers or vendors (#9371, #9377)
+* Fix migrations for SQL Ledger without customers or vendors (#9371, #9377)
+
+
 Changelog for 1.12.16
 * Fix undefined value warning caused by converting dates to strings (#9178)
 
