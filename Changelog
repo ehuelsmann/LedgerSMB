@@ -3,6 +3,15 @@
 Changelog for 1.13 Series
 Released 2025-10-04
 
+Changelog for 1.13.4
+* Fix dates not always shown on old-code screens (#9304)
+* Fix password duration not showing correctly on configuration screen (#9315)
+* Fix loading the menu after migrations (#9373)
+* Fix PostgreSQL v13 compatibility of SQL Ledger and LedgerSMB migrations (#9379)
+* Fix migrations for LedgerSMB 1.2 without customers or vendors (#9371, #9377)
+* Fix migrations for SQL Ledger without customers or vendors (#9371, #9377)
+
+
 Changelog for 1.13.3
 * Fix foreign currency calculation on single payment screen (#9231)
 * Print company address above PNL and balance reports (#9256)
