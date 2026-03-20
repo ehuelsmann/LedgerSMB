@@ -44,15 +44,15 @@ BEGIN;
     insert into session (session_id, users_id, token, last_used)
     values (-200, -200, md5(random()::text), now());
 
-    WITH a (accno, description, category) as (
-     values ('00001'::text, 'testing AP'::text, 'L'::text ),
-           ('00002', 'testing AP cost', 'E'),
-           ('00003', 'testing cash', 'A'),
-           ('00004', 'fx gain', 'I'),
-           ('00005', 'fx loss', 'E')
+    WITH a (accno, description, category, open_item_managed) as (
+     values ('00001'::text, 'testing AP'::text, 'L'::text, true),
+           ('00002', 'testing AP cost', 'E', false),
+           ('00003', 'testing cash', 'A', false),
+           ('00004', 'fx gain', 'I', false),
+           ('00005', 'fx loss', 'E', false)
     )
-    INSERT INTO account (accno, description, category, heading)
-    SELECT a.accno, a.description, a.category, h.id
+    INSERT INTO account (accno, description, category, heading, open_item_managed)
+    SELECT a.accno, a.description, a.category, h.id, a.open_item_managed
     FROM account_heading h
     JOIN a ON h.accno = '000000000000000000000';
 
@@ -81,9 +81,9 @@ BEGIN;
     VALUES ('inv_test1', 'ap', (select id from account where accno = '00001'));
     INSERT INTO ap (id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
          VALUES (-11, currval('open_item_id_seq'), 100, 110, 'inv_test1', 'xts', -101);
-    INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id)
-         VALUES (-11, '1901-01-01', 100, 'xts', 110, 't', (select id from account where accno = '00001')),
-                (-11, '1901-01-01', -100, 'xts', -110, 't', (select id from account where accno = '00002'));
+    INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id, open_item_id)
+         VALUES (-11, '1901-01-01', 100, 'xts', 110, 't', (select id from account where accno = '00001'), currval('open_item_id_seq')),
+                (-11, '1901-01-01', -100, 'xts', -110, 't', (select id from account where accno = '00002'), null);
 
     -- Pay the invoice in full
     SELECT * FROM
@@ -99,6 +99,7 @@ BEGIN;
                      ARRAY['cash '],   -- source
                      ARRAY[NULL],      -- memo
                      ARRAY[-11],       -- transaction_id
+                     ARRAY[currval('open_item_id_seq')::int],
                      NULL,  -- op_amount
                      NULL,  -- op_cash_account_id
                      NULL,  -- op_source
@@ -135,12 +136,12 @@ BEGIN;
     VALUES ('inv_test2', 'ap', (select id from account where accno = '00001'));
     INSERT INTO ap (id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
          VALUES (-12, currval('open_item_id_seq'), 100, 110, 'inv_test2', 'xts', -101);
-    INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id)
-         VALUES (-12, '1901-01-02', 100, 'xts', 110, 't', (select id from account where accno = '00001')),
-                (-12, '1901-01-02', -100, 'xts', -110, 't', (select id from account where accno = '00002'));
+    INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id, open_item_id)
+         VALUES (-12, '1901-01-02', 100, 'xts', 110, 't', (select id from account where accno = '00001'), currval('open_item_id_seq')),
+                (-12, '1901-01-02', -100, 'xts', -110, 't', (select id from account where accno = '00002'), null);
 
 
-    SELECT payment_bulk_post(ARRAY[ARRAY[-12,110]],
+    SELECT payment_bulk_post(ARRAY[ARRAY[-12,currval('open_item_id_seq'),110]],
                              batch_create('TestBatch', 'TestBatch',
                              'payment', -- payment
                              '1901-01-03'::date), 'source',
@@ -175,9 +176,9 @@ BEGIN;
     VALUES ('inv_test1/2', 'ap', (select id from account where accno = '00001'));
     INSERT INTO ap (id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
          VALUES (-13, currval('open_item_id_seq'), 100, 110, 'inv_test1', 'xts', -101);
-    INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id)
-         VALUES (-13, '1901-01-01', 100, 'xts', 110, 't', (select id from account where accno = '00001')),
-                (-13, '1901-01-01', -100, 'xts', -110, 't', (select id from account where accno = '00002'));
+    INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id, open_item_id)
+         VALUES (-13, '1901-01-01', 100, 'xts', 110, 't', (select id from account where accno = '00001'), currval('open_item_id_seq')),
+                (-13, '1901-01-01', -100, 'xts', -110, 't', (select id from account where accno = '00002'), null);
 
 
     PREPARE test AS
@@ -194,6 +195,7 @@ BEGIN;
                      ARRAY['cash '],   -- source
                      ARRAY[NULL],      -- memo
                      ARRAY[-13],       -- transaction_id
+                     ARRAY[currval('open_item_id_seq')::int], -- open_item_id
                      NULL,  -- op_amount
                      NULL,  -- op_cash_account_id
                      NULL,  -- op_source
@@ -214,13 +216,13 @@ BEGIN;
     VALUES ('inv_test2/2', 'ap', (select id from account where accno = '00001'));
     INSERT INTO ap (id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
          VALUES (-14, currval('open_item_id_seq'), 100, 110, 'inv_test2', 'xts', -101);
-    INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id)
-         VALUES (-14, '1901-01-02', 100, 'xts', 110, 't', (select id from account where accno = '00001')),
-                (-14, '1901-01-02', -100, 'xts', -110, 't', (select id from account where accno = '00002'));
+    INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id, open_item_id)
+         VALUES (-14, '1901-01-02', 100, 'xts', 110, 't', (select id from account where accno = '00001'), currval('open_item_id_seq')),
+                (-14, '1901-01-02', -100, 'xts', -110, 't', (select id from account where accno = '00002'), null);
 
 
     PREPARE test AS
-        SELECT payment_bulk_post(ARRAY[ARRAY[-14,110]],
+        SELECT payment_bulk_post(ARRAY[ARRAY[-14,currval('open_item_id_seq'),110]],
                              batch_create('TestBatch', 'TestBatch',
                              'payment', -- payment
                              '1901-01-03'::date), 'source',

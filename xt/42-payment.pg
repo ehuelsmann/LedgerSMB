@@ -37,7 +37,7 @@ BEGIN;
     SELECT has_function('payment_get_unused_overpayment',ARRAY['integer','integer','integer']);
     SELECT has_function('payment_get_vc_info',ARRAY['integer','integer']);
     SELECT has_function('payment__overpayments_list',ARRAY['date','date','text','text','text']);
-    SELECT has_function('payment_post',ARRAY['date','integer','integer','character','numeric','text','text','integer[]','numeric[]','text[]','text[]','integer[]','numeric[]','integer[]','text[]','text[]','integer[]','integer[]','boolean']);
+    SELECT has_function('payment_post',ARRAY['date','integer','integer','character','numeric','text','text','integer[]','numeric[]','text[]','text[]','integer[]','integer[]','numeric[]','integer[]','text[]','text[]','integer[]','integer[]','boolean']);
     SELECT has_function('payment__reverse',ARRAY['integer','date','boolean','integer']);
     SELECT has_function('payment__search',ARRAY['text','date','date','integer','text','integer','character','text']);
     SELECT has_function('payments_get_open_currencies',ARRAY['integer']);
@@ -340,7 +340,7 @@ BEGIN;
     values (currval('transactions_id_seq'),
             currval('open_item_id_seq'), 'test_reverse', -101, '1', '1', '1',
                     'XTS')
-       returning id as invoice_id
+       returning id as invoice_id, open_item_id
     \gset
 
     INSERT INTO acc_trans (approved, transdate, amount_bc, curr, amount_tc,
@@ -366,6 +366,7 @@ BEGIN;
                         array[1]::numeric[],
                         array['pmt-rev-src1']::text[], NULL,
                         array[:invoice_id]::int[],
+                        array[:open_item_id]::int[],
                         -- overpayments section
                         null, null, null, null, null, null,
                         -- approved:
@@ -410,15 +411,15 @@ BEGIN;
     INSERT INTO transactions (transdate, table_name, trans_type_code, approved)
     VALUES (now(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
-    VALUES ('test_bulk', 'ap', (select id from account where accno = '-2000000000'));
+    VALUES ('test_bulk', 'ap', (select id from account where accno = '00001'));
     INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
     values (currval('transactions_id_seq'),
             currval('open_item_id_seq'), 'test_bulk', -101, '1', '1', '1',
                     'XTS')
-       returning id as invoice_id
+       returning id as invoice_id, open_item_id
     \gset
-    SELECT payment_bulk_post(ARRAY[ARRAY[(:invoice_id)::numeric, 1::numeric]]::numeric[],
+    SELECT payment_bulk_post(ARRAY[ARRAY[(:invoice_id)::numeric, (:open_item_id)::numeric, 1::numeric]]::numeric[],
                              (:batch_id)::int, 'bulk'::text, '00001'::text, '00003'::text, now()::date,
                              1::int, 1::numeric, 'XTS'::text);
     SELECT currval('payment_id_seq') as payment_id

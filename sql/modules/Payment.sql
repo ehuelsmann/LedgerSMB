@@ -194,6 +194,7 @@ DROP TYPE IF EXISTS payment_invoice CASCADE;
 
 CREATE TYPE payment_invoice AS (
         invoice_id int,
+        open_item_id int,
         invnumber text,
         invoice bool,
         invoice_date date,
@@ -221,7 +222,7 @@ RETURNS SETOF payment_invoice AS
 $$
 BEGIN
 RETURN QUERY EXECUTE $sql$
-                SELECT a.id AS invoice_id, a.invnumber AS invnumber,a.invoice AS invoice,
+                SELECT a.id AS invoice_id, a.open_item_id, a.invnumber AS invnumber,a.invoice AS invoice,
                        a.transdate AS invoice_date, a.amount_bc AS amount,
                        a.amount_tc,
                        (CASE WHEN (c.discount_terms||' days')::interval < age(coalesce($8, current_date), a.transdate)
@@ -242,16 +243,13 @@ RETURN QUERY EXECUTE $sql$
                          END) AS due_fx,
                         null::numeric AS exchangerate,
                         a.description
-                 --TODO HV prepare drop entity_id from ap,ar
-                 --FROM  (SELECT id, invnumber, transdate, amount, entity_id,
-                 FROM  (SELECT txn.id, invnumber, invoice, txn.transdate, amount_bc,
+                 FROM  (SELECT txn.id, open_item_id, invnumber, invoice, txn.transdate, amount_bc,
                        amount_tc,
                                1 as invoice_class, curr,
                                entity_credit_account, txn.approved, description
                           FROM ap JOIN transactions txn ON txn.id = ap.id
                          UNION
-                         --SELECT id, invnumber, transdate, amount, entity_id,
-                         SELECT txn.id, invnumber, invoice, txn.transdate, amount_bc,
+                         SELECT txn.id, open_item_id, invnumber, invoice, txn.transdate, amount_bc,
                       amount_tc,
                                2 AS invoice_class, curr,
                                entity_credit_account, txn.approved, description
@@ -286,8 +284,8 @@ RETURN QUERY EXECUTE $sql$
                              OR $7 IS NULL)
                         AND due <> 0
                         AND a.approved = true
-                        GROUP BY a.invnumber, a.transdate, a.amount_bc, amount_tc,
-              discount, discount_tc, ac.due, ac.due_fx, a.id, c.discount_terms,
+                        GROUP BY a.id, a.open_item_id, a.invnumber, a.transdate, a.amount_bc, amount_tc,
+              discount, discount_tc, ac.due, ac.due_fx, c.discount_terms,
               a.curr, a.invoice, a.description
 $sql$
 USING in_account_class, in_entity_credit_id, in_curr, in_datefrom,
@@ -554,6 +552,7 @@ BEGIN
 
         CREATE TEMPORARY TABLE bulk_payments_in (
             id int,                   -- AR/AP id
+            open_item_id int,         -- open_item.id
             payment_id int,           -- payment.id
             eca_id int,               -- entity_credit_account.id
             entry_id int,             -- acc_trans.entry_id
@@ -572,9 +571,10 @@ BEGIN
         LOOP
             -- Fill the bulk payments table
             IF in_transactions[out_count][2] <> 0 THEN
-               INSERT INTO bulk_payments_in(id, amount_tc)
-            VALUES (in_transactions[out_count][1],
-                    in_transactions[out_count][2]);
+               INSERT INTO bulk_payments_in(id, open_item_id, amount_tc)
+               VALUES (in_transactions[out_count][1],
+                       in_transactions[out_count][2],
+                       in_transactions[out_count][3]);
             END IF;
         END LOOP;
 
@@ -747,7 +747,7 @@ BEGIN
            SET entry_id = nextval('acc_trans_entry_id_seq');
         INSERT INTO acc_trans
                (trans_id, chart_id, amount_bc, curr, amount_tc, approved,
-               voucher_id, transdate, source, entry_id)
+               voucher_id, transdate, source, entry_id, open_item_id)
         SELECT bpi.id, t_ar_ap_id,
                (bpi.amount_tc + bpi.disc_amount_tc)
                   * t_cash_sign * -1 * bpi.fxrate, in_currency,
@@ -755,7 +755,7 @@ BEGIN
                   * t_cash_sign * -1,
                CASE WHEN t_voucher_id IS NULL THEN true
                        ELSE false END,
-               t_voucher_id, in_payment_date, in_source, entry_id
+               t_voucher_id, in_payment_date, in_source, entry_id, open_item_id
           FROM bulk_payments_in bpi
           JOIN entity_credit_account eca ON bpi.eca_id = eca.id;
         INSERT INTO payment_links (payment_id, entry_id, type)
@@ -816,6 +816,7 @@ CREATE OR REPLACE FUNCTION payment_post
  in_source                        text[],
  in_memo                          text[],
  in_transaction_id                int[],
+ in_open_item_id                  int[],
  in_op_amount                     numeric[],
  in_op_cash_account_id            int[],
  in_op_source                     text[],
@@ -938,9 +939,9 @@ BEGIN
          WHERE trans_id = in_transaction_id[out_count]
                AND ( l.description in ('AR', 'AP'));
 
-        -- Now we post the AP/AR transaction
+        -- Now we post the AP/AR account
         INSERT INTO acc_trans (chart_id, amount_bc, curr, amount_tc,
-                               trans_id, transdate, approved, source, memo)
+                               trans_id, transdate, approved, source, memo, open_item_id)
               VALUES (var_account_id,
                       in_amount[out_count]*old_exchangerate*sign*-1,
                       in_curr,
@@ -949,7 +950,8 @@ BEGIN
                       in_datepaid,
                       coalesce(in_approved, true),
                       in_source[out_count],
-                      in_memo[out_count]);
+                      in_memo[out_count],
+                      in_open_item_id[out_count]);
         -- Link the ledger line to the payment record
         INSERT INTO payment_links
               VALUES (var_payment_id, currval('acc_trans_entry_id_seq'), 1);
@@ -1064,6 +1066,7 @@ COMMENT ON FUNCTION payment_post
  in_source                        text[],
  in_memo                          text[],
  in_transaction_id                int[],
+ in_open_item_id                  int[],
  in_op_amount                     numeric[],
  in_op_cash_account_id            int[],
  in_op_source                     text[],
@@ -1282,13 +1285,14 @@ BEGIN
     INSERT INTO acc_trans (trans_id, chart_id, transdate, source,
                            cleared, memo, invoice_id, approved,
                            amount_bc, amount_tc, curr,
-                           voucher_id)
+                           voucher_id, open_item_id)
      SELECT trans_id, chart_id, in_payment_date, source,
             false, memo, null, coalesce(in_approved, true),
             -1 * amount_bc, -1 * amount_tc, curr,
             (select id from voucher v
               where a.trans_id = v.trans_id
-                    and v.batch_id = in_batch_id) as voucher_id
+                and v.batch_id = in_batch_id) as voucher_id,
+            open_item_id
        FROM acc_trans a
       WHERE exists (select 1 from payment_links pl
                      where pl.payment_id = in_payment_id
