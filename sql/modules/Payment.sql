@@ -367,7 +367,7 @@ RETURN QUERY EXECUTE $sql$
                              ELSE 0::numeric
                              END) AS total_due,
                          array_agg(ARRAY[
-                              a.id::text, a.invnumber, a.transdate::text,
+                              a.id::text, a.open_item_id::text, a.invnumber, a.transdate::text,
                               a.amount_bc::text, (a.amount_bc - p.due)::text,
                               (CASE WHEN (c.discount_terms||' days')::interval
                                         < age(coalesce($10, current_date), a.transdate)
@@ -396,7 +396,7 @@ RETURN QUERY EXECUTE $sql$
 
                     FROM entity e
                     JOIN entity_credit_account c ON (e.id = c.entity_id)
-                    JOIN (SELECT ap.id, invnumber, txn.transdate, amount_bc,
+                    JOIN (SELECT ap.id, ap.open_item_id, invnumber, txn.transdate, amount_bc,
                                  curr, 1 as invoice_class,
                                  entity_credit_account, on_hold, v.batch_id,
                                  txn.approved
@@ -406,7 +406,7 @@ RETURN QUERY EXECUTE $sql$
                            WHERE $1 = 1
                                  AND (v.batch_class = 1 or v.batch_id IS NULL)
                            UNION
-                          SELECT ar.id, invnumber, txn.transdate, amount_bc,
+                          SELECT ar.id, ar.open_item_id, invnumber, txn.transdate, amount_bc,
                                  curr, 2 as invoice_class,
                                  entity_credit_account, on_hold, v.batch_id,
                                  txn.approved

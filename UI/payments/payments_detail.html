@@ -345,6 +345,10 @@
                                                                                 [% i.transdate %]
                                                                                 [% PROCESS input element_data = {
                                                                                         type = "hidden"
+                                                                                        name = "open_item_id_" _ r.contact_id _ "_" _ i.id
+                                                                                        value = i.open_item_id } %]
+                                                                                [% PROCESS input element_data = {
+                                                                                        type = "hidden"
                                                                                         name = "invoice_date_" _ r.contact_id _ "_" _ i.id
                                                                                         value = i.transdate } %]
                                                                         </td>

@@ -489,12 +489,13 @@ sub get_payment_detail_data {
         $inv->{invoices} =
             [  sort { $a->{transdate} cmp $b->{transdate} }
                map { { id => $_->[0],
-                       invnumber => $_->[1],
-                       transdate => $_->[2],
-                       amount => $_->[3], ## no critic (ProhibitMagicNumbers)
-                       paid => $_->[4],   ## no critic (ProhibitMagicNumbers)
-                       net => $_->[5],    ## no critic (ProhibitMagicNumbers)
-                       due => $_->[6],    ## no critic (ProhibitMagicNumbers)
+                       open_item_id => $_->[1],
+                       invnumber => $_->[2],
+                       transdate => $_->[3],
+                       amount => $_->[4], ## no critic (ProhibitMagicNumbers)
+                       paid => $_->[5],   ## no critic (ProhibitMagicNumbers)
+                       net => $_->[6],    ## no critic (ProhibitMagicNumbers)
+                       due => $_->[7],    ## no critic (ProhibitMagicNumbers)
                    } } @{$inv->{invoices} // []} ];
 
         for my $invoice (@{$inv->{invoices}}){
@@ -587,8 +588,8 @@ sub post_bulk {
 
             next if $invoice->{payment} == 0.0;
             my $db_amount = $invoice->{payment}->to_db();
-            my $invoice_subarray = "{$invoice->{invoice},$db_amount}";
-            if ($invoice_subarray !~ /^\{\d+\,\-?\d*\.?\d+\}$/){
+            my $invoice_subarray = "{$invoice->{invoice},$invoice->{open_item_id},$db_amount}";
+            if ($invoice_subarray !~ /^\{\d+\,\d+\,\-?\d*\.?\d+\}$/){
                 die "Invalid subarray: $invoice_subarray";
             }
 
