@@ -213,13 +213,13 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
         WHERE entity.name = ?
         AND entity_credit_account.entity_class = 1
         LIMIT 1
-        RETURNING ap.id
+        RETURNING ap.id, ap.open_item_id
     ");
 
     my $acc_trans_query = $dbh->prepare("
         INSERT INTO acc_trans (trans_id, chart_id, amount_bc,
-                               curr, amount_tc, transdate)
-        VALUES (?, ?, ?, 'USD', ?, ?)
+                               curr, amount_tc, transdate, open_item_id)
+        VALUES (?, ?, ?, 'USD', ?, ?, ?)
     ");
 
     foreach my $data (@{C->data}) {
@@ -240,7 +240,7 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
             $data->{'Amount'},
             $data->{'Vendor'},
         );
-        my $ap_id = $ap_query->fetchrow_hashref->{id};
+        my ($ap_id, $open_item_id) = $ap_query->fetchrow_array;
 
         $acc_trans_query->execute(
             $ap_id,
@@ -248,6 +248,7 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
             $data->{'Amount'} * -1,
             $data->{'Amount'} * -1,
             $data->{'Date'},
+            undef,
         );
 
         $acc_trans_query->execute(
@@ -256,6 +257,7 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
             $data->{'Amount'},
             $data->{'Amount'},
             $data->{'Date'},
+            $open_item_id,
         );
     }
 };
