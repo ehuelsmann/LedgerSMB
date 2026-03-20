@@ -904,6 +904,7 @@ sub _post_invoices {
         VALUES ( ?, currval('open_item_id_seq'), 't'::boolean,
                  ?, ?, ?, ?, ?, ?, ?, ?,
                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        RETURNING open_item_id
         |)
         or die $env->{'lsmb.db'}->errstr;
     $sth->execute(
@@ -921,6 +922,7 @@ sub _post_invoices {
         or die $sth->errstr;
     die $sth->errstr
         if $sth->err;
+    my ($open_item_id) = $sth->fetchrow_array;
 
     $sth = $env->{'lsmb.db'}->prepare(
         q|
@@ -955,9 +957,9 @@ sub _post_invoices {
     my $asth = $env->{'lsmb.db'}->prepare(
         q|
         INSERT INTO acc_trans (approved, trans_id, invoice_id, chart_id,
-              amount_bc, amount_tc, curr, transdate, source, memo )
+              amount_bc, amount_tc, curr, transdate, source, memo, open_item_id )
           VALUES ('f'::boolean, ?, ?, ?,
-                  ?, ?, ?, ?, ?, ?)
+                  ?, ?, ?, ?, ?, ?, ?)
         RETURNING entry_id
         |)
         or die $env->{'lsmb.db'}->errstr;
@@ -968,7 +970,7 @@ sub _post_invoices {
                    ($inv->{account}->{id} =~ s/^A-//r),
                    $sign*$inv->{amount}, $sign*$inv->{amount},
                    (map { $inv->{$_} } qw/currency transdate/),
-                   undef, undef,
+                   undef, undef, $open_item_id
         )
         or die $asth->errstr();
     for my $line ($inv->{lines}->@*) {
@@ -996,7 +998,7 @@ sub _post_invoices {
         ###BUG: check signs!!!
         $asth->execute($inv_id, $invline_id, $account_id,
                        -$sign*$line->{total}, -$sign*$line->{total},
-                       $inv->{currency}, $inv->{transdate}, undef, undef,
+                       $inv->{currency}, $inv->{transdate}, undef, undef, undef
             )
             or die $asth->errstr;
     }
@@ -1011,7 +1013,7 @@ sub _post_invoices {
         $asth->execute($inv_id, undef, $tax->{tax}->{chart_id},
                        -$sign*$tax->{amount}, -$sign*$tax->{amount},
                        $inv->{currency}, $inv->{transdate},
-                       $tax->{source}, $tax->{memo})
+                       $tax->{source}, $tax->{memo}, undef)
             or die $asth->errstr;
 
         my ($entry_id) = $asth->fetchrow_array;
