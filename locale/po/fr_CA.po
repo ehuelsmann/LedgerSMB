@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LedgerSMB 1.13.4-dev\n"
 "Report-Msgid-Bugs-To: devel@lists.ledgersmb.org\n"
-"POT-Creation-Date: 2026-02-28 23:08+0000\n"
+"POT-Creation-Date: 2026-03-20 08:51+0000\n"
 "Last-Translator: ylavoie <ylavoie@yveslavoie.com>, 2025\n"
 "Language-Team: French (Canada) (https://app.transifex.com/ledgersmb/teams/"
 "58325/fr_CA/)\n"
@@ -112,7 +112,7 @@ msgstr "Mouvements - Dépenses"
 msgid "AP Voucher"
 msgstr "Bon de compte à payer"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:397 lib/LedgerSMB/Upgrade_Tests.pm:619
+#: lib/LedgerSMB/Upgrade_Tests.pm:396 lib/LedgerSMB/Upgrade_Tests.pm:618
 msgid "AP account available when vendors defined"
 msgstr "Compte AP disponible lorsque les fournisseurs sont définis"
 
@@ -157,7 +157,7 @@ msgstr "Mouvements - Recettes"
 msgid "AR Voucher"
 msgstr "Bon de compte à recevoir"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:376 lib/LedgerSMB/Upgrade_Tests.pm:598
+#: lib/LedgerSMB/Upgrade_Tests.pm:375 lib/LedgerSMB/Upgrade_Tests.pm:597
 msgid "AR account available when customers defined"
 msgstr "Compte AR disponible lorsque les clients sont définis"
 
@@ -289,15 +289,15 @@ msgstr "Recettes"
 msgid "Accounts To"
 msgstr "Comptes à"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:683
+#: lib/LedgerSMB/Upgrade_Tests.pm:682
 msgid "Accounts marked for recon -- once"
 msgstr "Comptes marqués pour rapprochement -- une fois"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:699
+#: lib/LedgerSMB/Upgrade_Tests.pm:698
 msgid "Accounts marked for recon exist"
 msgstr "Les comptes marqués pour le rapprochement existent"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:794
+#: lib/LedgerSMB/Upgrade_Tests.pm:793
 msgid "Accounts without heading"
 msgstr "Comptes sans entête"
 
@@ -719,7 +719,7 @@ msgstr "Montant à payer"
 msgid "Amount/Rate"
 msgstr "Montant/Taux"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:776
+#: lib/LedgerSMB/Upgrade_Tests.pm:775
 msgid ""
 "An account can either be a summary account (which have a\n"
 "link of \"AR\", \"AP\" or \"IC\" value) or be linked to dropdowns (having "
@@ -988,7 +988,7 @@ msgid "Author: [_1]"
 msgstr "Auteur : [_1]"
 
 #: old/bin/ir.pl:560 old/bin/is.pl:412 old/bin/is.pl:666
-#: UI/Configuration/settings.html:60
+#: UI/Configuration/settings.html:51
 msgid "Automatic"
 msgstr "Automatique"
 
@@ -1729,7 +1729,7 @@ msgstr "Continuer le workflow précédent"
 msgid "Contra"
 msgstr "Contrepartie"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1034
+#: lib/LedgerSMB/Upgrade_Tests.pm:1033
 msgid ""
 "Contrary to SQL-ledger, LedgerSMB invoices numbers must be unique. Please "
 "review suggestions to make all AP invoice numbers unique. Conflicting entries "
@@ -2013,7 +2013,7 @@ msgstr "Numéro de client"
 msgid "Customer missing!"
 msgstr "Client manquant!"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:890
+#: lib/LedgerSMB/Upgrade_Tests.pm:889
 msgid "Customer not in a business"
 msgstr "Client hors entreprise"
 
@@ -2099,7 +2099,7 @@ msgstr "Composant de base de données"
 msgid "Database does not exist."
 msgstr "Base de données inexistante."
 
-#: lib/LedgerSMB/Scripts/setup.pm:1148
+#: lib/LedgerSMB/Scripts/setup.pm:1149
 msgid "Database exists."
 msgstr "La base de données existe."
 
@@ -2628,11 +2628,11 @@ msgstr "Je ne sais pas quoi faire avec la sauvegarde"
 msgid "Done"
 msgstr "Fait!"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:914
+#: lib/LedgerSMB/Upgrade_Tests.pm:913
 msgid "Double customernumbers"
 msgstr "Duplicats de numéro de client"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:949
+#: lib/LedgerSMB/Upgrade_Tests.pm:948
 msgid "Double vendornumbers"
 msgstr "Duplicats de numéro de fournisseur"
 
@@ -2698,7 +2698,7 @@ msgstr "Date d'échéance manquante!"
 msgid "Duplicate User Found: Importing User"
 msgstr "Duplicats d'utilisateur trouvés lors de l'importation"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:485
+#: lib/LedgerSMB/Upgrade_Tests.pm:484
 msgid "Duplicate employee numbers"
 msgstr "Numéros d'employés en double"
 
@@ -2901,7 +2901,7 @@ msgstr "Numéro d'employé"
 msgid "Employee Search"
 msgstr "Recherche d'employés"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:467
+#: lib/LedgerSMB/Upgrade_Tests.pm:466
 msgid ""
 "Employee name doesn't meet minimal requirements (e.g. non-empty, alphanumeric)"
 msgstr ""
@@ -2916,23 +2916,23 @@ msgstr ""
 msgid "Employees"
 msgstr "Employés"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:737
+#: lib/LedgerSMB/Upgrade_Tests.pm:736
 msgid "Empty AP account"
 msgstr "Compte AP vide"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:718
+#: lib/LedgerSMB/Upgrade_Tests.pm:717
 msgid "Empty AR account"
 msgstr "Compte AR vide"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:833
+#: lib/LedgerSMB/Upgrade_Tests.pm:832
 msgid "Empty businesses"
 msgstr "Entreprises vides"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:810
+#: lib/LedgerSMB/Upgrade_Tests.pm:809
 msgid "Empty customernumbers"
 msgstr "Numéros de client vides"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:930
+#: lib/LedgerSMB/Upgrade_Tests.pm:929
 msgid "Empty vendornumbers"
 msgstr "Numéros de fournisseur vides"
 
@@ -2994,7 +2994,7 @@ msgstr "Entrez l'inventaire"
 msgid "Enter User"
 msgstr "Entrez l'utilisateur"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:453
+#: lib/LedgerSMB/Upgrade_Tests.pm:452
 msgid "Enter employee numbers where they are missing"
 msgstr "Entrez les numéros d'employés là où ils sont manquants"
 
@@ -3433,7 +3433,7 @@ msgstr "Date initiale"
 msgid "Full"
 msgstr "Complet"
 
-#: lib/LedgerSMB/Scripts/setup.pm:1289
+#: lib/LedgerSMB/Scripts/setup.pm:1287
 msgid "Full Permissions"
 msgstr "Autorisations complètes"
 
@@ -3449,8 +3449,8 @@ msgstr "Autorisations complètes"
 msgid "GIFI"
 msgstr "Code d'identification comptable ou fiscale"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:580 lib/LedgerSMB/Upgrade_Tests.pm:642
-#: lib/LedgerSMB/Upgrade_Tests.pm:662
+#: lib/LedgerSMB/Upgrade_Tests.pm:579 lib/LedgerSMB/Upgrade_Tests.pm:641
+#: lib/LedgerSMB/Upgrade_Tests.pm:661
 msgid "GIFI accounts not in \"gifi\" table"
 msgstr "Les comptes IGRF ne figurent pas dans la table \"gifi\""
 
@@ -3806,7 +3806,7 @@ msgstr ""
 msgid "Invalid date/time entered"
 msgstr "Date/heure invalide"
 
-#: lib/LedgerSMB/Scripts/setup.pm:1193 lib/LedgerSMB/Scripts/setup.pm:1200
+#: lib/LedgerSMB/Scripts/setup.pm:1191 lib/LedgerSMB/Scripts/setup.pm:1198
 msgid "Invalid request"
 msgstr "Requête invalide"
 
@@ -4183,7 +4183,7 @@ msgstr "Statistiques de la base de données LedgerSMB"
 msgid "LedgerSMB consistency check results"
 msgstr ""
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:895
+#: lib/LedgerSMB/Upgrade_Tests.pm:894
 msgid ""
 "LedgerSMB customers must be assigned to a valid business.<br>\n"
 "Please review the selection or select the proper business from the list"
@@ -4234,7 +4234,7 @@ msgstr ""
 "Si la liste ci-dessous est vide, votre base de données est dans un état "
 "incohérent et doit d'abord être corrigée."
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:872
+#: lib/LedgerSMB/Upgrade_Tests.pm:871
 msgid ""
 "LedgerSMB vendors must be assigned to a valid business.<br>\n"
 "Please review the selection or select the proper business from the list"
@@ -4363,7 +4363,7 @@ msgstr "Connexion... Veuillez patienter."
 msgid "Login"
 msgstr "Login"
 
-#: lib/LedgerSMB/Scripts/setup.pm:1150
+#: lib/LedgerSMB/Scripts/setup.pm:1151
 msgid "Login?"
 msgstr "Connexion?"
 
@@ -4397,23 +4397,23 @@ msgstr ""
 msgid "Make"
 msgstr "Marque"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:487
+#: lib/LedgerSMB/Upgrade_Tests.pm:486
 msgid "Make employee numbers unique"
 msgstr "Rendre les numéros d'employés uniques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:523
+#: lib/LedgerSMB/Upgrade_Tests.pm:522
 msgid "Make invoice numbers unique"
 msgstr "Rendre les numéros de facture uniques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1052 lib/LedgerSMB/Upgrade_Tests.pm:507
+#: lib/LedgerSMB/Upgrade_Tests.pm:1051 lib/LedgerSMB/Upgrade_Tests.pm:506
 msgid "Make non-obsolete partnumbers unique"
 msgstr "Rendre uniques les numéros de pièces non obsolètes"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:567
+#: lib/LedgerSMB/Upgrade_Tests.pm:566
 msgid "Make sure all meta numbers are unique."
 msgstr "Assurez-vous que tous les méta-numéros sont uniques."
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:469
+#: lib/LedgerSMB/Upgrade_Tests.pm:468
 msgid ""
 "Make sure every name consists of alphanumeric characters (and underscores) "
 "only and is at least one character long"
@@ -4422,7 +4422,7 @@ msgstr ""
 "alphanumériques (et de traits de soulignement) et comporte au moins un "
 "caractère"
 
-#: lib/LedgerSMB/Scripts/setup.pm:1288
+#: lib/LedgerSMB/Scripts/setup.pm:1286
 msgid "Manage Users"
 msgstr "Gérer les utilisateurs"
 
@@ -4573,7 +4573,7 @@ msgstr "Plus d'informations ont été signalées dans les journaux d'erreurs"
 msgid "Multiple checks"
 msgstr "Plusieurs chèques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1197
+#: lib/LedgerSMB/Upgrade_Tests.pm:1196
 msgid ""
 "Multiple tax rates with the same end date have been detected for a tax "
 "account;"
@@ -4684,7 +4684,7 @@ msgstr "Dix-neuf"
 msgid "Ninety"
 msgstr "Quatre-vignt-dix"
 
-#: lib/LedgerSMB/Report/Taxform/List.pm:101 UI/Configuration/settings.html:51
+#: lib/LedgerSMB/Report/Taxform/List.pm:101 UI/Configuration/settings.html:42
 msgid "No"
 msgstr "Non"
 
@@ -4696,15 +4696,15 @@ msgstr "Aucun compte AR ou AP sélectionné"
 msgid "No File Class Specified"
 msgstr "Aucune classe de fichier spécifiée"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:538
+#: lib/LedgerSMB/Upgrade_Tests.pm:537
 msgid "No NULL Amounts"
 msgstr "Aucun montant NULL"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:451
+#: lib/LedgerSMB/Upgrade_Tests.pm:450
 msgid "No Null employeenumber"
 msgstr "Aucun numéro d'employé NULL"
 
-#: lib/LedgerSMB/Scripts/setup.pm:1290
+#: lib/LedgerSMB/Scripts/setup.pm:1288
 msgid "No changes"
 msgstr "Aucun changement"
 
@@ -4712,7 +4712,7 @@ msgstr "Aucun changement"
 msgid "No currencies defined.  Please set these up under System/Defaults."
 msgstr "Aucune devise définie. Veuillez les configurer sous Système/Défauts."
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:562
+#: lib/LedgerSMB/Upgrade_Tests.pm:561
 msgid "No duplicate meta_numbers"
 msgstr "Pas de méta_numéros en double"
 
@@ -4757,7 +4757,7 @@ msgstr "Non facturable"
 msgid "Non-cash"
 msgstr "Non monétaire"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1103
+#: lib/LedgerSMB/Upgrade_Tests.pm:1102
 msgid "Non-existing customer pricegroups in partscustomer"
 msgstr "Groupes de prix client inexistants dans partscustomer"
 
@@ -4769,11 +4769,11 @@ msgstr ""
 msgid "Non-tracking Items"
 msgstr "Objets non-référencés"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1005
+#: lib/LedgerSMB/Upgrade_Tests.pm:1004
 msgid "Non-unique invoice numbers"
 msgstr "Numéros de facture non uniques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1028
+#: lib/LedgerSMB/Upgrade_Tests.pm:1027
 msgid "Non-unique invoice numbers detected"
 msgstr "Numéros de facture non uniques détectés"
 
@@ -4867,15 +4867,15 @@ msgstr "Nov."
 msgid "November"
 msgstr "Novembre"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:965 lib/LedgerSMB/Upgrade_Tests.pm:984
+#: lib/LedgerSMB/Upgrade_Tests.pm:964 lib/LedgerSMB/Upgrade_Tests.pm:983
 msgid "Null employee numbers"
 msgstr "Numéros d'employé nuls"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1083
+#: lib/LedgerSMB/Upgrade_Tests.pm:1082
 msgid "Null make numbers"
 msgstr "Numéros de marque nuls"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1066
+#: lib/LedgerSMB/Upgrade_Tests.pm:1065
 msgid "Null model numbers"
 msgstr "Numéros de modèle nuls"
 
@@ -5446,7 +5446,7 @@ msgstr "Liste de sélection"
 msgid "Pick list"
 msgstr "Liste de sélection"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1177
+#: lib/LedgerSMB/Upgrade_Tests.pm:1176
 msgid ""
 "Please add a header to the CoA which sorts before the listed accounts "
 "(usually \"0000\" works) (in the standard SL UI)"
@@ -5454,7 +5454,7 @@ msgstr ""
 "Veuillez ajouter un entête au CoA qui trie avant les comptes répertoriés "
 "(généralement \"0000\" fonctionne) (dans l'interface utilisateur SL standard)"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1158
+#: lib/LedgerSMB/Upgrade_Tests.pm:1157
 msgid ""
 "Please add at least one header to your CoA which sorts before all other "
 "account numbers (in the standard SL UI)"
@@ -5462,67 +5462,67 @@ msgstr ""
 "Veuillez ajouter au moins un entête à votre CoA qui trie avant tous les "
 "autres numéros de compte (dans l'interface utilisateur SL standard)"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:649 lib/LedgerSMB/Upgrade_Tests.pm:669
+#: lib/LedgerSMB/Upgrade_Tests.pm:648 lib/LedgerSMB/Upgrade_Tests.pm:668
 msgid "Please add the missing GIFI accounts"
 msgstr "Veuillez ajouter les comptes IGRF manquants"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1123
+#: lib/LedgerSMB/Upgrade_Tests.pm:1122
 msgid "Please fix the presented rows to either be \"H\" or \"A\""
 msgstr ""
 "Veuillez corriger les lignes présentées pour qu'elles soient \"H\" ou \"A\""
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1107 lib/LedgerSMB/Upgrade_Tests.pm:1141
+#: lib/LedgerSMB/Upgrade_Tests.pm:1106 lib/LedgerSMB/Upgrade_Tests.pm:1140
 msgid ""
 "Please fix the pricegroup data in your partscustomer table (no UI available)"
 msgstr ""
 "Veuillez corriger les données du groupe de prix dans votre table "
 "partscustomer (aucune interface utilisateur disponible)"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:798
+#: lib/LedgerSMB/Upgrade_Tests.pm:797
 msgid ""
 "Please go into the SQL-Ledger UI and create/rename a\n"
 "heading which sorts alphanumerically before the first account by accno"
 msgstr ""
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1011
+#: lib/LedgerSMB/Upgrade_Tests.pm:1010
 msgid "Please make all AR invoice numbers unique"
 msgstr "Veuillez rendre tous les numéros de facture AR uniques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:420 lib/LedgerSMB/Upgrade_Tests.pm:918
+#: lib/LedgerSMB/Upgrade_Tests.pm:419 lib/LedgerSMB/Upgrade_Tests.pm:917
 msgid "Please make all customer numbers unique"
 msgstr "Veuillez rendre tous les numéros de client uniques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:989
+#: lib/LedgerSMB/Upgrade_Tests.pm:988
 msgid "Please make all employee numbers unique"
 msgstr "Veuillez rendre tous les numéros d'employé uniques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:439 lib/LedgerSMB/Upgrade_Tests.pm:953
+#: lib/LedgerSMB/Upgrade_Tests.pm:438 lib/LedgerSMB/Upgrade_Tests.pm:952
 msgid "Please make all vendor numbers unique"
 msgstr "Veuillez rendre tous les numéros de vendeur uniques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:756
+#: lib/LedgerSMB/Upgrade_Tests.pm:755
 msgid ""
 "Please make sure all accounts have a category of\n"
 "(A)sset, (L)iability, e(Q)uity, (I)ncome or (E)xpense."
 msgstr ""
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:969
+#: lib/LedgerSMB/Upgrade_Tests.pm:968
 msgid "Please make sure all employees have an employee number"
 msgstr "Veuillez vous assurer que tous les employés ont un numéro d'employé"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1088
+#: lib/LedgerSMB/Upgrade_Tests.pm:1087
 msgid "Please make sure all make numbers are non-empty"
 msgstr "Veuillez vous assurer que tous les numéros de marque ne sont pas vides"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1070
+#: lib/LedgerSMB/Upgrade_Tests.pm:1069
 msgid "Please make sure all modelsnumbers are non-empty"
 msgstr "Veuillez vous assurer que tous les numéros de modèles ne sont pas vides"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:814
+#: lib/LedgerSMB/Upgrade_Tests.pm:813
 msgid "Please make sure there are no empty customer numbers."
 msgstr "Veuillez vous assurer qu'il n'y a pas de numéros de client vides."
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:934
+#: lib/LedgerSMB/Upgrade_Tests.pm:933
 msgid "Please make sure there are no empty vendor numbers."
 msgstr "Veuillez vous assurer qu'il n'y a pas de numéros de fournisseur vides."
 
@@ -5548,17 +5548,17 @@ msgstr "Veuillez sélectionner un fournisseur avec des trop-payés inutilisés"
 msgid "Please submit a start/end time or a qty"
 msgstr "Veuillez soumettre une heure de début/fin ou une quantité"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:703
+#: lib/LedgerSMB/Upgrade_Tests.pm:702
 msgid ""
 "Please use pgAdmin3 or psql to look up the 'chart_id' value in the 'account' "
 "table and change it to an existing value"
 msgstr ""
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:687
+#: lib/LedgerSMB/Upgrade_Tests.pm:686
 msgid "Please use pgAdmin3 or psql to remove the duplicates"
 msgstr "Veuillez utiliser pgAdmin3 ou psql pour supprimer les doublons"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:584
+#: lib/LedgerSMB/Upgrade_Tests.pm:583
 msgid "Please use the 1.2 UI to add the GIFI accounts"
 msgstr ""
 "Veuillez utiliser l'interface utilisateur 1.2 pour ajouter les comptes IGRF"
@@ -5609,7 +5609,7 @@ msgstr "Enregistrement de la transaction [_1]"
 msgid "Posting Vendor Invoice [_1]"
 msgstr "Enregistrement de la facture du fournisseur [_1]"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1227
+#: lib/LedgerSMB/Upgrade_Tests.pm:1226
 msgid ""
 "Pre-migration checks found reconciliations on income or expense accounts or "
 "accounts that have not been marked for receipts/payment. Reconciliations "
@@ -6426,7 +6426,7 @@ msgstr "Sam."
 #: UI/asset/edit_class.html:60 UI/asset/import_asset.html:58
 #: UI/business_units/edit.html:91 UI/business_units/edit.html:103
 #: UI/business_units/list_classes.html:84 UI/Configuration/sequence.html:7
-#: UI/Configuration/sequence.html:117 UI/Configuration/settings.html:107
+#: UI/Configuration/sequence.html:117 UI/Configuration/settings.html:98
 #: UI/Contact/divs/bank_act.html:90 UI/Contact/divs/company.html:137
 #: UI/Contact/divs/employee.html:152 UI/Contact/divs/notes.html:59
 #: UI/Contact/divs/person.html:144 UI/Contact/pricelist.html:96
@@ -6695,11 +6695,11 @@ msgstr "Sélectionner vendeur"
 msgid "Select a Printer!"
 msgstr "Sélectionner une imprimante!"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:733
+#: lib/LedgerSMB/Upgrade_Tests.pm:732
 msgid "Select and assign the missing AP accounts"
 msgstr ""
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:714
+#: lib/LedgerSMB/Upgrade_Tests.pm:713
 msgid "Select and assign the missing AR accounts"
 msgstr ""
 
@@ -7531,7 +7531,7 @@ msgstr "Leur crédits"
 msgid "Their Debits"
 msgstr "Leurs débits"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:543
+#: lib/LedgerSMB/Upgrade_Tests.pm:542
 msgid ""
 "There are NULL values in the amounts column of your\n"
 "source database. Please either find professional help to migrate your\n"
@@ -7611,7 +7611,7 @@ msgstr ""
 msgid "This transaction will reverse transaction [_1] with ID [_2]"
 msgstr ""
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1231
+#: lib/LedgerSMB/Upgrade_Tests.pm:1230
 msgid ""
 "This will <b>keep</b> the transactions but will <b>ignore</b> the non-"
 "necessary reconciliations"
@@ -7619,7 +7619,7 @@ msgstr ""
 "Cela <b>conservera</b> les transactions mais <b>ignorera</b> les "
 "rapprochements non nécessaires"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:855
+#: lib/LedgerSMB/Upgrade_Tests.pm:854
 msgid ""
 "This will <b>remove</b> the business references in <u>vendor</u> and "
 "<u>customer</u> tables"
@@ -7990,7 +7990,7 @@ msgstr "Non approuvé"
 msgid "Uncheck to remove entry from payment"
 msgstr "Décochez pour supprimer l'entrée du paiement"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:837
+#: lib/LedgerSMB/Upgrade_Tests.pm:836
 msgid ""
 "Undefined businesses.<br>\n"
 "Please make sure business used by vendors and constomers are defined.<br>\n"
@@ -8001,19 +8001,19 @@ msgstr ""
 msgid "Unexpected file name, expected [_1], got [_2]"
 msgstr "Nom de fichier inattendu, attendu [_1], obtenu [_2]"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:521
+#: lib/LedgerSMB/Upgrade_Tests.pm:520
 msgid "Unique AR Invoice numbers"
 msgstr "Numéros de facture AR uniques"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:418
+#: lib/LedgerSMB/Upgrade_Tests.pm:417
 msgid "Unique Customernumber"
 msgstr "Numéro de client unique"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:437
+#: lib/LedgerSMB/Upgrade_Tests.pm:436
 msgid "Unique Vendornumber"
 msgstr "Numéro de fournisseur unique"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1050 lib/LedgerSMB/Upgrade_Tests.pm:505
+#: lib/LedgerSMB/Upgrade_Tests.pm:1049 lib/LedgerSMB/Upgrade_Tests.pm:504
 msgid "Unique nonobsolete partnumbers"
 msgstr "Numéros uniques de pièces non obsolètes"
 
@@ -8033,7 +8033,7 @@ msgstr "Unité"
 msgid "Unit Price"
 msgstr "Prix unitaire"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1154
+#: lib/LedgerSMB/Upgrade_Tests.pm:1153
 msgid "Unknown "
 msgstr "Inconnu"
 
@@ -8041,7 +8041,7 @@ msgstr "Inconnu"
 msgid "Unknown (JavaScript) error"
 msgstr "Erreur inconnue (JavaScript)"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1136
+#: lib/LedgerSMB/Upgrade_Tests.pm:1135
 msgid ""
 "Unknown account category (should be A(sset)/L(iability)/E(xpense)/I(ncome)/"
 "(e)Q(uity))"
@@ -8049,7 +8049,7 @@ msgstr ""
 "Catégorie de compte inconnue (doit être Actif(A)/Passif(L)/Dépenses(E)/"
 "Revenu(I)/(Capitaux propres)(Q))"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1118
+#: lib/LedgerSMB/Upgrade_Tests.pm:1117
 msgid "Unknown charttype; should be H(eader)/A(ccount)"
 msgstr "Type compte inconnu ; devrait être Entête (H)/Compte (A)"
 
@@ -8069,7 +8069,7 @@ msgstr "Déverrouiller"
 msgid "Unlock Batch"
 msgstr "Déverrouiller le lot"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:1220
+#: lib/LedgerSMB/Upgrade_Tests.pm:1219
 msgid "Unneeded Reconciliations"
 msgstr "Rapprochements inutiles"
 
@@ -8085,11 +8085,11 @@ msgstr "Numéro non pris en charge"
 msgid "Unsupported SQL-Ledger version detected."
 msgstr "Version SQL-Ledger non prise en charge détectée."
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:752
+#: lib/LedgerSMB/Upgrade_Tests.pm:751
 msgid "Unsupported account categories"
 msgstr "Catégories de compte non prises en charge"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:772
+#: lib/LedgerSMB/Upgrade_Tests.pm:771
 msgid "Unsupported account link combinations"
 msgstr "Combinaisons de liens de compte non prises en charge"
 
@@ -8214,7 +8214,7 @@ msgstr "Utilisé"
 msgid "User"
 msgstr "Utilisateur"
 
-#: lib/LedgerSMB/Scripts/setup.pm:1368
+#: lib/LedgerSMB/Scripts/setup.pm:1366
 msgid "User already exists. Import?"
 msgstr "L'utilisateur existe déjà. Importer?"
 
@@ -8339,7 +8339,7 @@ msgstr "Numéro de référence du fournisseur"
 msgid "Vendor missing!"
 msgstr "Fournisseur manquant!"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:867
+#: lib/LedgerSMB/Upgrade_Tests.pm:866
 msgid "Vendor not in a business"
 msgstr "Vendor not in a business"
 
@@ -8455,13 +8455,13 @@ msgstr "Bienvenue sur LedgerSMB"
 msgid "What is LedgerSMB"
 msgstr "Qu'est-ce que LedgerSMB"
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:378 lib/LedgerSMB/Upgrade_Tests.pm:600
+#: lib/LedgerSMB/Upgrade_Tests.pm:377 lib/LedgerSMB/Upgrade_Tests.pm:599
 msgid ""
 "When customers are defined, an AR account must be defined,\n"
 " however, your setup doesn't. Please go back and define one."
 msgstr ""
 
-#: lib/LedgerSMB/Upgrade_Tests.pm:399 lib/LedgerSMB/Upgrade_Tests.pm:621
+#: lib/LedgerSMB/Upgrade_Tests.pm:398 lib/LedgerSMB/Upgrade_Tests.pm:620
 msgid ""
 "When vendors are defined, an AP account must be defined,\n"
 " however, your setup doesn't. Please go back and define one."
@@ -8533,7 +8533,7 @@ msgid "Years"
 msgstr "Années"
 
 #: lib/LedgerSMB/Report/Taxform/List.pm:100 old/bin/oe.pl:1353
-#: UI/Configuration/settings.html:43 UI/setup/confirm_operation.html:30
+#: UI/Configuration/settings.html:34 UI/setup/confirm_operation.html:30
 msgid "Yes"
 msgstr "Oui"
 
