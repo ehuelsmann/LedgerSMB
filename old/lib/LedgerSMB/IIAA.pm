@@ -74,7 +74,7 @@ sub process_form_payments {
     my $query = q|
 SELECT payment_post(?, ?, ?, ?, ?,
                     ?, ?, ARRAY[(select id from account where accno = ?)], ?,
-                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, ?)
 |;
 
@@ -116,7 +116,7 @@ SELECT payment_post(?, ?, ?, ?, ?,
                 $sth->execute($datepaid, $eca_class, $eca_id, $curr,
                               $exchangerate, undef, undef, $cashaccno,
                               [$amount],
-                              [$source], [$memo], [$trans_id], undef, undef,
+                              [$source], [$memo], [$trans_id], [$form->{open_item_id}], undef, undef,
                               undef, undef, undef, undef,
 
                               # Post payment lines as 'approved':
