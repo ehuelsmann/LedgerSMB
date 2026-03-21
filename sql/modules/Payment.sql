@@ -140,20 +140,14 @@ RETURN QUERY EXECUTE $sql$
                                 ec.id IN
                                 (SELECT entity_credit_account
                                    FROM acc_trans
-                                   JOIN account_link l ON (acc_trans.chart_id = l.account_id)
-                                   JOIN ap ON (acc_trans.trans_id = ap.id)
-                                   WHERE l.description = 'AP'
-                                   GROUP BY chart_id,
-                                         trans_id, entity_credit_account
+                                   JOIN ap ON (acc_trans.open_item_id = ap.open_item_id)
+                                   GROUP BY ap.open_item_id, entity_credit_account
                                    HAVING SUM(acc_trans.amount_bc) <> 0)
                                WHEN $1 = 2 THEN
                                 ec.id IN (SELECT entity_credit_account
                                    FROM acc_trans
-                                   JOIN account_link l ON (acc_trans.chart_id = l.account_id)
-                                   JOIN ar ON (acc_trans.trans_id = ar.id)
-                                   WHERE l.description = 'AR'
-                                   GROUP BY chart_id,
-                                         trans_id, entity_credit_account
+                                   JOIN ar ON (acc_trans.open_item_id = ar.open_item_id)
+                                   GROUP BY ar.open_item_id, entity_credit_account
                                    HAVING SUM(acc_trans.amount_bc) <> 0)
                           END
 $sql$
@@ -255,7 +249,7 @@ RETURN QUERY EXECUTE $sql$
                                entity_credit_account, txn.approved, description
                          FROM ar JOIN transactions txn ON txn.id = ar.id
                          ) a
-                JOIN (SELECT trans_id, chart_id,
+                JOIN (SELECT open_item_id,
                              sum(CASE WHEN $1 = 1 THEN amount_bc
                                       WHEN $1 = 2 THEN amount_bc * -1
                                   END) as due,
@@ -263,13 +257,9 @@ RETURN QUERY EXECUTE $sql$
                                       WHEN $1 = 2 THEN amount_tc * -1
                                  END) as due_fx
                         FROM acc_trans
-                      GROUP BY trans_id, chart_id) ac ON (ac.trans_id = a.id)
-                        JOIN account_link l ON (l.account_id = ac.chart_id)
+                      GROUP BY open_item_id) ac ON (ac.open_item_id = a.open_item_id)
                         JOIN entity_credit_account c ON (c.id = a.entity_credit_account)
-                --        OR (a.entity_credit_account IS NULL and a.entity_id = c.entity_id))
-                        WHERE ((l.description = 'AP' AND $1 = 1)
-                              OR (l.description = 'AR' AND $1 = 2))
-                        AND a.invoice_class = $1
+                        WHERE  a.invoice_class = $1
                         AND c.entity_class = $1
                         AND c.id = $2
                         --### short term: ignore fractional cent differences
@@ -418,19 +408,15 @@ RETURN QUERY EXECUTE $sql$
                         ORDER BY transdate
                          ) a ON (a.entity_credit_account = c.id)
                     JOIN transactions t ON (a.id = t.id)
-                    JOIN (SELECT acc_trans.trans_id,
+                    JOIN (SELECT acc_trans.open_item_id,
                                  sum(CASE WHEN $1 = 1 THEN amount_bc
                                           WHEN $1 = 2
                                           THEN amount_bc * -1
                                      END) AS due
                             FROM acc_trans
-                            JOIN account coa ON (coa.id = acc_trans.chart_id)
-                            JOIN account_link al ON (al.account_id = coa.id)
                        LEFT JOIN voucher v ON (acc_trans.voucher_id = v.id)
-                           WHERE ((al.description = 'AP' AND $1 = 1)
-                                 OR (al.description = 'AR' AND $1 = 2))
-                           AND (approved IS TRUE or v.batch_class IN (3, 6))
-                        GROUP BY acc_trans.trans_id) p ON (a.id = p.trans_id)
+                           WHERE (approved IS TRUE or v.batch_class IN (3, 6))
+                        GROUP BY acc_trans.open_item_id) p ON (a.open_item_id = p.open_item_id)
                 LEFT JOIN "session" s ON (s."session_id" = t.locked_by)
                 LEFT JOIN users u ON (u.id = s.users_id)
                    WHERE (a.batch_id = $6
@@ -439,7 +425,8 @@ RETURN QUERY EXECUTE $sql$
                          AND due <> 0
                          AND NOT a.on_hold
                          AND a.curr = $3
-                         AND EXISTS (select trans_id FROM acc_trans
+                         AND EXISTS (select 1
+                                       FROM acc_trans
                                       WHERE trans_id = a.id AND
                                             chart_id = (SELECT id from account
                                                          WHERE accno
@@ -932,12 +919,13 @@ BEGIN
                    array_lower(in_transaction_id, 1) ..
                    array_upper(in_transaction_id, 1)
       LOOP
-        SELECT chart_id, amount_bc/amount_tc
+        SELECT oi.account_id, amount_bc/amount_tc
                INTO var_account_id, old_exchangerate
-          FROM acc_trans as ac
-          JOIN account_link as l ON (l.account_id = ac.chart_id)
-         WHERE trans_id = in_transaction_id[out_count]
-               AND ( l.description in ('AR', 'AP'));
+          FROM (select open_item_id, amount_bc, amount_tc from ar
+                union all
+                select open_item_id, amount_bc, amount_tc from ap) aa
+               JOIN open_item oi ON aa.open_item_id = oi.id
+         WHERE open_item_id = in_open_item_id[out_count];
 
         -- Now we post the AP/AR account
         INSERT INTO acc_trans (chart_id, amount_bc, curr, amount_tc,

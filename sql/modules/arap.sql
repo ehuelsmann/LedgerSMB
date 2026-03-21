@@ -40,28 +40,23 @@ RETURN QUERY EXECUTE $sql$
    SELECT txn.id, aa.invoice,
           aa.invnumber, aa.ordnumber, aa.ponumber, txn.transdate,
           e.name, eca.meta_number::text, e.id, aa.amount_bc,
-          aa.amount_bc - sum(CASE WHEN l.description IN ('AR', 'AP')
-                               THEN ac.amount_bc ELSE 0
-                           END),
+          aa.amount_bc - sum(ac.amount_bc),
           aa.amount_bc - aa.netamount_bc, aa.curr, aa.duedate,
           aa.notes, aa.shippingpoint, aa.shipvia,
           compound_array(bua.business_units || bui.business_units)
   FROM transactions txn
-     JOIN (select id, invoice, invnumber, ordnumber, ponumber, duedate,
+     JOIN (select id, open_item_id, invoice, invnumber, ordnumber, ponumber, duedate,
                   notes, shipvia, shippingpoint, amount_bc,
                   netamount_bc, curr, entity_credit_account, on_hold
              FROM ar WHERE $17 = 2
             UNION
-           select id, invoice, invnumber, ordnumber, ponumber, duedate,
+           select id, open_item_id, invoice, invnumber, ordnumber, ponumber, duedate,
                   notes, shipvia, shippingpoint, amount_bc,
                   netamount_bc, curr, entity_credit_account, on_hold
              FROM ap WHERE $17 = 1) aa ON txn.id = aa.id
      JOIN entity_credit_account eca ON aa.entity_credit_account = eca.id
      JOIN entity e ON e.id = eca.entity_id
-     JOIN acc_trans ac ON aa.id = ac.trans_id
-     JOIN account act ON act.id = ac.chart_id
-LEFT JOIN account_link l ON l.account_id = act.id
-                          AND l.description IN ('AR', 'AP')
+     JOIN acc_trans ac ON aa.open_item_id = ac.open_item_id
 LEFT JOIN invoice inv ON aa.id = inv.trans_id
 LEFT JOIN (SELECT array_agg(ARRAY[buc.label, bu.control_code])
                   as business_units, entry_id
@@ -168,14 +163,11 @@ BEGIN
                       current_date))
          END
    FROM (
-     SELECT sum(ac.amount_bc *
-                CASE WHEN al.description = 'AR' THEN -1 ELSE 1 END) AS used
-       FROM (select id, entity_credit_account from ap union
-             select id, entity_credit_account from ar) a
-       JOIN acc_trans ac ON ac.trans_id = a.id
-       JOIN account_link al ON al.account_id = ac.chart_id
-      WHERE al.description IN ('AR', 'AP')
-        AND ac.approved
+     SELECT sum(ac.amount_bc * a.sign_factor) AS used
+       FROM (select open_item_id, 1 as sign_factor, entity_credit_account from ap union
+             select open_item_id, -1 as sign_factor, entity_credit_account from ar) a
+       JOIN acc_trans ac ON ac.open_item_id = a.open_item_id
+      WHERE ac.approved
         AND a.entity_credit_account = $1
       UNION ALL
      SELECT sum(o.amount_tc * coalesce(e.rate, 'NaN'::numeric))

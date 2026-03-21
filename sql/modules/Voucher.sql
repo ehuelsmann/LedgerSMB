@@ -92,14 +92,13 @@ $$
                 FROM voucher v
                 JOIN acc_trans a ON (v.id = a.voucher_id)
                 JOIN batch_class bc ON (bc.id = v.batch_class)
-                JOIN account_link l ON (a.chart_id = l.account_id)
-                JOIN ap ON (ap.id = a.trans_id)
+                JOIN ap ON (ap.open_item_id = a.open_item_id)
                 JOIN entity_credit_account eca
                         ON (ap.entity_credit_account = eca.id)
                 JOIN entity e ON (eca.entity_id = e.id)
                 WHERE v.batch_id = in_batch_id
                         AND a.voucher_id = v.id
-                        AND (bc.class like 'payment%' AND l.description = 'AP')
+                        AND bc.class like 'payment%'
                 GROUP BY v.id, ap.invoice, a.source, eca.meta_number, e.name,
                         v.batch_id, v.trans_id, a.transdate, bc.class
 
@@ -116,14 +115,13 @@ $$
                 FROM voucher v
                 JOIN acc_trans a ON (v.id = a.voucher_id)
                 JOIN batch_class bc ON (bc.id = v.batch_class)
-                JOIN account_link l ON (a.chart_id = l.account_id)
-                JOIN ar ON (ar.id = a.trans_id)
+                JOIN ar ON (ar.open_item_id = a.open_item_id)
                 JOIN entity_credit_account eca
                         ON (ar.entity_credit_account = eca.id)
                 JOIN entity e ON (eca.entity_id = e.id)
                 WHERE v.batch_id = in_batch_id
                         AND a.voucher_id = v.id
-                        AND (bc.class like 'receipt%' AND l.description = 'AR')
+                        AND bc.class like 'receipt%'
                 GROUP BY v.id, ar.invoice, a.source, eca.meta_number, e.name,
                         v.batch_id, v.trans_id, a.transdate, bc.class
                 UNION ALL
