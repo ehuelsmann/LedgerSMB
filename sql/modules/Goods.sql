@@ -494,51 +494,68 @@ CREATE OR REPLACE FUNCTION goods__history(
   in_inc_po bool, in_inc_so bool, in_inc_quo bool, in_inc_rfq bool,
   in_inc_is bool, in_inc_ir bool
 ) RETURNS SETOF parts_history_result LANGUAGE SQL AS
-$$
-  SELECT p.id, p.partnumber, o.transdate, p.description, p.bin,
-         o.id as ord_id, o.ordnumber, o.oe_class, eca.meta_number::text, e.name,
-         i.sellprice, i.qty, i.discount, i.serialnumber
+  $$
+  WITH arap  AS (
+     SELECT id, 'ar' as o_table, invnumber as ordnumber, 'is' as oe_class,
+            txn.transdate, entity_credit_account
+       FROM ar
+           JOIN transactions txn
+                USING (id)
+     UNION
+     SELECT id, 'ap' as o_table, invnumber as ordnumber, 'ir' as oe_class,
+            txn.transdate, entity_credit_account
+       FROM ap
+            JOIN transactions txn
+                 USING (id)
+  ),
+  invoicelines AS (
+     SELECT i.parts_id, i.sellprice, i.qty, i.discount, i.serialnumber,
+            arap.id as ord_id, arap.o_table, arap.ordnumber, arap.oe_class,
+            arap.transdate, arap.entity_credit_account
+       FROM invoice i
+            JOIN arap
+                 ON i.trans_id = arap.id
+  ),
+  orderlines AS (
+     SELECT oi.parts_id, oi.sellprice, oi.qty, oi.discount, oi.serialnumber,
+            oe.id as ord_id, 'oe' as o_table, ordnumber as ordnumber, c.oe_class,
+            oe.transdate, oe.entity_credit_account
+       FROM orderitems oi
+            JOIN oe
+                 ON oi.trans_id = oe.id
+            JOIN oe_class c
+                 ON oe.oe_class_id = c.id
+  )
+  SELECT p.id, p.partnumber, l.transdate, p.description, p.bin,
+         l.ord_id, l.ordnumber, l.oe_class, eca.meta_number::text, e.name,
+         l.sellprice, l.qty, l.discount, l.serialnumber
     FROM parts p
-    JOIN (select id, trans_id, parts_id, sellprice, qty, discount, serialnumber,
-                 'o' as i_type
-            FROM orderitems
-           UNION
-          SELECT id, trans_id, parts_id, sellprice, qty, discount, serialnumber,
-                 'i' as i_type
-            FROM invoice) i ON p.id = i.parts_id
-    JOIN (select o.id, 'oe' as o_table, ordnumber as ordnumber, c.oe_class,
-                 o.oe_class_id, o.transdate, o.entity_credit_account, 'o' as expected_line
-            FROM oe o
-            JOIN oe_class c ON o.oe_class_id = c.id
-           UNION
-          SELECT id, 'ar' as o_table, invnumber as ordnumber, 'is' as oe_class,
-                 null, txn.transdate, entity_credit_account, 'i' as expected_line
-            FROM ar JOIN transactions txn USING (id)
-           UNION
-          SELECT id, 'ap' as o_table, invnumber as ordnumber, 'ir' as oe_class,
-                 null, txn.transdate, entity_credit_account, 'i' as expected_line
-            FROM ap JOIN transactions txn USING (id)) o ON o.id = i.trans_id
-                          AND o.expected_line = i.i_type
-    JOIN entity_credit_account eca ON o.entity_credit_account = eca.id
+         JOIN (SELECT *
+                 FROM orderlines
+               UNION ALL
+               SELECT *
+                FROM invoicelines) l
+              ON p.id = l.parts_id
+    JOIN entity_credit_account eca ON l.entity_credit_account = eca.id
     JOIN entity e ON e.id = eca.entity_id
    WHERE (in_partnumber is null or p.partnumber like in_partnumber || '%')
          AND (in_description IS NULL
               OR p.description @@ plainto_tsquery(in_description))
-         AND (in_date_from is null or in_date_from <= o.transdate)
-         and (in_date_to is null or in_date_to >= o.transdate)
-         AND (in_serialnumber is null or i.serialnumber = in_serialnumber)
+         AND (in_date_from is null or in_date_from <= l.transdate)
+         and (in_date_to is null or in_date_to >= l.transdate)
+         AND (in_serialnumber is null or l.serialnumber = in_serialnumber)
          AND ((in_inc_po IS NULL AND in_inc_so IS NULL
                 AND in_inc_quo IS NULL AND in_inc_rfq IS NULL
                 AND in_inc_ir IS NULL AND in_inc_is IS NULL)
               OR (
-                 (in_inc_po is true and o.oe_class = 'Purchase Order')
-                 OR (in_inc_so is true and o.oe_class = 'Sales Order')
-                 OR (in_inc_quo is true and o.oe_class = 'Quotation')
-                 OR (in_inc_rfq is true and o.oe_class = 'RFQ')
-                 OR (in_inc_ir is true and o.oe_class = 'ir')
-                 OR (in_inc_is is true and o.oe_class = 'is')
+                 (in_inc_po is true and l.oe_class = 'Purchase Order')
+                 OR (in_inc_so is true and l.oe_class = 'Sales Order')
+                 OR (in_inc_quo is true and l.oe_class = 'Quotation')
+                 OR (in_inc_rfq is true and l.oe_class = 'RFQ')
+                 OR (in_inc_ir is true and l.oe_class = 'ir')
+                 OR (in_inc_is is true and l.oe_class = 'is')
              ))
-ORDER BY o.transdate desc, o.id desc;
+ORDER BY l.transdate desc, l.ord_id desc;
 $$;
 
 update defaults set value = 'yes' where setting_key = 'module_load_ok';
