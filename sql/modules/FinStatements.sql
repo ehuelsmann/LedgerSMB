@@ -13,35 +13,35 @@ DROP VIEW IF EXISTS cash_impact CASCADE;
 
 --###BUG??? The cash impact below doesn't take 'approved' into account?
 CREATE VIEW cash_impact AS
-  SELECT id, '1'::numeric
-           AS portion, 'gl' as rel, txn.transdate
-    FROM gl JOIN transactions txn USING (id)
+  WITH ar_portions AS (
+    SELECT ar.id, ac.transdate, ac.amount_bc/ar.amount_bc as portion,
+           (row_number() over (partition by ac.open_item_id order by entry_id)) = 1 as opening
+      FROM acc_trans ac
+             JOIN ar
+                 ON ac.open_item_id = ar.open_item_id
+  ),
+  ap_portions AS (
+    SELECT ap.id, ac.transdate, -ac.amount_bc/ap.amount_bc as portion,
+           (row_number() over (partition by ac.open_item_id order by entry_id)) = 1 as opening
+      FROM acc_trans ac
+             JOIN ap
+                 ON ac.open_item_id = ap.open_item_id
+  )
+  SELECT id, txn.transdate, 'gl' as rel, '1'::numeric
+           AS portion
+    FROM gl
+           JOIN transactions txn
+               USING (id)
    UNION ALL
-  SELECT id,
-         CASE
-           WHEN ar.amount_bc = 0 THEN 0 -- avoid div by 0
-           WHEN txn.transdate = ac.transdate THEN 1 + sum(ac.amount_bc) / ar.amount_bc
-           ELSE 1 - (ar.amount_bc - sum(ac.amount_bc)) / ar.amount_bc
-           END AS portion,
-         'ar' as rel,
-         ac.transdate
-    FROM ar JOIN transactions txn USING (id)
-           JOIN acc_trans ac ON ac.trans_id = ar.id
-           JOIN account_link al ON ac.chart_id = al.account_id and al.description = 'AR'
-   GROUP BY ar.id, ar.amount_bc, ac.transdate, txn.transdate
+  SELECT id, transdate, 'ar' as rel, sum(portion) as portion
+    FROM ar_portions
+   WHERE NOT opening
+   GROUP by id, transdate
    UNION ALL
-  SELECT id,
-         CASE
-           WHEN ap.amount_bc = 0 THEN 0
-           WHEN txn.transdate = ac.transdate THEN 1 - sum(ac.amount_bc) / ap.amount_bc
-           ELSE 1 - (ap.amount_bc + sum(ac.amount_bc)) / ap.amount_bc
-           END AS portion,
-         'ap' as rel,
-         ac.transdate
-    FROM ap JOIN transactions txn USING (id)
-           JOIN acc_trans ac ON ac.trans_id = ap.id
-           JOIN account_link al ON ac.chart_id = al.account_id and al.description = 'AP'
-   GROUP BY ap.id, ap.amount_bc, ac.transdate, txn.transdate;
+  SELECT id, transdate, 'ap' as rel, sum(portion) as portion
+    FROM ap_portions
+   WHERE NOT opening
+   GROUP by id, transdate;
 
 COMMENT ON VIEW cash_impact IS
 $$ This view is used by cash basis reports to determine the fraction of a
