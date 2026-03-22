@@ -145,12 +145,12 @@ sub post_invoice {
         $dbh->do($query, {}, $accno) or $form->dberror($query);
 
         $query = qq|
-            INSERT INTO ap (id, open_item_id, invnumber, person_id, entity_credit_account)
+            INSERT INTO ap (trans_id, open_item_id, invnumber, person_id, entity_credit_account)
                  VALUES (currval('transactions_id_seq'), currval('open_item_id_seq'), '$uid', ?, ?)|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{vendor_id}) || $form->dberror($query);
 
-        $query = qq|SELECT id, open_item_id FROM ap WHERE invnumber = '$uid'|;
+        $query = qq|SELECT trans_id, open_item_id FROM ap WHERE invnumber = '$uid'|;
         $sth   = $dbh->prepare($query);
         $sth->execute || $form->dberror($query);
 
@@ -545,7 +545,7 @@ sub post_invoice {
                        reverse = ?,
                crdate = ?,
                shipto = ?
-         WHERE id = ?|;
+         WHERE trans_id = ?|;
     $dbh->do(
         $query, {},
 
@@ -654,10 +654,9 @@ sub retrieve_invoice {
                    a.shipto as shiptolocationid, l.line_one, l.line_two,
                    l.line_three, l.city, l.state, l.country_id, l.mail_code,
                    txn.workflow_id
-              FROM ap a
-              JOIN transactions txn USING (id)
+              FROM ap a JOIN transactions txn ON a.trans_id = txn.id
             LEFT JOIN location l on a.shipto = l.id
-             WHERE a.id = ?|;
+             WHERE a.trans_id = ?|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{id} ) || $form->dberror($query);
 
@@ -952,7 +951,7 @@ sub toggle_on_hold {
 
         my $dbh = $form->{dbh};
 
-        $sth = $dbh->prepare("update ap set on_hold = not on_hold where ap.id = ?");
+        $sth = $dbh->prepare("update ap set on_hold = not on_hold where ap.trans_id = ?");
         my $code = $sth->execute($form->{id});#tshvr4
 
         return 1;

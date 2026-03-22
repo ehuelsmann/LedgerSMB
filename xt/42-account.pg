@@ -125,7 +125,7 @@ BEGIN;
     VALUES('TEST', 'ap', (select id from account where accno = '00002'));
 
     INSERT INTO ap (invnumber, netamount_bc, amount_bc, entity_credit_account,
-                    open_item_id, id, curr, netamount_tc, amount_tc)
+                    open_item_id, trans_id, curr, netamount_tc, amount_tc)
     VALUES ('TEST', '0', '0', -100, currval('open_item_id_seq'), -100, 'XTS', 0, 0);
     INSERT INTO acc_trans (trans_id, chart_id, amount_bc, curr, amount_tc)
     VALUES (-100, (select id from account where accno = '00002'), '0', 'XTS', 0);

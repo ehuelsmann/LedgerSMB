@@ -10,13 +10,16 @@ $BODY$
   DECLARE
   t_new_reference text;
   t_old_reference text;
+  t_id int;
 BEGIN
   if tg_relname in ('ar','ap') then
     t_new_reference := new.invnumber;
     t_old_reference := old.invnumber;
+    t_id := new.trans_id;
   else
     t_new_reference := new.reference;
     t_old_reference := old.reference;
+    t_id := new.id;
   end if;
   IF tg_op = 'INSERT' THEN
     PERFORM * FROM transactions WHERE id = new.id;
@@ -25,7 +28,7 @@ BEGIN
     END IF;
 
     INSERT INTO transactions (id, table_name, reference, trans_type_code)
-    VALUES (new.id, TG_RELNAME, t_new_reference, TG_ARGV[0] );
+    VALUES (t_id, TG_RELNAME, t_new_reference, TG_ARGV[0] );
   ELSEIF tg_op = 'UPDATE' THEN
     IF new.id <> old.id
       OR t_new_reference <> t_old_reference THEN
@@ -35,7 +38,7 @@ BEGIN
          WHERE id = old.id;
     END IF;
   ELSE
-    DELETE FROM transactions WHERE id = old.id;
+    DELETE FROM transactions WHERE id = t_id;
   END IF;
   RETURN new;
 END;
@@ -55,6 +58,7 @@ $$
 DECLARE
    t_reference text;
    t_row RECORD;
+   t_id int;
 BEGIN
 
 IF TG_OP = 'INSERT' then
@@ -65,12 +69,14 @@ END IF;
 
 IF TG_TABLE_NAME IN ('ar', 'ap') THEN
     t_reference := t_row.invnumber;
+    t_id := t_row.trans_id;
 ELSE
     t_reference := t_row.reference;
+    t_id := t_row.id;
 END IF;
 
 INSERT INTO audittrail (trans_id,tablename,reference, action, person_id)
-values (t_row.id,TG_TABLE_NAME,t_reference, TG_OP, person__get_my_entity_id());
+values (t_id,TG_TABLE_NAME,t_reference, TG_OP, person__get_my_entity_id());
 
 return null; -- AFTER TRIGGER ONLY, SAFE
 END;

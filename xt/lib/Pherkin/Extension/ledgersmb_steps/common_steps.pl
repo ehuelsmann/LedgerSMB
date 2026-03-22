@@ -201,7 +201,7 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
       SQL
 
     my $ap_query = $dbh->prepare("
-        INSERT INTO ap (id, open_item_id, invnumber, amount_bc, netamount_bc,
+        INSERT INTO ap (trans_id, open_item_id, invnumber, amount_bc, netamount_bc,
                         duedate, curr, entity_credit_account,
                         amount_tc, netamount_tc)
         SELECT currval('transactions_id_seq'), currval('open_item_id_seq'), ?, ?, ?, ?, 'USD',
@@ -213,7 +213,7 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
         WHERE entity.name = ?
         AND entity_credit_account.entity_class = 1
         LIMIT 1
-        RETURNING ap.id, ap.open_item_id
+        RETURNING ap.trans_id, ap.open_item_id
     ");
 
     my $acc_trans_query = $dbh->prepare("

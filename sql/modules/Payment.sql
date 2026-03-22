@@ -241,13 +241,13 @@ RETURN QUERY EXECUTE $sql$
                        amount_tc,
                                1 as invoice_class, curr,
                                entity_credit_account, txn.approved, description
-                          FROM ap JOIN transactions txn ON txn.id = ap.id
+                          FROM ap JOIN transactions txn ON txn.id = ap.trans_id
                          UNION
                          SELECT txn.id, open_item_id, invnumber, invoice, txn.transdate, amount_bc,
                       amount_tc,
                                2 AS invoice_class, curr,
                                entity_credit_account, txn.approved, description
-                         FROM ar JOIN transactions txn ON txn.id = ar.id
+                         FROM ar JOIN transactions txn ON txn.id = ar.trans_id
                          ) a
                 JOIN (SELECT open_item_id,
                              sum(CASE WHEN $1 = 1 THEN amount_bc
@@ -386,23 +386,23 @@ RETURN QUERY EXECUTE $sql$
 
                     FROM entity e
                     JOIN entity_credit_account c ON (e.id = c.entity_id)
-                    JOIN (SELECT ap.id, ap.open_item_id, invnumber, txn.transdate, amount_bc,
+                    JOIN (SELECT txn.id, ap.open_item_id, invnumber, txn.transdate, amount_bc,
                                  curr, 1 as invoice_class,
                                  entity_credit_account, on_hold, v.batch_id,
                                  txn.approved
-                            FROM ap JOIN transactions txn USING (id)
+                            FROM ap JOIN transactions txn ON ap.trans_id = txn.id
                        LEFT JOIN (select * from voucher where batch_class = 1) v
-                                 ON (ap.id = v.trans_id)
+                                 ON (ap.trans_id = v.trans_id)
                            WHERE $1 = 1
                                  AND (v.batch_class = 1 or v.batch_id IS NULL)
                            UNION
-                          SELECT ar.id, ar.open_item_id, invnumber, txn.transdate, amount_bc,
+                          SELECT txn.id, ar.open_item_id, invnumber, txn.transdate, amount_bc,
                                  curr, 2 as invoice_class,
                                  entity_credit_account, on_hold, v.batch_id,
                                  txn.approved
-                            FROM ar JOIN transactions txn USING (id)
+                            FROM ar JOIN transactions txn ON ar.trans_id = txn.id
                        LEFT JOIN (select * from voucher where batch_class = 2) v
-                                 ON (ar.id = v.trans_id)
+                                 ON (ar.trans_id = v.trans_id)
                            WHERE $1 = 2
                                  AND (v.batch_class = 2 or v.batch_id IS NULL)
                         ORDER BY transdate
@@ -569,11 +569,11 @@ BEGIN
            SET eca_id =
                   (SELECT entity_credit_account FROM ar
                             WHERE in_account_class = 2
-                              AND bpi.id = ar.id
+                              AND bpi.id = ar.trans_id
                             UNION
                            SELECT entity_credit_account FROM ap
                             WHERE in_account_class = 1
-                              AND bpi.id = ap.id);
+                              AND bpi.id = ap.trans_id);
 
         CREATE TEMPORARY TABLE eca_payments_in AS
         SELECT eca_id, nextval('payment_id_seq') as payment_id,

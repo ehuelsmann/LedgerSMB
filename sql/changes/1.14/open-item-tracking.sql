@@ -16,7 +16,32 @@ alter table account
   add column open_item_managed boolean not null default false;
 
 alter table ar
+  rename column id to trans_id;
+
+comment on column ar.trans_id is
+  $$References the transaction representing the invoice or AR transaction.
+
+  This is the transaction responsible for creating or adding to the debtors
+  balance under Accounts Receivable (unless the transaction voids an invoice or
+  is a credit invoice or note).$$;
+
+drop trigger ar_track_global_sequence on ar; -- the 'id' sequence is no longer shared between ar/ap/gl
+
+alter table ar
   add column open_item_id int references open_item(id);
+
+
+alter table ap
+  rename column id to trans_id;
+
+comment on column ar.trans_id is
+  $$References the transaction representing the invoice or AP transaction.
+
+  This is the transaction responsible for creating or adding to the creditors
+  balance under Accounts Payable (unless the transaction voids an invoice or
+  is a debit invoice or note).$$;
+
+drop trigger ap_track_global_sequence on ap; -- the 'id' sequence is no longer shared between ar/ap/gl
 
 alter table ap
   add column open_item_id int references open_item(id);
@@ -66,12 +91,12 @@ insert into open_item (
 )
 select invnumber, lower(al.description), chart_id
   from acc_trans
-         join (select id, invnumber
+         join (select trans_id, invnumber
                  from ar
                 union
-               select id, invnumber
+               select trans_id, invnumber
                  from ap) aa
-             on acc_trans.trans_id = aa.id
+             on acc_trans.trans_id = aa.trans_id
          join account_link al
              on acc_trans.chart_id = al.account_id
  where al.description in ('AR', 'AP')
@@ -81,12 +106,12 @@ select invnumber, lower(al.description), chart_id
 update ar
    set open_item_id = ac.open_item_id
        from acc_trans ac
- where ar.id = ac.trans_id
+ where ar.trans_id = ac.trans_id
    and ac.open_item_id is not null;
 update ap
    set open_item_id = ac.open_item_id
        from acc_trans ac
- where ap.id = ac.trans_id
+ where ap.trans_id = ac.trans_id
    and ac.open_item_id is not null;
 
 

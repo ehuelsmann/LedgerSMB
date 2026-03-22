@@ -79,7 +79,7 @@ BEGIN;
     VALUES (-11, '1901-01-01', 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('inv_test1', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
+    INSERT INTO ap (trans_id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
          VALUES (-11, currval('open_item_id_seq'), 100, 110, 'inv_test1', 'xts', -101);
     INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id, open_item_id)
          VALUES (-11, '1901-01-01', 100, 'xts', 110, 't', (select id from account where accno = '00001'), currval('open_item_id_seq')),
@@ -134,7 +134,7 @@ BEGIN;
     VALUES (-12, '1901-01-02', 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('inv_test2', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
+    INSERT INTO ap (trans_id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
          VALUES (-12, currval('open_item_id_seq'), 100, 110, 'inv_test2', 'xts', -101);
     INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id, open_item_id)
          VALUES (-12, '1901-01-02', 100, 'xts', 110, 't', (select id from account where accno = '00001'), currval('open_item_id_seq')),
@@ -174,7 +174,7 @@ BEGIN;
     VALUES (-13, '1901-01-01', 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('inv_test1/2', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
+    INSERT INTO ap (trans_id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
          VALUES (-13, currval('open_item_id_seq'), 100, 110, 'inv_test1', 'xts', -101);
     INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id, open_item_id)
          VALUES (-13, '1901-01-01', 100, 'xts', 110, 't', (select id from account where accno = '00001'), currval('open_item_id_seq')),
@@ -214,7 +214,7 @@ BEGIN;
     VALUES (-14, '1901-01-02', 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('inv_test2/2', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
+    INSERT INTO ap (trans_id, open_item_id, amount_bc, amount_tc, invnumber, curr, entity_credit_account)
          VALUES (-14, currval('open_item_id_seq'), 100, 110, 'inv_test2', 'xts', -101);
     INSERT INTO acc_trans (trans_id, transdate, amount_bc, curr, amount_tc, approved, chart_id, open_item_id)
          VALUES (-14, '1901-01-02', 100, 'xts', 110, 't', (select id from account where accno = '00001'), currval('open_item_id_seq')),

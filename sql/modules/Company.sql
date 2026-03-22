@@ -118,18 +118,22 @@ $$
 BEGIN
 RETURN QUERY EXECUTE $sql$
      WITH arap AS (
-       select  invnumber, ar.curr, txn.transdate, entity_credit_account, ar.id,
+       select  invnumber, ar.curr, txn.transdate, entity_credit_account, txn.id,
                    person_id, notes
-             FROM ar JOIN transactions txn USING (id)
+        FROM ar
+             JOIN transactions txn
+                  ON ar.trans_id = txn.id
              JOIN acc_trans ON ar.open_item_id  = acc_trans.open_item_id
             where $16 = 2 and $13 = 'i'
        GROUP BY 1, 2, 3, 4, 5, 6, 7
                   having (($17 and sum(acc_trans.amount_bc) = 0)
                       or ($18 and 0 <> sum(acc_trans.amount_bc)))
             UNION ALL
-           select invnumber, ap.curr, txn.transdate, entity_credit_account, ap.id,
+           select invnumber, ap.curr, txn.transdate, entity_credit_account, txn.id,
                   person_id, notes
-             FROM ap JOIN transactions txn USING (id)
+             FROM ap
+                  JOIN transactions txn
+                       ON ap.trans_id = txn.id
              JOIN acc_trans ON ap.open_item_id  = acc_trans.open_item_id
             where $16 = 1 and $13 = 'i'
        GROUP BY 1, 2, 3, 4, 5, 6, 7

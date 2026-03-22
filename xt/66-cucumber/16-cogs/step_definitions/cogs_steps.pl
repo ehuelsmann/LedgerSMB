@@ -29,7 +29,7 @@ Given qr/^(-?\d+) units sold/, sub {
         or die $dbh->errstr;
     $dbh->do(
         q{
-        INSERT INTO ar (id, open_item_id, invnumber, invoice,
+        INSERT INTO ar (trans_id, open_item_id, invnumber, invoice,
                         entity_credit_account)
              VALUES (currval('transactions_id_seq'),
                      currval('open_item_id_seq'),
@@ -141,7 +141,7 @@ When qr/^(-?\d+) units are sold$/, sub {
         or die $dbh->errstr;
     $dbh->do(
         q{
-        INSERT INTO ar (id, open_item_id, invnumber, invoice,
+        INSERT INTO ar (trans_id, open_item_id, invnumber, invoice,
                         entity_credit_account)
              VALUES (currval('transactions_id_seq'),
                      currval('open_item_id_seq'),
@@ -197,7 +197,7 @@ When qr/^(\d+) units are credited$/, sub {
         or die $dbh->errstr;
     $dbh->do(
         q{
-        INSERT INTO ar (id, open_item_id, invnumber, invoice, reverse,
+        INSERT INTO ar (trans_id, open_item_id, invnumber, invoice, reverse,
                         entity_credit_account)
              VALUES (currval('transactions_id_seq'),
                      currval('open_item_id_seq'),

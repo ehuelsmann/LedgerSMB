@@ -46,7 +46,7 @@ BEGIN;
     VALUES ('_TEST AP', now(), 'ap', 'ap', false);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('_TEST AP', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account, amount_bc, netamount_bc,
+    INSERT INTO ap (trans_id, open_item_id, invnumber, entity_credit_account, amount_bc, netamount_bc,
             amount_tc, netamount_tc, curr)
     select currval('transactions_id_seq'), currval('open_item_id_seq'), '_TEST AP', -1000, '100', '100', '100', '100', 'XTS';
 
@@ -64,7 +64,7 @@ BEGIN;
     VALUES ('_TEST AR', now(), 'ar', 'ar', false);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('_TEST AR', 'ar', (select id from account where accno = '00002'));
-    INSERT INTO ar (id, open_item_id, invnumber, entity_credit_account, amount_bc, netamount_bc,
+    INSERT INTO ar (trans_id, open_item_id, invnumber, entity_credit_account, amount_bc, netamount_bc,
            amount_tc, netamount_tc, curr)
     select currval('transactions_id_seq'), currval('open_item_id_seq'), '_TEST AR', -1001, '100', '100', 100, 100, 'XTS';
 

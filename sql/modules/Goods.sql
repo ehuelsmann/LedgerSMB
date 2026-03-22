@@ -499,14 +499,14 @@ CREATE OR REPLACE FUNCTION goods__history(
      SELECT id, 'ar' as o_table, invnumber as ordnumber, 'is' as oe_class,
             txn.transdate, entity_credit_account
        FROM ar
-           JOIN transactions txn
-                USING (id)
+            JOIN transactions txn
+                 ON ar.trans_id = txn.id
      UNION
      SELECT id, 'ap' as o_table, invnumber as ordnumber, 'ir' as oe_class,
             txn.transdate, entity_credit_account
        FROM ap
             JOIN transactions txn
-                 USING (id)
+                 ON ap.trans_id = txn.id
   ),
   invoicelines AS (
      SELECT i.parts_id, i.sellprice, i.qty, i.discount, i.serialnumber,

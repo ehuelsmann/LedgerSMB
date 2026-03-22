@@ -95,7 +95,7 @@ BEGIN;
     VALUES (now(), 'ap', 'ap', false);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test_hide', 'ap', (select id from account where accno = '-2000000000'));
-    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
+    INSERT INTO ap (trans_id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
     values (currval('transactions_id_seq'),
             currval('open_item_id_seq'), 'test_hide', -101, '1', '1', '1', 'XTS');
@@ -117,7 +117,7 @@ BEGIN;
     VALUES (now(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test_show2', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
+    INSERT INTO ap (trans_id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
     VALUES (currval('transactions_id_seq'),
             currval('open_item_id_seq'), 'test_show2', -101, 100000, 100000, 100000,
@@ -138,7 +138,7 @@ BEGIN;
     VALUES (-300, now(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test_show3', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
+    INSERT INTO ap (trans_id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
             VALUES (-300, currval('open_item_id_seq'), 'test_show3', -101, 1000000, 1000000, 1000000,
                     'XTS');
@@ -160,7 +160,7 @@ BEGIN;
     VALUES (now(), 'ap', 'ap', false);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test_show', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
+    INSERT INTO ap (trans_id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
     values (currval('transactions_id_seq'),
             currval('open_item_id_seq'), 'test_show', -101, '1', '1', '1', 'XTS');
@@ -335,12 +335,12 @@ BEGIN;
     VALUES (now(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test_reverse', 'ap', (select id from account where accno = '00001AP2'));
-    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
+    INSERT INTO ap (trans_id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
     values (currval('transactions_id_seq'),
             currval('open_item_id_seq'), 'test_reverse', -101, '1', '1', '1',
                     'XTS')
-       returning id as invoice_id, open_item_id
+       returning trans_id as invoice_id, open_item_id
     \gset
 
     INSERT INTO acc_trans (approved, transdate, amount_bc, curr, amount_tc,
@@ -394,7 +394,7 @@ BEGIN;
    PREPARE test AS
    SELECT count(distinct act.id) = 1
      FROM ap
-          JOIN acc_trans ac ON ap.id = ac.trans_id
+          JOIN acc_trans ac ON ap.trans_id = ac.trans_id
           JOIN account act ON ac.chart_id = act.id
           JOIN account_link al ON al.account_id = act.id
     WHERE ap.invnumber = 'test_reverse'
@@ -412,12 +412,12 @@ BEGIN;
     VALUES (now(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test_bulk', 'ap', (select id from account where accno = '00001'));
-    INSERT INTO ap (id, open_item_id, invnumber, entity_credit_account,
+    INSERT INTO ap (trans_id, open_item_id, invnumber, entity_credit_account,
                     amount_bc, amount_tc, netamount_bc, curr)
     values (currval('transactions_id_seq'),
             currval('open_item_id_seq'), 'test_bulk', -101, '1', '1', '1',
                     'XTS')
-       returning id as invoice_id, open_item_id
+       returning trans_id as invoice_id, open_item_id
     \gset
     SELECT payment_bulk_post(ARRAY[ARRAY[(:invoice_id)::numeric, (:open_item_id)::numeric, 1::numeric]]::numeric[],
                              (:batch_id)::int, 'bulk'::text, '00001'::text, '00003'::text, now()::date,
@@ -430,7 +430,7 @@ BEGIN;
      WHERE notes = 'generated from bulk payment'
            AND EXISTS (select 1 from payment_links pl
                                 join acc_trans ac on pl.entry_id = ac.entry_id
-                                join ap on ac.trans_id = ap.id
+                                join ap on ac.trans_id = ap.trans_id
                         where ap.invnumber = 'test_bulk');
     SELECT results_eq('test', array[1::int],
                       'After payment, the payment table contains a record');
@@ -440,7 +440,7 @@ BEGIN;
      WHERE notes = 'generated from bulk payment'
            AND EXISTS (select 1 from payment_links pl
                                 join acc_trans ac on pl.entry_id = ac.entry_id
-                                join ap on ac.trans_id = ap.id
+                                join ap on ac.trans_id = ap.trans_id
                         where ap.invnumber = 'test_bulk')
     \gset
 

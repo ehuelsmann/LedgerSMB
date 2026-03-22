@@ -292,17 +292,17 @@ sub post_transaction {
         ($accno) = split /--/, $form->{$ARAP};
         $query = qq{
             INSERT INTO open_item (item_number, item_type, account_id)
-            VALUES (? || currval('transactions_id_seq'), ?, (SELECT id FROM account WHERE accno = ?))
+            VALUES (? || '-' || currval('transactions_id_seq'), ?, (SELECT id FROM account WHERE accno = ?))
             };
         $dbh->do($query, {}, $ARAP, $table, $accno) or $form->dberror($query);
 
         $query = qq|
-            INSERT INTO $table (id, invnumber, open_item_id, person_id, entity_credit_account)
+            INSERT INTO $table (trans_id, invnumber, open_item_id, person_id, entity_credit_account)
                  VALUES (currval('transactions_id_seq'), '$uid', currval('open_item_id_seq'), ?, ?)|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{"$form->{vc}_id"}) || $form->dberror($query);
 
-        $query = qq|SELECT id, open_item_id FROM $table WHERE invnumber = '$uid'|;
+        $query = qq|SELECT trans_id, open_item_id FROM $table WHERE invnumber = '$uid'|;
         $sth   = $dbh->prepare($query);
         $sth->execute || $form->dberror($query);
 
@@ -342,7 +342,7 @@ sub post_transaction {
              person_id = ?,
              entity_credit_account = ?,
              setting_sequence = ?
-       WHERE id = ?
+       WHERE trans_id = ?
     |;
    }
    else {
@@ -364,7 +364,7 @@ sub post_transaction {
              reverse = ?,
              person_id = ?,
              entity_credit_account = ?,
-       WHERE id = ?
+       WHERE trans_id = ?
     |;
    }
 
@@ -957,7 +957,7 @@ sub save_intnotes {
         $form->error('Bad arap in save_intnotes');
     }
     my $sth = $form->{dbh}->prepare("UPDATE $table SET intnotes = ? " .
-                                      "where id = ?");
+                                      "where trans_id = ?");
     $sth->execute($form->{intnotes}, $form->{id});
 }
 
@@ -978,7 +978,7 @@ sub save_employee {
         $form->error('Bad arap in save_employee');
     }
     my $sth = $form->{dbh}->prepare("UPDATE $table SET person_id = ? " .
-                                    "where id = ?");
+                                    "where trans_id = ?");
     my ($name, $person_id) = split(/--/, $form->{employee}, 2);
     $sth->execute($person_id, $form->{id});
 }

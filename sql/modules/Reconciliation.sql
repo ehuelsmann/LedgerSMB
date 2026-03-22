@@ -860,12 +860,12 @@ CREATE OR REPLACE VIEW recon_payee AS
    LEFT JOIN (
      SELECT *
        FROM (
-         SELECT ap.id, e.name
+         SELECT ap.trans_id as id, e.name
            FROM ap
                   JOIN entity_credit_account eca ON ap.entity_credit_account = eca.id
                   JOIN entity e ON eca.entity_id = e.id
           UNION
-         SELECT ar.id, e.name
+         SELECT ar.trans_id as id, e.name
            FROM ar
                   JOIN entity_credit_account eca ON ar.entity_credit_account = eca.id
                   JOIN entity e ON eca.entity_id = e.id

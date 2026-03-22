@@ -88,8 +88,8 @@ sub _get_invoices_by_id {
               entity_credit_account, person_id,
               language_code, description, notes, intnotes, shippingpoint, shipvia,
               amount_bc, netamount_bc, curr, amount_tc, netamount_tc
-          FROM ar JOIN transactions txn ON ar.id = txn.id
-        WHERE invoice AND ar.id = ?
+          FROM ar JOIN transactions txn ON ar.trans_id = txn.id
+        WHERE invoice AND txn.id = ?
 
         UNION ALL
         SELECT 'vendor' as type,
@@ -98,8 +98,8 @@ sub _get_invoices_by_id {
               entity_credit_account, person_id,
               language_code, description, notes, intnotes, shippingpoint, shipvia,
               amount_bc, netamount_bc, curr, amount_tc, netamount_tc
-          FROM ap JOIN transactions txn ON ap.id = txn.id
-        WHERE invoice and ap.id = ?
+          FROM ap JOIN transactions txn ON ap.trans_id = txn.id
+        WHERE invoice and txn.id = ?
         |;
     my $sth = $env->{'lsmb.db'}->prepare($query)
         or die $env->{'lsmb.db'}->errstr;
@@ -892,7 +892,7 @@ sub _post_invoices {
         # What to do with 'setting_sequence' (for 'ar')?
         # and why does that not exist for 'ap'??
         q|
-        INSERT INTO ar (id, open_item_id, invoice,
+        INSERT INTO ar (trans_id, open_item_id, invoice,
             invnumber, ordnumber, quonumber, ponumber,
             amount_bc, netamount_bc, curr, amount_tc, netamount_tc, taxincluded,
             crdate, duedate,

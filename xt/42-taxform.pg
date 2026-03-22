@@ -113,7 +113,7 @@ BEGIN;
     VALUES (-1024, date1(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test1', 'ap', -1000);
-    INSERT INTO ap (id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
+    INSERT INTO ap (trans_id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
                     entity_credit_account)
     values(-1024, currval('open_item_id_seq'), 1010, 1010, 'XTS', 1010, 1010, -255);
 
@@ -141,7 +141,7 @@ BEGIN;
     VALUES (-1025, date1(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test2', 'ap', -1000);
-    INSERT INTO ap (id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
+    INSERT INTO ap (trans_id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
                     entity_credit_account)
     values(-1025, currval('open_item_id_seq'), 1010, 1010, 'XTS', 1010, 1010, -255);
 
@@ -169,7 +169,7 @@ BEGIN;
     VALUES (-1026, date1(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test3', 'ap', -1000);
-    INSERT INTO ap (id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
+    INSERT INTO ap (trans_id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
                     entity_credit_account)
           values(-1026, currval('open_item_id_seq'), 1010, 1010, 'XTS', 1010, 10101, -255);
 
@@ -204,7 +204,7 @@ BEGIN;
     VALUES (-1027, date1(), 'ap', 'ap', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test4', 'ap', -1000);
-    INSERT INTO ap (id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
+    INSERT INTO ap (trans_id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
                     entity_credit_account)
     values(-1027, currval('open_item_id_seq'), 1010, 1010, 'XTS', 1010, 1010, -256);
 
@@ -232,7 +232,7 @@ BEGIN;
     VALUES (-1035, date1(), 'ar', 'ar', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test10', 'ar', -1000);
-    INSERT INTO ar (id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
+    INSERT INTO ar (trans_id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
                     entity_credit_account, invoice, invnumber)
          values (-1035, currval('open_item_id_seq'), 1010, 1010, 'XTS', 1010, 1010, -255, true, 'test1');
 
@@ -267,7 +267,7 @@ BEGIN;
     VALUES (-1036, date1(), 'ar', 'ar', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test11', 'ar', -1000);
-    INSERT INTO ar (id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
+    INSERT INTO ar (trans_id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
                     entity_credit_account, invoice, invnumber)
           values(-1036, currval('open_item_id_seq'), 1010, 1010, 'XTS', 1010, 1010, -255, true, 'test2');
 
@@ -309,7 +309,7 @@ BEGIN;
     VALUES (-1037, date1(), 'ar', 'ar', true);
     INSERT INTO open_item (item_number, item_type, account_id)
     VALUES ('test12', 'ar', -1000);
-    INSERT INTO ar (id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
+    INSERT INTO ar (trans_id, open_item_id, amount_bc, netamount_bc, curr, amount_tc, netamount_tc,
                     entity_credit_account, invoice, invnumber)
           values(-1037, currval('open_item_id_seq'), 1010, 1010, 'XTS', 1010, 1010, -256, true, 'test3');
 

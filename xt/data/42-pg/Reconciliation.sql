@@ -56,28 +56,28 @@ INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-200, '1000-01-01', 'ar', 'ar', true);
 INSERT INTO open_item (item_number, item_type, account_id)
 VALUES ('-2000', 'ar', test_get_account_id('-11111'));
-INSERT INTO ar (id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
 values (-200, currval('open_item_id_seq'), '-2000', '10', '10', 10, 10, -200, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-201, '1000-01-03', 'ar', 'ar', true);
 INSERT INTO open_item (item_number, item_type, account_id)
 VALUES ('-2001', 'ar', test_get_account_id('-11111'));
-INSERT INTO ar (id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
 values (-201, currval('open_item_id_seq'), '-2001', '10', '10', 10, 10, -200, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-204, '1000-01-01', 'ar', 'ar', true);
 INSERT INTO open_item (item_number, item_type, account_id)
 VALUES ('-2002', 'ar', test_get_account_id('-11111'));
-INSERT INTO ar (id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
 values (-204, currval('open_item_id_seq'), '-2002', '10', '10', 10, 10, -200, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-205, '1000-01-03', 'ar', 'ar', true);
 INSERT INTO open_item (item_number, item_type, account_id)
 VALUES ('-2003', 'ar', test_get_account_id('-11111'));
-INSERT INTO ar (id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
 values (-205, currval('open_item_id_seq'), '-2003', '10', '10', 10, 10, -200, 'XTS');
 
@@ -85,28 +85,28 @@ INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-206, '1000-01-01', 'ar', 'ar', true);
 INSERT INTO open_item (item_number, item_type, account_id)
 VALUES ('-2004', 'ar', test_get_account_id('-11111'));
-INSERT INTO ar (id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
 values (-206, currval('open_item_id_seq'), '-2004', '10', '10', 10, 10, -201, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-207, '1000-01-03', 'ar', 'ar', true);
 INSERT INTO open_item (item_number, item_type, account_id)
 VALUES ('-2005', 'ar', test_get_account_id('-11111'));
-INSERT INTO ar (id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
 values (-207, currval('open_item_id_seq'), '-2005', '10', '10', 10, 10, -201, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-208, '1000-01-01', 'ar', 'ar', true);
 INSERT INTO open_item (item_number, item_type, account_id)
 VALUES ('-2006', 'ar', test_get_account_id('-11111'));
-INSERT INTO ar (id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
 values (-208, currval('open_item_id_seq'), '-2006', '10', '10', 10, 10, -201, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-209, '1000-01-03', 'ar', 'ar', true);
 INSERT INTO open_item (item_number, item_type, account_id)
 VALUES ('-2007', 'ar', test_get_account_id('-11111'));
-INSERT INTO ar (id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
 values (-209, currval('open_item_id_seq'), '-2007', '10', '10', 10, 10, -201, 'XTS');
 
@@ -243,7 +243,7 @@ select -201, entry_id, 1
   from acc_trans
  where trans_id < 0
        and chart_id = test_get_account_id('-11112')
-       and exists (select 1 from ar where ar.id = acc_trans.trans_id);
+       and exists (select 1 from ar where ar.trans_id = acc_trans.trans_id);
 
 -- Test Act 3 - 2 payments and an adjustment, all with the same source
 

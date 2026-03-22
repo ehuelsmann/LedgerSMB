@@ -86,14 +86,14 @@ RETURNS SETOF tax_form_report_item AS $BODY$
                       END * CASE WHEN aa.class = 'ap' THEN -1 else 1 end
                       * CASE WHEN ac.relation = 'invoice' then -1 else 1 end)
 
-                FROM (select ar.id, txn.transdate, entity_credit_account, invoice,
+                FROM (select txn.id, txn.transdate, entity_credit_account, invoice,
                              amount_bc, 'ar' as class
-                        FROM ar JOIN transactions txn USING (id)
+                        FROM ar JOIN transactions txn ON ar.trans_id = txn.id
                        WHERE approved
                        UNION
-                      select ap.id, txn.transdate, entity_credit_account, invoice,
+                      select txn.id, txn.transdate, entity_credit_account, invoice,
                              amount_bc, 'ap' as class
-                        FROM ap JOIN transactions txn USING (id)
+                        FROM ap JOIN transactions txn ON ap.trans_id = txn.id
                        WHERE approved
                      ) aa
                JOIN (select trans_id, 'acc_trans' as relation,
@@ -206,14 +206,14 @@ RETURNS SETOF tax_form_report_detail_item AS $BODY$
                          * CASE WHEN aa.class = 'ap' THEN -1 else 1 end
                          * CASE WHEN relation = 'invoice' THEN -1 ELSE 1 END),
                      aa.invnumber, aa.duedate::text, aa.id
-                FROM (select ar.id, entity_credit_account, invnumber, duedate,
+                FROM (select txn.id, entity_credit_account, invnumber, duedate,
                              amount_bc, txn.transdate, 'ar' as class
-                        FROM ar JOIN transactions txn USING (id)
+                        FROM ar JOIN transactions txn ON ar.trans_id = txn.id
                        WHERE approved
                        UNION
-                      select ap.id, entity_credit_account, invnumber, duedate,
+                      select txn.id, entity_credit_account, invnumber, duedate,
                              amount_bc, txn.transdate, 'ap' as class
-                        FROM ap JOIN transactions txn USING (id)
+                        FROM ap JOIN transactions txn ON ap.trans_id = txn.id
                        WHERE approved
                      ) aa
                 JOIN (select trans_id, 'acc_trans' as relation,
@@ -316,15 +316,15 @@ RETURNS SETOF tax_form_report_item AS $BODY$
                       END * CASE WHEN aa.class = 'ap' THEN -1 else 1 end
                       * CASE WHEN ac.relation = 'invoice' then -1 else 1 end)
 
-                FROM (select ar.id, txn.transdate, entity_credit_account, invoice,
+                FROM (select txn.id, txn.transdate, entity_credit_account, invoice,
                              amount_bc, 'ar' as class
-                        FROM ar JOIN transactions txn USING (id)
+                        FROM ar JOIN transactions txn ON ar.trans_id = txn.id
                        WHERE approved
                          AND txn.transdate BETWEEN in_from_date AND in_to_date
                        UNION
-                      select ap.id, txn.transdate, entity_credit_account, invoice,
+                      select txn.id, txn.transdate, entity_credit_account, invoice,
                              amount_bc, 'ap' as class
-                        FROM ap JOIN transactions txn USING (id)
+                        FROM ap JOIN transactions txn ON ap.trans_id = txn.id
                        WHERE approved
                          AND txn.transdate BETWEEN in_from_date AND in_to_date
                      ) aa
@@ -417,15 +417,15 @@ RETURNS SETOF tax_form_report_detail_item AS $BODY$
                          * CASE WHEN aa.class = 'ap' THEN -1 else 1 end
                          * CASE WHEN relation = 'invoice' THEN -1 ELSE 1 END),
                      aa.invnumber, aa.duedate::text, aa.id
-                FROM (select ar.id, entity_credit_account, invnumber, duedate,
+                FROM (select txn.id, entity_credit_account, invnumber, duedate,
                              amount_bc, txn.transdate, 'ar' as class
-                        FROM ar JOIN transactions txn USING (id)
+                        FROM ar JOIN transactions txn ON ar.trans_id = txn.id
                        WHERE approved
                          AND txn.transdate BETWEEN in_from_date AND in_to_date
                        UNION
-                      select ap.id, entity_credit_account, invnumber, duedate,
+                      select txn.id, entity_credit_account, invnumber, duedate,
                              amount_bc, txn.transdate, 'ap' as class
-                        FROM ap JOIN transactions txn USING (id)
+                        FROM ap JOIN transactions txn ON ap.trans_id = txn.id
                        WHERE approved
                          AND txn.transdate BETWEEN in_from_date AND in_to_date
                      ) aa

@@ -804,12 +804,12 @@ sub post_invoice {
         $dbh->do($query, {}, $accno) or $form->dberror($query);
 
         $query = qq|
-            INSERT INTO ar (id, open_item_id, invnumber, person_id, entity_credit_account)
+            INSERT INTO ar (trans_id, open_item_id, invnumber, person_id, entity_credit_account)
                  VALUES (currval('transactions_id_seq'), currval('open_item_id_seq'), '$uid', ?, ?)|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{customer_id}) || $form->dberror($query);
 
-        $query = qq|SELECT id, open_item_id FROM ar WHERE invnumber = '$uid'|;
+        $query = qq|SELECT trans_id, open_item_id FROM ar WHERE invnumber = '$uid'|;
         $sth   = $dbh->prepare($query);
         $sth->execute || $form->dberror($query);
 
@@ -1240,7 +1240,7 @@ sub post_invoice {
                        setting_sequence = ?,
                shipto = ?,
                shipto_attn = ?
-         WHERE id = ?
+         WHERE trans_id = ?
              |;
     $dbh->do(
         $query, {},
@@ -1301,7 +1301,7 @@ sub retrieve_invoice {
         #HV TODO drop entity_id from ar
         $query = qq|
                SELECT a.invnumber, a.ordnumber, a.quonumber,
-                      trx.transdate,
+                      txn.transdate,
                       case when a.amount_tc = 0 then 1 else a.amount_bc/a.amount_tc end as exchangerate,
                       a.shippingpoint, a.shipvia, a.terms, a.notes,
                       a.intnotes,
@@ -1309,16 +1309,15 @@ sub retrieve_invoice {
                       a.person_id as employee_id, e.name AS employee,
                       a.reverse, a.entity_credit_account as customer_id,
                       a.language_code, a.ponumber, a.crdate,
-                      a.on_hold, trx.description, a.setting_sequence,
+                      a.on_hold, txn.description, a.setting_sequence,
                       a.shipto as shiptolocationid, l.line_one, l.line_two,
                       l.line_three, l.city, l.state, l.country_id, l.mail_code,
-                      trx.workflow_id
-                 FROM ar a
-                 JOIN transactions trx USING (id)
+                      txn.workflow_id
+                 FROM ar a JOIN transactions txn ON a.trans_id = txn.id
             LEFT JOIN entity_employee em ON (em.entity_id = a.person_id)
             LEFT JOIN entity e ON e.id = em.entity_id
             LEFT JOIN location l on a.shipto = l.id
-                WHERE a.id = ?|;
+                WHERE a.trans_id = ?|;
 
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{id} ) || $form->dberror($query);
@@ -1568,7 +1567,7 @@ sub toggle_on_hold {
 
         my $dbh = $form->{dbh};
 
-        $sth = $dbh->prepare("update ar set on_hold = not on_hold where ar.id = ?");
+        $sth = $dbh->prepare("update ar set on_hold = not on_hold where ar.trans_id = ?");
         my $code = $sth->execute($form->{id});
 
         return 1;
