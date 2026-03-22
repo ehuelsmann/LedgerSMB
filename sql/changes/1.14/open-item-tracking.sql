@@ -47,14 +47,6 @@ alter table ap
   add column open_item_id int references open_item(id);
 
 
---defer making AR/AP open item managed
---update account
---   set open_item_managed = true
--- where exists (select 1
---                 from account_link al
---                where al.description = ANY(ARRAY['AR', 'AP']::text[])
---                      and account.id = al.account_id)
-
 
 comment on table open_item is
   $$Allows tracking of items to be cleared/handled in subsequent transactions. $$;
@@ -86,10 +78,16 @@ create trigger trigger_open_item_maintenance
     execute function trigger_open_item_maintenance();
 
 
+/*
+  *
+  * Data migration
+  *
+ */
+
 insert into open_item (
   item_number, item_type, account_id
 )
-select invnumber, lower(al.description), chart_id
+select al.description || '-' || aa.trans_id, lower(al.description), chart_id
   from acc_trans
          join (select trans_id, invnumber
                  from ar
@@ -100,20 +98,23 @@ select invnumber, lower(al.description), chart_id
          join account_link al
              on acc_trans.chart_id = al.account_id
  where al.description in ('AR', 'AP')
- group by invnumber, lower(al.description), chart_id;
-
+ group by al.description, aa.trans_id, lower(al.description), chart_id;
 
 update ar
-   set open_item_id = ac.open_item_id
-       from acc_trans ac
- where ar.trans_id = ac.trans_id
-   and ac.open_item_id is not null;
-update ap
-   set open_item_id = ac.open_item_id
-       from acc_trans ac
- where ap.trans_id = ac.trans_id
-   and ac.open_item_id is not null;
+   set open_item_id = oi.id
+       from open_item oi
+ where oi.item_number = 'AR-' || ar.trans_id;
 
+update ap
+   set open_item_id = oi.id
+       from open_item oi
+ where oi.item_number = 'AP-' || ap.trans_id;
+
+update account
+   set open_item_managed = exists (select 1
+                                     from account_link al
+                                    where al.description in ('AR', 'AP')
+                                      and al.account_id = account.id);
 
 alter table ar
   alter column open_item_id set not null;
@@ -121,3 +122,10 @@ alter table ar
 alter table ap
   alter column open_item_id set not null;
 
+
+update acc_trans ac
+   set open_item_id = oi.id
+       from open_item oi
+ where ac.chart_id = oi.account_id
+   and (oi.item_number = 'AR-' || ac.trans_id
+        or oi.item_number = 'AP-' || ac.trans_id);
