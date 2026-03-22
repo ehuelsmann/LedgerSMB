@@ -573,12 +573,6 @@ jobs:
         if: ${{ matrix.COVERAGE }}
 
       # Send logs & artifacts
-      - name: Collect docker logs
-        uses: jwalton/gh-docker-logs@v2
-        with:
-          dest: 'logs/docker-logs'
-        if: always()
-
       - name: Archive production artifacts
         uses: actions/upload-artifact@v7
         with:
