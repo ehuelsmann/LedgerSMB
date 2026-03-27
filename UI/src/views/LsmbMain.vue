@@ -210,14 +210,22 @@ export default {
             style="height: 100%; box-sizing: border-box"
         >
             <template #after>
-                <div id="maindiv" style="margin: 15px">
+                <div
+                    id="maindiv"
+                    style="padding: 15px; height: 100%; box-sizing: border-box"
+                >
                     <router-view />
                 </div>
             </template>
             <template #before>
                 <div
                     id="menudiv"
-                    style="box-sizing: border-box; padding: 5px; margin: 15px"
+                    style="
+                        box-sizing: border-box;
+                        padding: 5px;
+                        height: calc(100% - 30px);
+                        margin: 15px;
+                    "
                 >
                     <div style="text-align: center">
                         <a
