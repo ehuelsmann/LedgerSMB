@@ -1,4 +1,6 @@
 
+alter table gl disable trigger gl_track_deleted_transaction;
+
 insert into trans_type (code, description)
 values ('ap', 'The transaction is a regular Accounts Payable item'),
        ('ar', 'The transaction is a regular Accounts Receivable item');
@@ -46,6 +48,8 @@ update transactions txn
    ) old
    where txn.id = old.id;
 
+drop view if exists recon_payee cascade;
+
 alter table ar
   alter column id drop default,
   drop column approved,
@@ -70,7 +74,6 @@ alter table gl
   drop constraint gl_id_fkey,
   -- the on delete cascade prevents deletion of approved lots (= transactions)
   add constraint gl_id_fkey foreign key (id) references transactions (id) on delete cascade;
-
 
 do $$
 declare
@@ -106,7 +109,6 @@ delete from gl
  where exists (select *
                  from mfg_lot ml where gl.id = ml.trans_id);
 
-
 alter table asset_report
   -- the on delete cascade prevents deletion of approved lots (= transactions)
   add column trans_id int references transactions(id) on delete cascade;
@@ -126,7 +128,6 @@ delete from gl
  where exists (select *
                  from asset_report ar where gl.id = ar.trans_id);
 
-
 alter table inventory_report
   drop constraint inventory_report_trans_id_fkey,
   -- the on delete cascade prevents deletion of approved lots (= transactions)
@@ -141,12 +142,13 @@ delete from gl
  where exists (select *
                  from inventory_report ir where gl.id = ir.trans_id);
 
-
 alter table payment
   add column trans_id int references transactions(id);
 
 update payment
    set trans_id = gl_id;
+
+drop view if exists overpayments cascade;
 
 alter table payment
   drop column gl_id;
@@ -178,6 +180,7 @@ delete from gl
 -- based on 'gl', 'ar' and 'ap', but those lost their roles
 drop view if exists file_tx_links cascade;
 
+alter table gl enable trigger gl_track_deleted_transaction;
 
 create or replace trigger gl_track_global_sequence before INSERT OR UPDATE on gl
   for each row execute procedure track_global_sequence('gl');
