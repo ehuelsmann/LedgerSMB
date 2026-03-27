@@ -548,7 +548,7 @@ sub form_header {
         }
         $vc = qq|<input data-dojo-type="dijit/form/TextBox" id=$form->{vc} name=$form->{vc} value="$form->{$form->{vc}}" size=35>
              <a id="new-contact" target="_blank"
-                 href="erp.pl?__action=root#contact.pl?__action=add&entity_class=$eclass">
+                 href="#contact.pl?__action=add&entity_class=$eclass">
                  [| . $locale->text('New') . qq|]</a>|;
     }
 
