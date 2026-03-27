@@ -1,5 +1,10 @@
 /* stylelint-disable no-descending-specificity */
 
+/* .dijitVisible has 'display: block' */
+.dijitHidden {
+    display: none;
+}
+
 textarea#intnotes,
 textarea#notes {
     /* Prevent notes fields taking up endless screen estate */
