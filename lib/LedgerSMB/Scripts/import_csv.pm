@@ -37,6 +37,7 @@ use LedgerSMB::Timecard;
 
 use List::MoreUtils qw{ any };
 use Text::CSV;
+use Workflow::Context;
 
 our $cols = {
     gl              =>  ['accno', 'debit', 'credit', 'curr', 'debit_fx',
@@ -280,6 +281,24 @@ sub _process_gl_multi {
                        ?, ?, ?, ?)
                                 })
         or die $dbh->errstr;
+
+    my $wf = $request->{_wire}->get('workflows')
+        ->create_workflow( 'GL',
+                           Workflow::Context->new(
+                               'transdate' => $request->{transdate},
+                               'batch-id'  => $batch_id,
+                               'table_name' => 'gl'
+                           ) );
+    $wf->execute_action( 'post' ); # misnomer: actually only saves...
+
+    # then, insert the workflow ID in the insertion below.
+    my $sth_tx = $dbh->prepare(q{
+        INSERT INTO transactions (
+               workflow_id, transdate, reference, description,
+               table_name, trans_type_code, approved)
+        VALUES (?, ?, ?, ?, 'gl', 'gl', true)
+        })
+        or die $dbh->errstr;
     my $sth_gl = $dbh->prepare(q{
         INSERT INTO gl (transdate, reference, description)
                VALUES (?, ?, ?)
@@ -302,6 +321,11 @@ sub _process_gl_multi {
             or die $sth_gl->errstr;
         my ($trans_id) = $sth_gl->fetchrow_array;
         $sth_gl->finish;
+
+        $dbh->do(q{update transactions set workflow_id = ? where id = ?},
+                 {},
+                 $wf->id, $trans_id)
+            or die $dbh->errstr;
 
         $sth_voucher->execute($batch_id, $trans_id)
             or die $sth_voucher->errstr;
