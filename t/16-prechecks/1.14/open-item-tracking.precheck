@@ -1,0 +1,11 @@
+{
+     q|Check AR/AP items associated with exactly one AR/AP ledger account.| => [
+         {
+              failure_data => [
+                     [ 'id', 'count' ], # column names line
+                     [ 1, 2 ]
+                 ],
+              response => { confirm => 'ok' },
+              submit_session => []
+         }]
+}
