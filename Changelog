@@ -5,6 +5,7 @@ Changelog for 1.14 Series
 Changelog for 1.14.0
 
 Added functionalities
+* New numbering sequences for lots, payments and asset reports (#9283, #9321)
 
 Changed functionalities
 
@@ -17,10 +18,12 @@ Cleanup & architecture improvements
 * Centralized 'transactions' table, reducing role of ar/ap/gl tables (#9283)
 * Subledger transactions no longer *also* gl transactions (#9235)
 * Removed unused SQL modules (#9279)
+* Move last tables to GENERATED IDENTITY (#9319)
+* Various improvements to the generation of our API documentation (#9334, #9335, #9344)
 
 Updated dependencies
-* Perl minimum version increased to 5.38
-* PostgreSQL minimum version increased to v14
+* Perl minimum version increased to 5.38 (from 5.36)
+* PostgreSQL minimum version increased to v14 (from v13)
 
 
 Changelog for 1.13 Series
