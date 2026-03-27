@@ -131,7 +131,7 @@ sub post_transaction {
                     AND workflow_id IS NULL|;
         $sth   = $dbh->prepare($query);
         $form->{reversing} ||= undef; # convert empty string to NULL
-        $sth->execute( $form->{workflow_id}, $form->{reversing}, $form->{description}, $form->{id}, $form->{reference} )
+        $sth->execute( $form->{workflow_id}, $form->{reversing}, $form->{description}, $form->{reference}, $form->{id} )
             || $form->dberror($query);
     }
 
@@ -281,7 +281,7 @@ sub transaction {
 
         $form->{currencies} = $form->currencies;
 
-        $query = qq|SELECT g.*, t.workflow_id, t.reversing, t.reversing_reference, t.reversed_by, t.reversed_by_reference
+        $query = qq|SELECT g.*, t.description, t.workflow_id, t.reversing, t.reversing_reference, t.reversed_by, t.reversed_by_reference
                  FROM gl g JOIN transactions_reversal t on g.id = t.id
                 WHERE g.id = ?|;
 
