@@ -14,12 +14,14 @@
       <condition name="!reversing" />
       <condition name="!separate-duties" />
       <condition name="!period-closed" />
+      <condition name="!is-batch-member" />
       <condition name="complete" />
     </action>
     <action name="post_reversing" resulting_state="POSTED">
       <condition name="reversing" />
       <condition name="!period-closed" />
       <condition name="acl-draft-post" />
+      <condition name="!is-batch-member" />
     </action>
   </state>
 
@@ -39,6 +41,12 @@
       <condition name="complete" />
       <condition name="!period-closed" />
       <condition name="acl-draft-post" />
+      <condition name="!is-batch-member" />
+    </action>
+    <action name="batch-approve" resulting_state="POSTED">
+      <condition name="complete" />
+      <condition name="!period-closed" />
+      <condition name="is-batch-member"/>
     </action>
     <action name="del" resulting_state="DELETED">
       <condition name="!is-batch-member" />
