@@ -40,10 +40,10 @@ TODO! Check workflow when 'separate duties' is false!
           done="Posted"
           history-text="Posted"
           class="LedgerSMB::Workflow::Action::TransactionApprove" />
-  <!--action name="batch-approve"
+  <action name="batch-approve"
           group="main"
           ui="none"
-          class="LedgerSMB::Workflow::Action::Null" / -->
+          class="LedgerSMB::Workflow::Action::Null" />
   <action name="post_and_approve"
           group="main"
           order="05"

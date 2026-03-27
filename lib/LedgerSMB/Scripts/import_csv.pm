@@ -37,6 +37,7 @@ use LedgerSMB::Timecard;
 
 use List::MoreUtils qw{ any };
 use Text::CSV;
+use Workflow::Context;
 
 our $cols = {
     gl              =>  ['accno', 'debit', 'credit', 'curr', 'debit_fx',
@@ -280,11 +281,22 @@ sub _process_gl_multi {
                        ?, ?, ?, ?)
                                 })
         or die $dbh->errstr;
+
+    my $wf = $request->{_wire}->get('workflows')
+        ->create_workflow( 'GL',
+                           Workflow::Context->new(
+                               'transdate' => $request->{transdate},
+                               'batch-id'  => $batch_id,
+                               'table_name' => 'gl'
+                           ) );
+    $wf->execute_action( 'post' ); # misnomer: actually only saves...
+
+    # then, insert the workflow ID in the insertion below.
     my $sth_tx = $dbh->prepare(q{
         INSERT INTO transactions (
-               transdate, reference, description,
+               workflow_id, transdate, reference, description,
                table_name, trans_type_code, approved)
-        VALUES (?, ?, ?, 'gl', 'gl', true)
+        VALUES (?, ?, ?, ?, 'gl', 'gl', true)
         })
         or die $dbh->errstr;
     my $sth_gl = $dbh->prepare(q{
@@ -305,7 +317,7 @@ sub _process_gl_multi {
             LedgerSMB::Setting::Sequence->increment('glnumber', $request)
             unless defined $entry{reference};
 
-        $sth_tx->execute(@entry{qw/ transdate reference description /})
+        $sth_tx->execute($wf->id, @entry{qw/ transdate reference description /})
             or die $sth_tx->errstr;
         $sth_gl->execute($entry{reference})
             or die $sth_gl->errstr;
