@@ -122,7 +122,7 @@
     "stylelint-order": "8.1.1",
     "stylelint-webpack-plugin": "5.1.0",
     "tmp": "0.2.5",
-    "typescript": "5.9.3",
+    "typescript": "6.0.2",
     "undici": "7.24.5",
     "unix-timestamp": "1.1.0",
     "unused-webpack-plugin": "2.4.0",
