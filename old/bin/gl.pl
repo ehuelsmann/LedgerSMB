@@ -826,8 +826,10 @@ sub print {
         $form->{curr} = $form->{"curr_0"};;
 
         $form->{amount} = $form->{totaldebit};
-        my $fmt = LedgerSMB::Num2text->new($form->{_locale});
-        $form->{text_amount} = $fmt->num2text($form->parse_amount( \%myconfig,$form->{amount}));
+        $form->{text_amount} =
+            LedgerSMB::Num2text::cardinal(
+                $form->{_locale},
+                $form->parse_amount( \%myconfig,$form->{amount}));
     } else {
         # render the code--description for all business unit instead of id
         for my $drow (@displayrows) {

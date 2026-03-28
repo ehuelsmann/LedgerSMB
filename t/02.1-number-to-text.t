@@ -28,9 +28,9 @@ my %english = (
  1455 => 'One Thousand Four Hundred Fifty Five'
 );
 
-my $en = LedgerSMB::Num2text->new(LedgerSMB::Locale->get_handle('en'));
+my $en = (LedgerSMB::Locale->get_handle('en'));
 $en->init;
-is($en->num2text($_, 1) , $english{$_}, "$_ -> $english{$_}, Plain") for keys %english;
+is(LedgerSMB::Num2text::cardinal($en, $_) , $english{$_}, "$_ -> $english{$_}, Plain") for keys %english;
 
 
 done_testing;
