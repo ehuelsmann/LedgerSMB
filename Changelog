@@ -5,6 +5,7 @@ Changelog for 1.14 Series
 Changelog for 1.14.0
 
 Added functionalities
+* Support textual numbers for check printing for all translations (#9430)
 * New numbering sequences for lots, payments and asset reports (#9283, #9321)
 
 Changed functionalities
@@ -20,6 +21,7 @@ Cleanup & architecture improvements
 * Removed unused SQL modules (#9279)
 * Move last tables to GENERATED IDENTITY (#9319)
 * Various improvements to the generation of our API documentation (#9334, #9335, #9344)
+* Dropped custom number-to-text conversion in favor of Lingua::Num2Word (#9430)
 
 Updated dependencies
 * Perl minimum version increased to 5.38 (from 5.36)
