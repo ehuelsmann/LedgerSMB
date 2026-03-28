@@ -57,10 +57,6 @@ sub collect {
 # only check new code; we're scaling down on old code anyway
 find(\&collect, 'lib');
 
-@on_disk =
-    grep { ! m#^lib/LedgerSMB/Sysconfig.pm# } # LedgerSMB::Sysconfig false fail
-    @on_disk;
-
 
 my %also_private = (
     'LedgerSMB::Scripts::payment' => [ qr/(^p\_)|(_p$)/ ],

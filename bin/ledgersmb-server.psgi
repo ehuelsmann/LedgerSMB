@@ -22,7 +22,6 @@ use lib $FindBin::Bin . '/..'; # For our 'old code'-"require"s
 use LedgerSMB::Locale;
 use LedgerSMB::PSGI;
 use LedgerSMB::PSGI::Preloads;
-use LedgerSMB::Sysconfig;
 use LedgerSMB::Middleware::RequestID;
 
 use Beam::Wire;
@@ -82,9 +81,6 @@ do {
     elsif (-f 'ledgersmb.yml') {
         $config_file = 'ledgersmb.yml';
     }
-    elsif (-f 'ledgersmb.conf') {
-        $config_file = 'ledgersmb.conf';
-    }
 
     my $config;
     if (not defined $config_file
@@ -119,10 +115,6 @@ do {
         else {
             $config = $base_config;
         }
-    }
-    else {
-        $config = LedgerSMB::Sysconfig->ini2wire( $config_file );
-        $config->{extra_middleware} = [];
     }
     $wire = Beam::Wire->new( config => $config );
 };

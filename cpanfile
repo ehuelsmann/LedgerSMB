@@ -8,7 +8,6 @@ recommends 'Authen::SASL';
 requires 'Beam::Wire';
 requires 'CGI::Emulate::PSGI';
 requires 'CGI::Parse::PSGI';
-requires 'Config::IniFiles';
 requires 'Cookie::Baker', '0.10'; # for 'samesite' attribute
 requires 'DBD::Pg', '3.5.0';      # Due to being able to escape '?' placeholders
 requires 'DBI', '1.635';

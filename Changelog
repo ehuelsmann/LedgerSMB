@@ -11,6 +11,7 @@ Added functionalities
 Changed functionalities
 
 Removed functionalities
+* Support for the INI configuration file format (#9433)
 
 Bugs fixed
 * Overpayment reversals don't have a 'payment' record (#9257)

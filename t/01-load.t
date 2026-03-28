@@ -24,7 +24,7 @@ sub collect {
 }
 find(\&collect, 'lib/LedgerSMB/', 'old/lib/LedgerSMB/');
 
-my %tested = ( 'LedgerSMB::Sysconfig' => 1 );
+my %tested;
 sub module_loads {
     my ($module, @required_modules) = @_;
 
@@ -45,8 +45,6 @@ sub module_loads {
 
 ########### The actual tests
 
-
-use Test2::Require::Module 'LedgerSMB::Sysconfig';
 
 module_loads
     'LedgerSMB::Template::Plugin::ODS' => qw( XML::Twig OpenOffice::OODoc );
