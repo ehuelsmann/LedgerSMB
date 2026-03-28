@@ -804,11 +804,6 @@ sub process_transactions {
                 #         $form->info( " ..... " . $locale->text('failed') );
                 #     }
 
-                #     # print form
-                #     if ( LedgerSMB::Sysconfig::latex() && $ok ) {
-                #         &print_recurring( \%$pt, $defaultprinter );
-                #     }
-
                 #     &email_recurring( \%$pt );
 
                 # }
