@@ -34,6 +34,46 @@ requires 'JSONSchema::Validator', '0.010';
 recommends 'Cpanel::JSON::XS', '3.0206'; # 3.0206 adds 'allow_bignum' option
 recommends 'JSON::PP', '2.00'; # 1.99_01 adds 'allow_bignum'
 requires 'JSONSchema::Validator';
+
+# the modules below are sorted in the same order as the
+#   Locale::CLDR::* modules
+requires 'Lingua::Num2Word';
+requires 'Lingua::AFR::Num2Word';
+requires 'Lingua::ARA::Num2Word';
+requires 'Lingua::BUL::Num2Word';
+requires 'Lingua::CAT::Num2Word';
+requires 'Lingua::CES::Num2Word'; # iso 639 says cze
+requires 'Lingua::DAN::Num2Word';
+requires 'Lingua::DEU::Num2Word'; # iso 639 says ger
+requires 'Lingua::ELL::Num2Word'; # iso 639 says gre
+requires 'Lingua::ENG::Num2Word';
+requires 'Lingua::SPA::Num2Word';
+requires 'Lingua::EST::Num2Word';
+requires 'Lingua::FAS::Num2Word'; # iso 639 says per
+requires 'Lingua::FIN::Num2Word';
+requires 'Lingua::FRA::Num2Word'; # iso 639 says fre
+requires 'Lingua::HEB::Num2Word';
+requires 'Lingua::HUN::Num2Word';
+requires 'Lingua::HUN::Num2Word';
+requires 'Lingua::IND::Num2Word';
+requires 'Lingua::ISL::Num2Word'; # iso 639 says ice
+requires 'Lingua::ITA::Num2Word';
+requires 'Lingua::JPN::Num2Word';
+# requires 'Lingua::JAV::Num2Word';
+requires 'Lingua::LIT::Num2Word';
+requires 'Lingua::IND::Num2Word';
+# requires 'Lingua::MAY::Num2Word';
+requires 'Lingua::NOR::Num2Word'; # iso 639 says nob
+requires 'Lingua::NLD::Num2Word'; # iso 639 says dut
+requires 'Lingua::POL::Num2Word';
+requires 'Lingua::POR::Num2Word';
+requires 'Lingua::RUS::Num2Word';
+requires 'Lingua::SWE::Num2Word';
+requires 'Lingua::THA::Num2Word';
+requires 'Lingua::TUR::Num2Word';
+requires 'Lingua::UKR::Num2Word';
+requires 'Lingua::ZHO::Num2Word'; # iso 639 says chi
+
 requires 'List::MoreUtils';
 requires 'Locale::CLDR', '0.44.1';
 # Keep thoss in sync with the languages defined in Pg-database.sql
@@ -70,6 +110,7 @@ requires 'Locale::CLDR::Locales::Th', '0.44.1';
 requires 'Locale::CLDR::Locales::Tr', '0.44.1';
 requires 'Locale::CLDR::Locales::Uk', '0.44.1';
 requires 'Locale::CLDR::Locales::Zh', '0.44.1';
+requires 'Locale::Codes::Language';
 requires 'Locale::Maketext::Lexicon', '0.62';
 requires 'Locales';
 requires 'Log::Any';

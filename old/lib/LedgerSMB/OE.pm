@@ -1232,19 +1232,17 @@ sub order_details {
       ? $form->{ordtotal}
       : $form->{ordtotal} + $tax;
 
-    my $c = LedgerSMB::Num2text->new(
-        LedgerSMB::Locale->get_handle(
-            ($form->{language_code} ne "")
-            ? $form->{language_code} : $myconfig->{countrycode}
-        ));
-    $c->init;
     my $whole;
     ( $whole, $form->{decimal} ) = split /\./, $form->{ordtotal};
     $form->{decimal} .= "00";
     $form->{decimal} = substr( $form->{decimal}, 0, 2 );
 
-    $form->{text_decimal}   = $c->num2text( $form->{decimal} * 1 );
-    $form->{text_amount}    = $c->num2text($whole);
+    $form->{text_decimal}   =
+        LedgerSMB::Num2text::cardinal( $form->{_locale},
+                                       $form->{decimal} * 1 );
+    $form->{text_amount}    =
+        LedgerSMB::Num2text::cardinal( $form->{_locale},
+                                       $whole );
     $form->{integer_amount} = $form->format_amount( $myconfig, $whole );
 
     # format amounts

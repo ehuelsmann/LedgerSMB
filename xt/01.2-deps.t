@@ -25,6 +25,7 @@ ok_dependencies($file, \@on_disk,
                     'Email::Sender', # Loaded through dependency injection
                     'LaTeX::Driver',
                     'LedgerSMB',
+                    'Lingua',
                     'Locale::CLDR::Locales',
                     'Log::Any::Adapter::Log4perl', # used as plugin
                     'MooseX::ClassAttribute',

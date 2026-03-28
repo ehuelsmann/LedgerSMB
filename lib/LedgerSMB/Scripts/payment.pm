@@ -431,9 +431,8 @@ is not merged in, meaning that $request->{multiple} must be set to a true value.
 
 sub print {
     my ($request) = @_;
-    my $fmt = LedgerSMB::Num2text->new($request->{_locale});
-    my $payment =  LedgerSMB::DBObject::Payment->new(%$request);
-    $fmt->init();
+    my $locale  = $request->{_locale};
+    my $payment = LedgerSMB::DBObject::Payment->new(%$request);
     $payment->{company} = $payment->{_user}->{company};
     $payment->{address} = $payment->{_user}->{address};
 
@@ -505,7 +504,8 @@ sub print {
             }
             my $amt = $check->{amount}->copy;
             $amt->bfloor();
-            $check->{text_amount} = $fmt->num2text($amt);
+            $check->{text_amount} =
+                LedgerSMB::Num2text::cardinal($locale, $amt);
             $check->{decimal} = ($check->{amount} - $amt) * 100;
             $check->{amount} = $request->format_amount(
                 $check->{amount},
