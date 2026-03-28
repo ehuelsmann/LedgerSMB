@@ -406,7 +406,7 @@ BEGIN
 
 SELECT * INTO t_inv FROM invoice WHERE id = in_invoice_id;
 SELECT * INTO t_part FROM parts WHERE id = t_inv.parts_id;
-SELECT * INTO t_ar FROM ar WHERE id = t_inv.trans_id;
+SELECT * INTO t_ar FROM ar WHERE trans_id = t_inv.trans_id;
 SELECT transdate INTO t_transdate FROM transactions WHERE id = t_inv.trans_id;
 
 IF t_ar.is_return THEN

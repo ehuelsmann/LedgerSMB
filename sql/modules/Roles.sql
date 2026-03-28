@@ -658,6 +658,7 @@ SELECT lsmb__create_role('ar_transaction_create',
 SELECT lsmb__grant_role('ar_transaction_create', 'contact_read');
 SELECT lsmb__grant_role('ar_transaction_create', 'exchangerate_edit');
 SELECT lsmb__grant_perms('ar_transaction_create', 'ar', 'INSERT');
+SELECT lsmb__grant_perms('ar_transaction_create', 'open_item', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create', 'invoice_note', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create', 'business_unit_ac', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create', 'journal_entry', 'INSERT');
@@ -669,6 +670,7 @@ SELECT lsmb__grant_perms('ar_transaction_create', 'journal_line', 'SELECT');
 SELECT lsmb__grant_perms('ar_transaction_create', 'business_unit_jl', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create', 'oe', 'SELECT'); --@@TODO: Why??
 SELECT lsmb__grant_perms('ar_transaction_create', 'transactions_id_seq', 'ALL');
+SELECT lsmb__grant_perms('ar_transaction_create', 'open_item_id_seq', 'ALL');
 SELECT lsmb__grant_perms('ar_transaction_create', 'acc_trans', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create', 'acc_trans_entry_id_seq', 'ALL');
 SELECT lsmb__grant_perms('ar_transaction_create', 'journal_entry_id_seq', 'ALL');
@@ -682,11 +684,13 @@ SELECT lsmb__create_role('ar_transaction_create_voucher',
 SELECT lsmb__grant_role('ar_transaction_create_voucher', 'contact_read');
 SELECT lsmb__grant_role('ar_transaction_create_voucher', 'batch_create');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'ar', 'INSERT');
+SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'open_item', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'warehouse_inventory', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'acc_trans', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'tax_extended', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'business_unit_ac', 'INSERT');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'transactions_id_seq', 'all');
+SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'open_item_id_seq', 'all');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'invoice_id_seq', 'all');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'acc_trans_entry_id_seq', 'all');
 SELECT lsmb__grant_perms('ar_transaction_create_voucher', 'warehouse_inventory_entry_id_seq', 'all');
@@ -725,7 +729,7 @@ SELECT lsmb__grant_role('ar_transaction_list', 'contact_read');
 SELECT lsmb__grant_role('ar_transaction_list', 'file_read');
 SELECT lsmb__grant_perms('ar_transaction_list', tname, 'SELECT')
   FROM unnest(
-         array['ar'::text, 'acc_trans', 'business_unit_ac', 'invoice',
+         array['ar'::text, 'open_item', 'acc_trans', 'business_unit_ac', 'invoice',
                'business_unit_inv', 'warehouse_inventory', 'tax_extended', 'ac_tax_form',
                'invoice_tax_form']
        ) tname;
@@ -849,12 +853,13 @@ SELECT lsmb__create_role('ap_transaction_create',
 SELECT lsmb__grant_role('ap_transaction_create', 'contact_read');
 SELECT lsmb__grant_role('ap_transaction_create', 'exchangerate_edit');
 SELECT lsmb__grant_perms('ap_transaction_create', obj, ptype)
-  FROM unnest(array['ap'::text, 'invoice_note', 'journal_entry', 'journal_line',
+  FROM unnest(array['ap'::text, 'open_item', 'invoice_note', 'journal_entry', 'journal_line',
                     'business_unit_jl']) obj
  CROSS JOIN unnest(array['SELECT'::text, 'INSERT']) ptype;
 
 SELECT lsmb__grant_perms('ap_transaction_create', obj, 'ALL')
   FROM unnest(array['transactions_id_seq'::text, 'acc_trans_entry_id_seq',
+                    'open_item_id_seq',
                     'journal_entry_id_seq', 'journal_line_id_seq']) obj;
 
 SELECT lsmb__grant_perms('ap_transaction_create', 'acc_trans', 'INSERT');
@@ -878,11 +883,12 @@ SELECT lsmb__grant_perms('ap_transaction_create_voucher', 'journal_line', 'SELEC
 SELECT lsmb__grant_perms('ap_transaction_create_voucher', 'eca_invoice', 'INSERT');
 SELECT lsmb__grant_perms('ap_transaction_create_voucher', 'eca_invoice', 'SELECT');
 SELECT lsmb__grant_perms('ap_transaction_create_voucher', obj, ptype)
-  FROM unnest(array['ap'::text, 'invoice', 'business_unit_inv']) obj
+  FROM unnest(array['ap'::text, 'open_item', 'invoice', 'business_unit_inv']) obj
  CROSS JOIN unnest(array['SELECT'::text, 'INSERT', 'UPDATE']) ptype;
 
 SELECT lsmb__grant_perms('ap_transaction_create_voucher', obj, 'ALL')
-  FROM unnest(array['transactions_id_seq'::text, 'acc_trans_entry_id_seq']) obj;
+  FROM unnest(array['transactions_id_seq'::text, 'open_item_id_seq',
+                    'acc_trans_entry_id_seq']) obj;
 
 SELECT lsmb__create_role('ap_invoice_create',
                          $DOC$
@@ -917,7 +923,7 @@ SELECT lsmb__create_role('ap_transaction_list',
 SELECT lsmb__grant_role('ap_transaction_list', 'contact_read');
 SELECT lsmb__grant_role('ap_transaction_list', 'file_read');
 SELECT lsmb__grant_perms('ap_transaction_list', obj, 'SELECT')
-  FROM unnest(array['ap'::text, 'acc_trans', 'invoice', 'warehouse_inventory',
+  FROM unnest(array['ap'::text, 'open_item', 'acc_trans', 'invoice', 'warehouse_inventory',
                     'tax_extended', 'ac_tax_form', 'invoice_tax_form']) obj;
 
 SELECT lsmb__create_role('ap_voucher_all',
@@ -1149,7 +1155,7 @@ SELECT lsmb__create_role('inventory_reports',
                          $DOC$
 );
 SELECT lsmb__grant_perms('inventory_reports', obj, 'SELECT')
-  FROM unnest(array['ar'::text, 'ap', 'warehouse_inventory',
+  FROM unnest(array['ar'::text, 'ap', 'open_item', 'warehouse_inventory',
                     'invoice', 'acc_trans']) obj;
 
 SELECT lsmb__create_role('inventory_adjust',
@@ -1158,7 +1164,7 @@ SELECT lsmb__create_role('inventory_adjust',
                          $DOC$
 );
 SELECT lsmb__grant_perms('inventory_adjust', obj, 'SELECT')
-  FROM unnest(array['parts'::text, 'ar', 'ap', 'invoice']) obj;
+  FROM unnest(array['parts'::text, 'ar', 'ap', 'open_item', 'invoice']) obj;
 
 SELECT lsmb__grant_perms('inventory_adjust', obj, 'INSERT')
   FROM unnest(array['inventory_report'::text, 'inventory_report_line']) obj;
@@ -1284,7 +1290,8 @@ SELECT lsmb__grant_perms('gl_transaction_create', obj, 'INSERT')
 
 SELECT lsmb__grant_perms('gl_transaction_create', obj, 'ALL')
   FROM unnest(array['transactions_id_seq'::text, 'acc_trans_entry_id_seq',
-                   'journal_entry_id_seq', 'journal_line_id_seq'])obj;
+                    'open_item_id_seq',
+                    'journal_entry_id_seq', 'journal_line_id_seq'])obj;
 
 SELECT lsmb__create_role('gl_voucher_create',
                          $DOC$
@@ -1295,7 +1302,8 @@ SELECT lsmb__grant_perms('gl_voucher_create', obj, 'INSERT')
   FROM unnest(array['gl'::text, 'acc_trans', 'business_unit_ac']) obj;
 
 SELECT lsmb__grant_perms('gl_voucher_create', obj, 'ALL')
-  FROM unnest(array['transactions_id_seq'::text, 'acc_trans_entry_id_seq']) obj;
+  FROM unnest(array['transactions_id_seq'::text, 'open_item_id_seq',
+                    'acc_trans_entry_id_seq']) obj;
 -- TODO Add menu permissions
 
 SELECT lsmb__create_role('gl_reports',

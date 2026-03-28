@@ -195,11 +195,16 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
       VALUES (?, 'ap', 'ap', true)
       SQL
 
+    my $oi_query = $dbh->prepare(<<~'SQL');
+      INSERT INTO open_item (item_number, item_type, account_id)
+      VALUES ('AP-' || currval('transactions_id_seq'), 'ap', ?)
+      SQL
+
     my $ap_query = $dbh->prepare("
-        INSERT INTO ap (id, invnumber, amount_bc, netamount_bc,
+        INSERT INTO ap (trans_id, open_item_id, invnumber, amount_bc, netamount_bc,
                         duedate, curr, entity_credit_account,
                         amount_tc, netamount_tc)
-        SELECT currval('transactions_id_seq'), ?, ?, ?, ?, 'USD',
+        SELECT currval('transactions_id_seq'), currval('open_item_id_seq'), ?, ?, ?, ?, 'USD',
                entity_credit_account.id, ?, ?
         FROM entity
         JOIN entity_credit_account ON (
@@ -208,18 +213,22 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
         WHERE entity.name = ?
         AND entity_credit_account.entity_class = 1
         LIMIT 1
-        RETURNING ap.id
+        RETURNING ap.trans_id, ap.open_item_id
     ");
 
     my $acc_trans_query = $dbh->prepare("
         INSERT INTO acc_trans (trans_id, chart_id, amount_bc,
-                               curr, amount_tc, transdate)
-        VALUES (?, ?, ?, 'USD', ?, ?)
+                               curr, amount_tc, transdate, open_item_id)
+        VALUES (?, ?, ?, 'USD', ?, ?, ?)
     ");
 
     foreach my $data (@{C->data}) {
         $txn_query->execute(
             $data->{'Date'},
+        );
+
+        $oi_query->execute(
+            10 # 2100--Accounts payable account
         );
 
         $ap_query->execute(
@@ -231,7 +240,7 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
             $data->{'Amount'},
             $data->{'Vendor'},
         );
-        my $ap_id = $ap_query->fetchrow_hashref->{id};
+        my ($ap_id, $open_item_id) = $ap_query->fetchrow_array;
 
         $acc_trans_query->execute(
             $ap_id,
@@ -239,6 +248,7 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
             $data->{'Amount'} * -1,
             $data->{'Amount'} * -1,
             $data->{'Date'},
+            undef,
         );
 
         $acc_trans_query->execute(
@@ -247,6 +257,7 @@ Given qr/(an )?unpaid AP transactions? with these values:$/, sub {
             $data->{'Amount'},
             $data->{'Amount'},
             $data->{'Date'},
+            $open_item_id,
         );
     }
 };
@@ -819,7 +830,7 @@ Given qr/that standard payment terms apply for "(.+)"/, sub {
               SELECT account__save(NULL, 'DISC', 'Payment discounts',
                  'E', NULL, (select id from account_heading where accno='5600'),
                  null, false, false, ARRAY['AR_discount','AP_discount']::text[],
-                 false, false);
+                 false, false, false);
             })
             or die $dbh->errstr;
     }

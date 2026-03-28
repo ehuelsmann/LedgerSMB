@@ -159,7 +159,7 @@ is saved.  For receipts, this just redirects to bulk_post currently.
 my $bulk_post_map = input_map(
     [ qr/^(?<fld>id|source|memo|paid)_(?<cid>\d+)$/ => '@contacts<cid>:%<fld>' ],
     [ qr/^contact_label_(?<cid>\d+)$/ => '@contacts<cid>:%pay_to' ],
-    [ qr/^(?<fld>invoice_date|invnumber|due|payment|invoice|net)_(?<cid>\d+)_(?<invrow>\d+)$/
+    [ qr/^(?<fld>invoice_date|invnumber|due|payment|invoice|net|open_item_id)_(?<cid>\d+)_(?<invrow>\d+)$/
       => '@contacts<cid>:@invoices<invrow>:%<fld>' ],
     [ qr/(?<fld>cash_accno|ar_ap_accno)$/ => '%<fld>' ],
     [ qr/^transdate$/ => '%date_paid' ],
@@ -1085,6 +1085,7 @@ sub payment2 {
                 number => $invoice->{invnumber},
                 id     =>  $invoice_id,
                 href   => $uri },
+            open_item_id      => $invoice->{open_item_id},
             invoice_date      => "$invoice->{invoice_date}",
             amount            => $invoice_amt ? $request->format_amount( $invoice_amt, money => 1) : '',
             due               => $request->format_amount( $due, money => 1),
@@ -1319,6 +1320,7 @@ sub post_payment {
     my @memo;
     my @source;
     my @transaction_id;
+    my @open_item_id;
     my @op_amount;
     my @op_cash_account_id;
     my @op_source;
@@ -1383,6 +1385,7 @@ sub post_payment {
                 push @source, undef;
                 push @memo, $locale->text('Applied discount');
                 push @transaction_id, $array_options[$ref]->{invoice_id};
+                push @open_item_id, $array_options[$ref]->{open_item_id};
             }
 
             # We'll use this for both cash and ap/ar accounts
@@ -1399,6 +1402,7 @@ sub post_payment {
             push @memo,
                 $request->{"memo_invoice_$array_options[$ref]->{invoice_id}"};
             push @transaction_id, $array_options[$ref]->{invoice_id};
+            push @open_item_id, $array_options[$ref]->{open_item_id};
         }
     }
     # Check if there is an unhandled overpayment and run payment2 as needed
@@ -1447,6 +1451,7 @@ sub post_payment {
     $Payment->{source}             = \@source;
     $Payment->{memo}               = \@memo;
     $Payment->{transaction_id}     = \@transaction_id;
+    $Payment->{open_item_id}       = \@open_item_id;
     $Payment->{op_amount}          = \@op_amount;
     $Payment->{op_cash_account_id} = \@op_cash_account_id;
     $Payment->{op_source}          = \@op_source;

@@ -10,13 +10,16 @@ $BODY$
   DECLARE
   t_new_reference text;
   t_old_reference text;
+  t_id int;
 BEGIN
   if tg_relname in ('ar','ap') then
     t_new_reference := new.invnumber;
     t_old_reference := old.invnumber;
+    t_id := new.trans_id;
   else
     t_new_reference := new.reference;
     t_old_reference := old.reference;
+    t_id := new.id;
   end if;
   IF tg_op = 'INSERT' THEN
     PERFORM * FROM transactions WHERE id = new.id;
@@ -25,7 +28,7 @@ BEGIN
     END IF;
 
     INSERT INTO transactions (id, table_name, reference, trans_type_code)
-    VALUES (new.id, TG_RELNAME, t_new_reference, TG_ARGV[0] );
+    VALUES (t_id, TG_RELNAME, t_new_reference, TG_ARGV[0] );
   ELSEIF tg_op = 'UPDATE' THEN
     IF new.id <> old.id
       OR t_new_reference <> t_old_reference THEN
@@ -35,7 +38,7 @@ BEGIN
          WHERE id = old.id;
     END IF;
   ELSE
-    DELETE FROM transactions WHERE id = old.id;
+    DELETE FROM transactions WHERE id = t_id;
   END IF;
   RETURN new;
 END;
@@ -55,6 +58,7 @@ $$
 DECLARE
    t_reference text;
    t_row RECORD;
+   t_id int;
 BEGIN
 
 IF TG_OP = 'INSERT' then
@@ -65,12 +69,14 @@ END IF;
 
 IF TG_TABLE_NAME IN ('ar', 'ap') THEN
     t_reference := t_row.invnumber;
+    t_id := t_row.trans_id;
 ELSE
     t_reference := t_row.reference;
+    t_id := t_row.id;
 END IF;
 
 INSERT INTO audittrail (trans_id,tablename,reference, action, person_id)
-values (t_row.id,TG_TABLE_NAME,t_reference, TG_OP, person__get_my_entity_id());
+values (t_id,TG_TABLE_NAME,t_reference, TG_OP, person__get_my_entity_id());
 
 return null; -- AFTER TRIGGER ONLY, SAFE
 END;
@@ -186,6 +192,55 @@ $$ language plpgsql;
 COMMENT ON FUNCTION trigger_invoice_prevent_allocation_delete() IS
   $$Prevents deletion of the "invoice" record in case the "allocated" field is non-zero to
   maintain correct COGS assignment.
+  $$;
+
+create or replace function trigger_open_item_maintenance () returns trigger
+as $$
+begin
+  if exists (select 1
+               from account
+              where new.chart_id = account.id
+                and open_item_managed) then
+    if new.open_item_id is null then
+      if TG_OP = 'UPDATE' then
+        raise exception 'Setting open_item_id to NULL not allowed on open item managed account';
+      else
+        if not exists (select 1
+                         from account_link al
+                        where account_id = new.chart_id
+                          and description = ANY(ARRAY['AR', 'AP']::text[])) then
+          insert into open_item (item_number, item_type, account_id, opening_entry_id)
+          values (setting_increment('openitemnumber'), 'gl', new.chart_id, new.entry_id)
+          returning id into new.open_item_id;
+
+          raise warning 'Created open item % due to insert without open_item_id on open item maneged account', new.open_item_id;
+        else
+          raise exception 'AR/AP items need to be posted with open_item_id on the AR/AP accounts';
+        end if;
+      end if;
+    else
+      -- verify that the open item matches the line's chart_id
+      if new.chart_id <> (select account_id
+                            from open_item oi
+                           where oi.id = new.open_item_id) then
+        raise exception 'Open item % not associated with account %', new.open_item_id, new.chart_id;
+      end if;
+    end if;
+  else
+    if new.open_item_id is not null then
+      raise exception 'Account % not open-item managed; providing open_item_id not allowed', new.chart_id;
+    end if;
+  end if;
+
+  return new;
+end;
+  $$ language plpgsql;
+
+comment on function trigger_open_item_maintenance() is
+  $$Make sure to have item references on open item managed accounts.
+
+  This function creates a new open item, if a posting is done without an open
+  item reference - if the account is *not* an AR/AP account (assumption: it is a GL account).
   $$;
 
 update defaults set value = 'yes' where setting_key = 'module_load_ok';

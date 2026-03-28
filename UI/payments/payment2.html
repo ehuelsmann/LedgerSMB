@@ -201,6 +201,10 @@ onLoad="maximize_minimize_on_load(event, 'div_topay_state', 'payments/img/down.g
         <td class="invoice-date">
           [% row.invoice_date %]
           [% PROCESS input element_data = {
+             type="hidden"
+             name="open_item_id_" _ row.invoice.id
+             value=row.open_item_id } %]
+          [% PROCESS input element_data = {
                  type="hidden"
                  name="invoice_date_" _ row.invoice.id
                  value=row.invoice_date } %]

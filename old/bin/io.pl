@@ -138,8 +138,8 @@ sub approve {
     $wf->execute_action( 'approve' );
     my $query =
         ($form->{vc} eq 'customer')
-        ? 'select invnumber from ar where id = ?'
-        : 'select invnumber from ap where id = ?';
+        ? 'select invnumber from ar where trans_id = ?'
+        : 'select invnumber from ap where trans_id = ?';
     my $sth = $form->{dbh}->prepare($query)
         or $form->dberror($query);
     $sth->execute( $form->{id} )

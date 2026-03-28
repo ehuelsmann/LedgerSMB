@@ -21,7 +21,7 @@ BEGIN
 
   SELECT INTO v_cost, v_qty SUM(i.sellprice * i.qty), SUM(i.qty)
   FROM invoice i
-  JOIN ap a ON (a.id = i.trans_id)
+  JOIN ap a ON (a.trans_id = i.trans_id)
   WHERE i.parts_id = v_parts_id;
 
   IF v_cost IS NULL THEN
@@ -54,10 +54,10 @@ BEGIN
 
   SELECT INTO v_cost sellprice
     FROM invoice i
-           JOIN ap a ON (a.id = i.trans_id)
-           JOIN transactions txn ON a.id = txn.id
+           JOIN ap a ON (a.trans_id = i.trans_id)
+           JOIN transactions txn ON a.trans_id = txn.id
    WHERE i.parts_id = v_parts_id
-   ORDER BY txn.transdate desc, a.id desc
+   ORDER BY txn.transdate desc, a.trans_id desc
    LIMIT 1;
 
   IF v_cost IS NULL THEN

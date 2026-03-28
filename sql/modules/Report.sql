@@ -31,12 +31,12 @@ RETURNS SETOF incoming_lot_cogs_line AS
 $$
 BEGIN
 RETURN QUERY EXECUTE $sql$
-SELECT i.id, a.id, a.invnumber, txn.transdate, i.parts_id, p.partnumber,
+SELECT i.id, a.trans_id, a.invnumber, txn.transdate, i.parts_id, p.partnumber,
        i.description, i.qty * -1, i.allocated, p.onhand,
        i.sellprice, i.qty * i.sellprice * -1, i.allocated * i.sellprice
   FROM ap a
   JOIN transactions txn USING (id)
-  JOIN invoice i ON a.id = i.trans_id
+  JOIN invoice i ON a.trans_id = i.trans_id
   JOIN parts p ON i.parts_id = p.id
  WHERE p.income_accno_id IS NOT NULL AND p.expense_accno_id IS NOT NULL
        AND (txn.transdate >= $1 OR $1 IS NULL)
@@ -74,6 +74,7 @@ CREATE TYPE report_aging_item AS (
         c90_tc numeric,
         duedate date,
         id int,
+        open_item_id int,
         curr char(3),
         exchangerate numeric,
         line_items text[][],
@@ -134,15 +135,15 @@ RETURN QUERY EXECUTE $sql$
                             THEN (a.sign * sum(ac.amount_tc))
                             ELSE 0 END
                             as c90_tc,
-                       a.duedate, a.id, a.curr,
+                       a.duedate, a.trans_id, a.open_item_id, a.curr,
                        null::numeric AS exchangerate,
                         (SELECT array_agg(ARRAY[p.partnumber,
                                         i.description, i.qty::text])
                                 FROM parts p
                                 JOIN invoice i ON (i.parts_id = p.id)
-                                WHERE i.trans_id = a.id) AS line_items,
+                                WHERE i.trans_id = a.trans_id) AS line_items,
                    (coalesce($5, now())::date - a.transdate) as age
-                  FROM (select id, invnumber, ordnumber, amount_bc, duedate,
+                  FROM (select trans_id, open_item_id, invnumber, ordnumber, amount_bc, duedate,
                                curr, ponumber, notes, entity_credit_account,
                                -1 AS sign, txn.transdate, force_closed,
                                CASE WHEN $7
@@ -154,7 +155,7 @@ RETURN QUERY EXECUTE $sql$
                           FROM ar JOIN transactions txn USING (id)
                          WHERE $2 = 2
                          UNION
-                        SELECT id, invnumber, ordnumber, amount_bc, duedate,
+                        SELECT trans_id, open_item_id, invnumber, ordnumber, amount_bc, duedate,
                                curr, ponumber, notes, entity_credit_account,
                                1 as sign, txn.transdate, force_closed,
                                CASE WHEN $7
@@ -165,13 +166,8 @@ RETURN QUERY EXECUTE $sql$
                                END as age
                           FROM ap JOIN transactions txn USING (id)
                          WHERE $2 = 1) a
-                  JOIN acc_trans ac ON ac.trans_id = a.id
+                  JOIN acc_trans ac ON ac.open_item_id = a.open_item_id
                   JOIN account acc ON ac.chart_id = acc.id
-                  JOIN account_link acl ON acl.account_id = acc.id
-                       AND (($2 = 1
-                              AND acl.description = 'AP')
-                           OR ($2 = 2
-                              AND acl.description = 'AR'))
                   JOIN entity_credit_account c
                        ON a.entity_credit_account = c.id
                   JOIN entity e ON (e.id = c.entity_id)
@@ -193,7 +189,7 @@ RETURN QUERY EXECUTE $sql$
                        l.city, l.state, l.mail_code, country.name,
                        a.invnumber, txn.transdate, a.ordnumber,
                        a.ponumber, a.notes, a.amount_bc, a.sign,
-                       a.duedate, a.id, a.curr, a.age
+                       a.duedate, a.trans_id, a.open_item_id, a.curr, a.age
                 HAVING ($6 is null
                         or $6 <@ compound_array(bu_tree.path))
                        AND sum(ac.amount_bc::numeric(20,2)) <> 0
@@ -311,14 +307,14 @@ FOR retval IN
                                                 on ar.entity_credit_account = eca.id
                                             join entity
                                                 on eca.entity_id = entity.id) ar
-                            ON txn.id = ar.id
+                            ON txn.id = ar.trans_id
                         LEFT JOIN (select ap.*, entity.name as entity_name
                                      from ap
                                             join entity_credit_account eca
                                                 on ap.entity_credit_account = eca.id
                                             join entity
                                                 on eca.entity_id = entity.id) ap
-                            ON txn.id = ap.id) g
+                            ON txn.id = ap.trans_id) g
            JOIN acc_trans ac ON ac.trans_id = g.id
          JOIN account c ON ac.chart_id = c.id
     LEFT JOIN business_unit_ac bac ON ac.entry_id = bac.entry_id
@@ -412,6 +408,7 @@ DROP TYPE IF EXISTS aa_transactions_line CASCADE;
 
 CREATE TYPE aa_transactions_line AS (
     id int,
+    open_item_id int,
     invoice bool,
     entity_id int,
     meta_number text,
@@ -446,34 +443,33 @@ $$
 BEGIN
 RETURN QUERY EXECUTE $sql$
 
-SELECT a.id, a.invoice, eeca.id, eca.meta_number::text, eeca.name, a.transdate,
+SELECT a.id, a.open_item_id, a.invoice, eeca.id, eca.meta_number::text, eeca.name, a.transdate,
        a.invnumber, a.ordnumber, a.ponumber, a.curr, a.amount_bc, a.netamount_bc,
        a.amount_bc - a.netamount_bc as tax,
        a.amount_bc - p.due as paid, p.due, p.last_payment, a.duedate, a.notes,
        ee.name, me.name, a.shippingpoint, a.shipvia,
        '{}'::text[] as business_units -- TODO
-  FROM (select txn.id, txn.transdate, invnumber, curr, amount_bc, netamount_bc, duedate,
+  FROM (select txn.id, open_item_id, txn.transdate, invnumber, curr, amount_bc, netamount_bc, duedate,
                notes, person_id, entity_credit_account, invoice,
                shippingpoint, shipvia, ordnumber, ponumber, description,
                on_hold, force_closed
-          FROM ar JOIN transactions txn ON ar.id = txn.id
+          FROM ar JOIN transactions txn ON ar.trans_id = txn.id
          WHERE $1 = 2 and txn.approved
          UNION
-        SELECT txn.id, txn.transdate, invnumber, curr, amount_bc, netamount_bc, duedate,
+        SELECT txn.id, open_item_id, txn.transdate, invnumber, curr, amount_bc, netamount_bc, duedate,
                notes, person_id, entity_credit_account, invoice,
                shippingpoint, shipvia, ordnumber, ponumber, description,
                on_hold, force_closed
-          FROM ap JOIN transactions txn ON ap.id = txn.id
+          FROM ap JOIN transactions txn ON ap.trans_id = txn.id
          WHERE $1 = 1 and txn.approved) a
   LEFT
-  JOIN (SELECT trans_id, sum(amount_bc) *
+  JOIN (SELECT open_item_id, sum(amount_bc) *
                CASE WHEN $1 = 1 THEN 1 ELSE -1 END AS due,
                max(transdate) as last_payment
           FROM acc_trans ac
-          JOIN account_link al ON ac.chart_id = al.account_id
-         WHERE approved AND al.description IN ('AR', 'AP')
+         WHERE approved
                AND ($10 is null or transdate <= $10)
-      GROUP BY trans_id) p ON p.trans_id = a.id
+      GROUP BY open_item_id) p ON p.open_item_id = a.open_item_id
   JOIN entity_credit_account eca ON a.entity_credit_account = eca.id
   JOIN entity eeca ON eca.entity_id = eeca.id
   LEFT
@@ -560,7 +556,7 @@ $$
 BEGIN
 RETURN QUERY EXECUTE $sql$
 
-SELECT a.id, a.invoice, eeca.id, eca.meta_number::text, eeca.name,
+SELECT a.id, a.open_item_id, a.invoice, eeca.id, eca.meta_number::text, eeca.name,
        a.transdate, a.invnumber, a.ordnumber, a.ponumber, a.curr,
        a.amount_bc as amount, a.netamount_bc as netamount,
        a.amount_bc - a.netamount_bc as tax, a.amount_bc - p.due,
@@ -569,29 +565,27 @@ SELECT a.id, a.invoice, eeca.id, eca.meta_number::text, eeca.name,
        eee.name as employee, mee.name as manager, a.shippingpoint,
        a.shipvia, '{}'::text[]
 
-  FROM (select txn.id, txn.transdate, invnumber, curr, amount_bc, netamount_bc, duedate,
+  FROM (select txn.id, open_item_id, txn.transdate, invnumber, curr, amount_bc, netamount_bc, duedate,
                notes,
                person_id, entity_credit_account, invoice, shippingpoint,
                shipvia, ordnumber, ponumber, description, on_hold, force_closed
-          FROM ar JOIN transactions txn ON ar.id = txn.id
+          FROM ar JOIN transactions txn ON ar.trans_id = txn.id
          WHERE $1 = 2
                and ($21 is null or ($21 = txn.approved))
          UNION
-        SELECT txn.id, txn.transdate, invnumber, curr, amount_bc, netamount_bc, duedate,
+        SELECT txn.id, open_item_id, txn.transdate, invnumber, curr, amount_bc, netamount_bc, duedate,
                notes,
                person_id, entity_credit_account, invoice, shippingpoint,
                shipvia, ordnumber, ponumber, description, on_hold, force_closed
-          FROM ap JOIN transactions txn ON ap.id = txn.id
+          FROM ap JOIN transactions txn ON ap.trans_id = txn.id
          WHERE $1 = 1
                and ($21 is null or ($21 = txn.approved))) a
   LEFT
   JOIN (select sum(amount_bc) * case when $1 = 1 THEN 1 ELSE -1 END
-               as due, trans_id, max(transdate) as last_payment
+               as due, open_item_id, max(transdate) as last_payment
           FROM acc_trans ac
-          JOIN account_link l ON ac.chart_id = l.account_id
-         WHERE l.description IN ('AR', 'AP')
-      GROUP BY ac.trans_id
-       ) p ON p.trans_id = a.id
+      GROUP BY ac.open_item_id
+       ) p ON p.open_item_id = a.open_item_id
   LEFT
   JOIN entity_employee ee ON ee.entity_id = a.person_id
   LEFT

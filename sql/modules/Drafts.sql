@@ -41,9 +41,9 @@ BEGIN
                END as amount
           FROM transactions txn
                  LEFT JOIN ar
-                     ON ar.id = txn.id
+                     ON ar.trans_id = txn.id
                  LEFT JOIN ap
-                     ON ap.id = txn.id
+                     ON ap.trans_id = txn.id
          WHERE NOT EXISTS (select 1
                              from voucher v
                             where v.trans_id = txn.id)
@@ -78,7 +78,7 @@ begin
             WHERE trans_id = in_id;
           UPDATE ar
              set invnumber = setting_increment('sinumber')
-           WHERE id = in_id AND invnumber is null;
+           WHERE trans_id = in_id AND invnumber is null;
         ELSIF (t_table = 'ap') THEN
                 PERFORM cogs__add_for_ap_line(id) FROM invoice
                   WHERE trans_id = in_id;

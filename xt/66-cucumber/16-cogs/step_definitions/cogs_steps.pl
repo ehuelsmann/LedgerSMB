@@ -22,9 +22,18 @@ Given qr/^(-?\d+) units sold/, sub {
         or die $dbh->errstr;
     $dbh->do(
         q{
-        INSERT INTO ar (id, invnumber, invoice,
+        INSERT INTO open_item (item_number, item_type, account_id)
+        VALUES ('AR-' || currval('transactions_id_seq'),
+                'ar', (select id from account where accno = '1200'))
+        })
+        or die $dbh->errstr;
+    $dbh->do(
+        q{
+        INSERT INTO ar (trans_id, open_item_id, invnumber, invoice,
                         entity_credit_account)
-             VALUES (currval('transactions_id_seq'), 'sale', true,
+             VALUES (currval('transactions_id_seq'),
+                     currval('open_item_id_seq'),
+                     'sale', true,
                      (select id from entity_credit_account
                        where meta_number=?)
                     );
@@ -125,9 +134,18 @@ When qr/^(-?\d+) units are sold$/, sub {
         or die $dbh->errstr;
     $dbh->do(
         q{
-        INSERT INTO ar (id, invnumber, invoice,
+        INSERT INTO open_item (item_number, item_type, account_id)
+        VALUES ('AR-' || currval('transactions_id_seq'),
+                'ar', (select id from account where accno = '1200'))
+        })
+        or die $dbh->errstr;
+    $dbh->do(
+        q{
+        INSERT INTO ar (trans_id, open_item_id, invnumber, invoice,
                         entity_credit_account)
-             VALUES (currval('transactions_id_seq'), ?, true,
+             VALUES (currval('transactions_id_seq'),
+                     currval('open_item_id_seq'),
+                     ?, true,
                      (select id from entity_credit_account
                        where meta_number=?)
                     );
@@ -172,9 +190,18 @@ When qr/^(\d+) units are credited$/, sub {
         or die $dbh->errstr;
     $dbh->do(
         q{
-        INSERT INTO ar (id, invnumber, invoice, reverse,
+        INSERT INTO open_item (item_number, item_type, account_id)
+        VALUES ('AR-' || currval('transactions_id_seq'),
+                'ar', (select id from account where accno = '1200'))
+        })
+        or die $dbh->errstr;
+    $dbh->do(
+        q{
+        INSERT INTO ar (trans_id, open_item_id, invnumber, invoice, reverse,
                         entity_credit_account)
-             VALUES (currval('transactions_id_seq'), ?, true, true,
+             VALUES (currval('transactions_id_seq'),
+                     currval('open_item_id_seq'),
+                     ?, true, true,
                      (select id from entity_credit_account
                        where meta_number=?)
                     );

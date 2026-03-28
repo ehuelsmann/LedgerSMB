@@ -56,8 +56,8 @@ $$
                         v.batch_id, v.trans_id,
                         a.amount_bc, txn.transdate, 'Payable', v.batch_class
                 FROM voucher v
-                JOIN ap a ON (v.trans_id = a.id)
-                JOIN transactions txn ON a.id = txn.id
+                JOIN ap a ON (v.trans_id = a.trans_id)
+                JOIN transactions txn ON a.trans_id = txn.id
                 JOIN entity_credit_account eca
                         ON (eca.id = a.entity_credit_account)
                 JOIN entity e ON (eca.entity_id = e.id)
@@ -70,8 +70,8 @@ $$
                         v.batch_id, v.trans_id,
                         a.amount_bc, txn.transdate, 'Receivable', v.batch_class
                 FROM voucher v
-                JOIN ar a ON (v.trans_id = a.id)
-                JOIN transactions txn ON a.id = txn.id
+                JOIN ar a ON (v.trans_id = a.trans_id)
+                JOIN transactions txn ON a.trans_id = txn.id
                 JOIN entity_credit_account eca
                         ON (eca.id = a.entity_credit_account)
                 JOIN entity e ON (eca.entity_id = e.id)
@@ -92,14 +92,13 @@ $$
                 FROM voucher v
                 JOIN acc_trans a ON (v.id = a.voucher_id)
                 JOIN batch_class bc ON (bc.id = v.batch_class)
-                JOIN account_link l ON (a.chart_id = l.account_id)
-                JOIN ap ON (ap.id = a.trans_id)
+                JOIN ap ON (ap.open_item_id = a.open_item_id)
                 JOIN entity_credit_account eca
                         ON (ap.entity_credit_account = eca.id)
                 JOIN entity e ON (eca.entity_id = e.id)
                 WHERE v.batch_id = in_batch_id
                         AND a.voucher_id = v.id
-                        AND (bc.class like 'payment%' AND l.description = 'AP')
+                        AND bc.class like 'payment%'
                 GROUP BY v.id, ap.invoice, a.source, eca.meta_number, e.name,
                         v.batch_id, v.trans_id, a.transdate, bc.class
 
@@ -116,14 +115,13 @@ $$
                 FROM voucher v
                 JOIN acc_trans a ON (v.id = a.voucher_id)
                 JOIN batch_class bc ON (bc.id = v.batch_class)
-                JOIN account_link l ON (a.chart_id = l.account_id)
-                JOIN ar ON (ar.id = a.trans_id)
+                JOIN ar ON (ar.open_item_id = a.open_item_id)
                 JOIN entity_credit_account eca
                         ON (ar.entity_credit_account = eca.id)
                 JOIN entity e ON (eca.entity_id = e.id)
                 WHERE v.batch_id = in_batch_id
                         AND a.voucher_id = v.id
-                        AND (bc.class like 'receipt%' AND l.description = 'AR')
+                        AND bc.class like 'receipt%'
                 GROUP BY v.id, ar.invoice, a.source, eca.meta_number, e.name,
                         v.batch_id, v.trans_id, a.transdate, bc.class
                 UNION ALL
@@ -214,8 +212,8 @@ $$
                 LEFT JOIN users u ON (u.entity_id = b.created_by)
                 LEFT JOIN voucher v ON (v.batch_id = b.id)
                 LEFT JOIN batch_class vc ON (v.batch_class = vc.id)
-                LEFT JOIN ar ON (vc.id = 2 AND v.trans_id = ar.id)
-                LEFT JOIN ap ON (vc.id = 1 AND v.trans_id = ap.id)
+                LEFT JOIN ar ON (vc.id = 2 AND v.trans_id = ar.trans_id)
+                LEFT JOIN ap ON (vc.id = 1 AND v.trans_id = ap.trans_id)
                 LEFT JOIN acc_trans al ON
                         ((vc.id NOT IN (3, 4, 6, 7) AND v.trans_id = al.trans_id) OR
                                 (vc.id IN (3, 4, 6, 7)
@@ -487,8 +485,8 @@ BEGIN
         DELETE FROM acc_trans WHERE trans_id = ANY(t_transaction_ids);
         DELETE FROM voucher WHERE batch_id = in_batch_id;
         DELETE FROM batch WHERE id = in_batch_id;
-        DELETE FROM ar WHERE id = ANY(t_transaction_ids);
-        DELETE FROM ap WHERE id = ANY(t_transaction_ids);
+        DELETE FROM ar WHERE trans_id = ANY(t_transaction_ids);
+        DELETE FROM ap WHERE trans_id = ANY(t_transaction_ids);
         DELETE FROM gl WHERE id = ANY(t_transaction_ids);
         DELETE FROM transactions WHERE id = ANY(t_transaction_ids);
 
@@ -536,8 +534,8 @@ BEGIN
         -- deletion of the ar/ap/gl row causes removal of the `transactions`
         -- row, which fails if the voucher isn't deleted...
         DELETE FROM voucher WHERE id = voucher_row.id;
-        DELETE FROM ar WHERE id = voucher_row.trans_id;
-        DELETE FROM ap WHERE id = voucher_row.trans_id;
+        DELETE FROM ar WHERE trans_id = voucher_row.trans_id;
+        DELETE FROM ap WHERE trans_id = voucher_row.trans_id;
         DELETE FROM gl WHERE id = voucher_row.trans_id;
     ELSE
         -- Delete only the lines in the transaction which are explicitly

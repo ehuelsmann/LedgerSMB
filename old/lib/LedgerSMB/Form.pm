@@ -1328,14 +1328,14 @@ sub add_shipto {
             or die $self->{dbh}->errstr;
     }
     elsif ($self->{vc} eq 'customer') {
-        $self->{dbh}->do('update ar set shipto = ? where id = ?',
+        $self->{dbh}->do('update ar set shipto = ? where trans_id = ?',
                          {},
                          $self->{shiptolocationid},
                          $id)
             or die $self->{dbh}->errstr;
     }
     else {
-        $self->{dbh}->do('update ap set shipto = ? where id = ?',
+        $self->{dbh}->do('update ap set shipto = ? where trans_id = ?',
                          {},
                          $self->{shiptolocationid},
                          $id)
@@ -1992,12 +1992,12 @@ sub create_links {
                 txn.approved, ctf.default_reportable,
                 txn.description, a.on_hold, a.crdate,
                 a.shipto as shiptolocationid, a.shipto_attn as shiptoattn,
-                a.is_return, $seq,
+                a.is_return, $seq, a.open_item_id,
                 t.workflow_id, t.reversing, t.reversing_reference,
                 t.reversed_by, t.reversed_by_reference
             FROM $arap a
-            JOIN transactions txn ON a.id = txn.id
-            JOIN transactions_reversal t ON t.id = a.id
+            JOIN transactions txn ON a.trans_id = txn.id
+            JOIN transactions_reversal t ON txn.id = t.id
             JOIN entity_credit_account c
                 ON (a.entity_credit_account = c.id)
             JOIN entity ce ON (ce.id = c.entity_id)
@@ -2006,7 +2006,7 @@ sub create_links {
             LEFT JOIN entity e ON (er.entity_id = e.id)
             LEFT JOIN country_tax_form ctf
                                   ON (ctf.id = c.taxform_id)
-            WHERE a.id = ? AND c.entity_class =
+            WHERE txn.id = ? AND c.entity_class =
                 (select id FROM entity_class
                 WHERE class ilike ?)|;
         $sth = $dbh->prepare($query) || $self->dberror($query);

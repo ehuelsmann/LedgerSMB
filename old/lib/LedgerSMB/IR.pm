@@ -136,17 +136,25 @@ sub post_invoice {
         $query = q{INSERT INTO transactions (table_name, trans_type_code, approved)
                    VALUES ('ap', 'ap', false)};
         $dbh->do($query) or $form->dberror($query);
+
+        ($accno) = split /--/, $form->{AP};
+        $query = q{
+            INSERT INTO open_item (item_number, item_type, account_id)
+            VALUES ('AP-' || currval('transactions_id_seq'), 'ap', (SELECT id FROM account WHERE accno = ?))
+            };
+        $dbh->do($query, {}, $accno) or $form->dberror($query);
+
         $query = qq|
-            INSERT INTO ap (id, invnumber, person_id, entity_credit_account)
-                 VALUES (currval('transactions_id_seq'), '$uid', ?, ?)|;
+            INSERT INTO ap (trans_id, open_item_id, invnumber, person_id, entity_credit_account)
+                 VALUES (currval('transactions_id_seq'), currval('open_item_id_seq'), '$uid', ?, ?)|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{employee_id}, $form->{vendor_id}) || $form->dberror($query);
 
-        $query = qq|SELECT id FROM ap WHERE invnumber = '$uid'|;
+        $query = qq|SELECT trans_id, open_item_id FROM ap WHERE invnumber = '$uid'|;
         $sth   = $dbh->prepare($query);
         $sth->execute || $form->dberror($query);
 
-        ( $form->{id} ) = $sth->fetchrow_array;
+        ( $form->{id}, $form->{open_item_id} ) = $sth->fetchrow_array;
 
         $query = q|UPDATE transactions SET workflow_id = ?, reversing = ? WHERE id = ? AND workflow_id IS NULL|;
         $sth   = $dbh->prepare($query);
@@ -458,13 +466,13 @@ sub post_invoice {
         ($accno) = split /--/, $form->{AP};
 
         $query = qq|
-          INSERT INTO acc_trans (trans_id, chart_id,
+          INSERT INTO acc_trans (trans_id, chart_id, open_item_id,
                                 amount_bc, curr, amount_tc, transdate, approved)
-                       VALUES (?, (SELECT id FROM account WHERE accno = ?),
+                       VALUES (?, (SELECT id FROM account WHERE accno = ?), ?,
                               ?, ?, ?, ?, ?)|;
         $sth = $dbh->prepare($query)
             or $form->dberror($dbh->errstr);
-         $sth->execute( $form->{id}, $accno,
+        $sth->execute( $form->{id}, $accno, $form->{open_item_id},
                        $form->{payables}, $form->{currency},
                     $form->{payables}/$form->{exchangerate},
                        $form->{transdate}, $approved)
@@ -537,7 +545,7 @@ sub post_invoice {
                        reverse = ?,
                crdate = ?,
                shipto = ?
-         WHERE id = ?|;
+         WHERE trans_id = ?|;
     $dbh->do(
         $query, {},
 
@@ -646,10 +654,9 @@ sub retrieve_invoice {
                    a.shipto as shiptolocationid, l.line_one, l.line_two,
                    l.line_three, l.city, l.state, l.country_id, l.mail_code,
                    txn.workflow_id
-              FROM ap a
-              JOIN transactions txn USING (id)
+              FROM ap a JOIN transactions txn ON a.trans_id = txn.id
             LEFT JOIN location l on a.shipto = l.id
-             WHERE a.id = ?|;
+             WHERE a.trans_id = ?|;
         $sth = $dbh->prepare($query);
         $sth->execute( $form->{id} ) || $form->dberror($query);
 
@@ -944,7 +951,7 @@ sub toggle_on_hold {
 
         my $dbh = $form->{dbh};
 
-        $sth = $dbh->prepare("update ap set on_hold = not on_hold where ap.id = ?");
+        $sth = $dbh->prepare("update ap set on_hold = not on_hold where ap.trans_id = ?");
         my $code = $sth->execute($form->{id});#tshvr4
 
         return 1;

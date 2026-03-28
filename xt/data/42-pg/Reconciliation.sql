@@ -26,6 +26,11 @@ Summarizing what's happening below:
 
  */
 
+CREATE OR REPLACE FUNCTION test_get_account_id(in_accno text) returns int as
+  $$ SELECT id FROM account WHERE accno = $1; $$
+  language sql;
+
+
 INSERT INTO workflow (workflow_id, state, type)
 VALUES (nextval('workflow_seq'), 'SAVED', 'whatever');
 
@@ -49,45 +54,61 @@ values (-201, -201, 'T-11112', 1, -1000, 'XTS');
 
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-200, '1000-01-01', 'ar', 'ar', true);
-INSERT INTO ar (id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO open_item (item_number, item_type, account_id)
+VALUES ('-2000', 'ar', test_get_account_id('-11111'));
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
-values (-200, '-2000', '10', '10', 10, 10, -200, 'XTS');
+values (-200, currval('open_item_id_seq'), '-2000', '10', '10', 10, 10, -200, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-201, '1000-01-03', 'ar', 'ar', true);
-INSERT INTO ar (id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO open_item (item_number, item_type, account_id)
+VALUES ('-2001', 'ar', test_get_account_id('-11111'));
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
-values (-201, '-2001', '10', '10', 10, 10, -200, 'XTS');
+values (-201, currval('open_item_id_seq'), '-2001', '10', '10', 10, 10, -200, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-204, '1000-01-01', 'ar', 'ar', true);
-INSERT INTO ar (id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO open_item (item_number, item_type, account_id)
+VALUES ('-2002', 'ar', test_get_account_id('-11111'));
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
-values (-204, '-2002', '10', '10', 10, 10, -200, 'XTS');
+values (-204, currval('open_item_id_seq'), '-2002', '10', '10', 10, 10, -200, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-205, '1000-01-03', 'ar', 'ar', true);
-INSERT INTO ar (id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO open_item (item_number, item_type, account_id)
+VALUES ('-2003', 'ar', test_get_account_id('-11111'));
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
-values (-205, '-2003', '10', '10', 10, 10, -200, 'XTS');
+values (-205, currval('open_item_id_seq'), '-2003', '10', '10', 10, 10, -200, 'XTS');
 
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-206, '1000-01-01', 'ar', 'ar', true);
-INSERT INTO ar (id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO open_item (item_number, item_type, account_id)
+VALUES ('-2004', 'ar', test_get_account_id('-11111'));
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
-values (-206, '-2004', '10', '10', 10, 10, -201, 'XTS');
+values (-206, currval('open_item_id_seq'), '-2004', '10', '10', 10, 10, -201, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-207, '1000-01-03', 'ar', 'ar', true);
-INSERT INTO ar (id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO open_item (item_number, item_type, account_id)
+VALUES ('-2005', 'ar', test_get_account_id('-11111'));
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
-values (-207, '-2005', '10', '10', 10, 10, -201, 'XTS');
+values (-207, currval('open_item_id_seq'), '-2005', '10', '10', 10, 10, -201, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-208, '1000-01-01', 'ar', 'ar', true);
-INSERT INTO ar (id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO open_item (item_number, item_type, account_id)
+VALUES ('-2006', 'ar', test_get_account_id('-11111'));
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
-values (-208, '-2006', '10', '10', 10, 10, -201, 'XTS');
+values (-208, currval('open_item_id_seq'), '-2006', '10', '10', 10, 10, -201, 'XTS');
 INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
 VALUES (-209, '1000-01-03', 'ar', 'ar', true);
-INSERT INTO ar (id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
+INSERT INTO open_item (item_number, item_type, account_id)
+VALUES ('-2007', 'ar', test_get_account_id('-11111'));
+INSERT INTO ar (trans_id, open_item_id, invnumber, amount_bc, netamount_bc, amount_tc, netamount_tc,
                 entity_credit_account, curr)
-values (-209, '-2007', '10', '10', 10, 10, -201, 'XTS');
+values (-209, currval('open_item_id_seq'), '-2007', '10', '10', 10, 10, -201, 'XTS');
 
 
 insert into payment (id, reference, payment_class, payment_date, entity_credit_id, currency)
@@ -119,8 +140,6 @@ INSERT INTO transactions (id, transdate, table_name, trans_type_code, approved)
             values (-214, '1000-01-03', 'gl', 'gl', false);
 INSERT INTO gl (id, reference)
 values (-214, 'gl trans, unapproved lines');
-
-CREATE OR REPLACE FUNCTION test_get_account_id(in_accno text) returns int as $$ SELECT id FROM account WHERE accno = $1; $$ language sql;
 
 
 -- Test Act 1; 1000-01-01; source '1'
@@ -224,7 +243,7 @@ select -201, entry_id, 1
   from acc_trans
  where trans_id < 0
        and chart_id = test_get_account_id('-11112')
-       and exists (select 1 from ar where ar.id = acc_trans.trans_id);
+       and exists (select 1 from ar where ar.trans_id = acc_trans.trans_id);
 
 -- Test Act 3 - 2 payments and an adjustment, all with the same source
 

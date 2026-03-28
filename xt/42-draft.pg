@@ -37,16 +37,18 @@ BEGIN;
     INSERT INTO entity_credit_account (id, meta_number, entity_class, entity_id, ar_ap_account_id, curr)
     VALUES (-1001, '_testc', 2, -1000, -1000, 'XTS');
     SELECT account__save
-           (NULL, '00001', 'test only', 'A', NULL, (select id from account_heading limit 1), null, FALSE, FALSE,'{}', false,
+           (NULL, '00001', 'test only', 'A', NULL, (select id from account_heading limit 1), null, FALSE, FALSE,'{}', false, false,
            false);
     SELECT account__save
-           (NULL, '00002', 'test only', 'A', NULL, (select id from account_heading limit 1), null, FALSE, FALSE,'{}', false,
+           (NULL, '00002', 'test only', 'A', NULL, (select id from account_heading limit 1), null, FALSE, FALSE,'{}', false, false,
            false);
     INSERT INTO transactions (reference, transdate, table_name, trans_type_code, approved)
     VALUES ('_TEST AP', now(), 'ap', 'ap', false);
-    INSERT INTO ap (id, invnumber, entity_credit_account, amount_bc, netamount_bc,
+    INSERT INTO open_item (item_number, item_type, account_id)
+    VALUES ('_TEST AP', 'ap', (select id from account where accno = '00001'));
+    INSERT INTO ap (trans_id, open_item_id, invnumber, entity_credit_account, amount_bc, netamount_bc,
             amount_tc, netamount_tc, curr)
-    select currval('transactions_id_seq'), '_TEST AP', -1000, '100', '100', '100', '100', 'XTS';
+    select currval('transactions_id_seq'), currval('open_item_id_seq'), '_TEST AP', -1000, '100', '100', '100', '100', 'XTS';
 
     INSERT INTO acc_trans (chart_id, trans_id, amount_bc, curr, amount_tc, approved)
     SELECT id, currval('transactions_id_seq'), '100', 'XTS', 100, TRUE FROM account WHERE accno = '00001';
@@ -60,9 +62,11 @@ BEGIN;
 
     INSERT INTO transactions (reference, transdate, table_name, trans_type_code, approved)
     VALUES ('_TEST AR', now(), 'ar', 'ar', false);
-    INSERT INTO ar (id, invnumber, entity_credit_account, amount_bc, netamount_bc,
+    INSERT INTO open_item (item_number, item_type, account_id)
+    VALUES ('_TEST AR', 'ar', (select id from account where accno = '00002'));
+    INSERT INTO ar (trans_id, open_item_id, invnumber, entity_credit_account, amount_bc, netamount_bc,
            amount_tc, netamount_tc, curr)
-    select currval('transactions_id_seq'), '_TEST AR', -1001, '100', '100', 100, 100, 'XTS';
+    select currval('transactions_id_seq'), currval('open_item_id_seq'), '_TEST AR', -1001, '100', '100', 100, 100, 'XTS';
 
     INSERT INTO acc_trans (chart_id, trans_id, amount_bc, curr, amount_tc, approved)
     SELECT id, currval('transactions_id_seq'), '-100', 'XTS', -100, TRUE FROM account WHERE accno = '00001';
