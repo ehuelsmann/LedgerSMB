@@ -22,10 +22,12 @@ create function pg_temp.new_workflow(approved boolean, submitted boolean,
 $$ language sql;
 
 
-alter table cr_report disable trigger all;
+-- don't mention triggers by name, because they don't exist yet
+-- during the database creation process (only during upgrades)
+alter table cr_report disable trigger user;
 update cr_report
    set workflow_id = pg_temp.new_workflow(approved, submitted, deleted);
-alter table cr_report enable trigger all;
+alter table cr_report enable trigger user;
 
 
 insert into
