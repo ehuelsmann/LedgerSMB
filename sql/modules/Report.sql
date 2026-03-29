@@ -523,7 +523,8 @@ $$
 BEGIN
 RETURN QUERY EXECUTE $sql$
 
-SELECT null::int as id, null::bool as invoice, entity_id, meta_number::text,
+SELECT null::int as id, null::int as open_item_id, null::bool as invoice,
+       entity_id, meta_number::text,
        entity_name, null::date as transdate, count(*)::text as invnumber,
        null::text as ordnumber, null::text as ponumber, curr,
        sum(amount) as amount, sum(netamount) as netamount, sum(tax) as tax,
