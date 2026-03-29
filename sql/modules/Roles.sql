@@ -1067,7 +1067,8 @@ SELECT lsmb__grant_role('payment_process', 'exchangerate_edit');
 
 SELECT lsmb__grant_perms('payment_process', 'ap', 'UPDATE');
 SELECT lsmb__grant_perms('payment_process', obj, 'ALL')
-  FROM unnest(array['payment'::text, 'payment_id_seq', 'acc_trans_entry_id_seq']
+  FROM unnest(array['payment'::text, 'payment_id_seq', 'acc_trans_entry_id_seq',
+                    'overpayment', 'overpayment_id_seq']
        ) obj;
 
 SELECT lsmb__grant_perms('payment_process', obj, ptype)
@@ -1084,7 +1085,8 @@ SELECT lsmb__grant_role('receipt_process', 'exchangerate_edit');
 
 SELECT lsmb__grant_perms('receipt_process', 'ar', 'UPDATE');
 SELECT lsmb__grant_perms('receipt_process', obj, 'ALL')
-  FROM unnest(array['payment'::text, 'payment_id_seq', 'acc_trans_entry_id_seq']
+  FROM unnest(array['payment'::text, 'payment_id_seq', 'acc_trans_entry_id_seq',
+                    'overpayment', 'overpayment_id_seq']
        ) obj;
 
 SELECT lsmb__grant_perms('receipt_process', obj, ptype)
