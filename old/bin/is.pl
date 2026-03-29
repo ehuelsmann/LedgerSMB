@@ -217,7 +217,8 @@ sub invoice_links {
             $form->{"select$key"} .= qq|<option value="$value"$selected>$value</option>\n|;
         }
 
-        if ( $key eq "AR_paid" ) {
+        if ( $key eq "AR_paid"
+             or $key eq "AR_overpayment" ) {
 
             if ( $form->{acc_trans} and $form->{acc_trans}{$key} ) {
                 foreach my $i ( 1 .. scalar @{ $form->{acc_trans}{$key} } ) {

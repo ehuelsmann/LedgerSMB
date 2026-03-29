@@ -363,7 +363,8 @@ sub create_links {
         foreach my $i ( 1 .. scalar @{ $form->{acc_trans}{$key} } ) {
 
 
-            if ( $key eq "$form->{ARAP}_paid" ) {
+            if ( $key eq "$form->{ARAP}_paid"
+                 or $key eq "$form->{ARAP}_overpayment" ) {
 
                 $form->{"$form->{ARAP}_paid_$i"} =
 "$form->{acc_trans}{$key}->[$i-1]->{accno}--$form->{acc_trans}{$key}->[$i-1]->{description}";
