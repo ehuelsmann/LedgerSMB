@@ -211,7 +211,8 @@ sub invoice_links {
               "<option value=\"$ref->{accno}--$ref->{description}\">$ref->{accno}--$ref->{description}</option>\n";
         }
 
-        if ( $key eq "AP_paid" ) {
+        if ( $key eq "AP_paid"
+             or $key eq "AP_overpayment" ) {
             if ( $form->{acc_trans}{$key} ) {
             foreach my $i ( 1 .. scalar @{ $form->{acc_trans}{$key} } ) {
                 $form->{"AP_paid_$i"} =
