@@ -115,7 +115,7 @@ sub recurring_transactions {
                       (s.nextdate IS NULL OR s.nextdate > s.enddate)
                           AS expired
              FROM recurring s
-             JOIN ar a ON (a.id = s.id)
+             JOIN ar a ON (a.trans_id = s.id)
                      JOIN entity_credit_account eca
                           ON a.entity_credit_account = eca.id
              JOIN entity e ON (eca.entity_id = e.id)
@@ -137,7 +137,7 @@ sub recurring_transactions {
                   (s.nextdate IS NULL OR s.nextdate > s.enddate)
                   AS expired
              FROM recurring s
-             JOIN ap a ON (a.id = s.id)
+             JOIN ap a ON (a.trans_id = s.id)
                      JOIN entity_credit_account eca
                           ON a.entity_credit_account = eca.id
              JOIN entity e ON (eca.entity_id = e.id)
