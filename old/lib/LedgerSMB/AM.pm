@@ -165,48 +165,50 @@ sub recurring_transactions {
         LEFT JOIN recurringemail se ON (se.id = s.id)
         LEFT JOIN recurringprint sp ON (sp.id = s.id)
 
-            UNION
-
-           SELECT 'oe' AS module, 'so' AS transaction,
-                  e.name AS description, a.amount_tc as amount,
-                          extract(days from recurring_interval) as days,
-                extract(months from recurring_interval) as months,
-                extract(years from recurring_interval) as years,
-                  s.*, se.formname AS recurringemail,
-                  sp.formname AS recurringprint,
-                  s.nextdate - current_date AS overdue,
-                  'customer' AS vc,
-                  a.curr,
-                  (s.nextdate IS NULL OR s.nextdate > s.enddate)
-                  AS expired
-             FROM recurring s
-             JOIN oe a ON (a.id = s.id)
-             JOIN entity e ON (a.entity_id = e.id)
-        LEFT JOIN recurringemail se ON (se.id = s.id)
-        LEFT JOIN recurringprint sp ON (sp.id = s.id)
-            WHERE a.quotation = '0'
-
-            UNION
-
-           SELECT 'oe' AS module, 'po' AS transaction,
-                  e.name AS description, a.amount_tc as amount,
-                          extract(days from recurring_interval) as days,
-                extract(months from recurring_interval) as months,
-                extract(years from recurring_interval) as years,
-                  s.*, se.formname AS recurringemail,
-                  sp.formname AS recurringprint,
-                  s.nextdate - current_date AS overdue, 'vendor' AS vc,
-                  a.curr,
-                  (s.nextdate IS NULL OR s.nextdate > s.enddate)
-                  AS expired
-             FROM recurring s
-             JOIN oe a ON (a.id = s.id)
-             JOIN entity e ON (a.entity_id = e.id)
-        LEFT JOIN recurringemail se ON (se.id = s.id)
-        LEFT JOIN recurringprint sp ON (sp.id = s.id)
-            WHERE a.quotation = '0'
-
          ORDER BY $sortorder|;
+
+    # orders and transactions don't share the same 'id' which makes the bit below totally broken:
+
+        #     UNION
+
+        #    SELECT 'oe' AS module, 'so' AS transaction,
+        #           e.name AS description, a.amount_tc as amount,
+        #                   extract(days from recurring_interval) as days,
+        #         extract(months from recurring_interval) as months,
+        #         extract(years from recurring_interval) as years,
+        #           s.*, se.formname AS recurringemail,
+        #           sp.formname AS recurringprint,
+        #           s.nextdate - current_date AS overdue,
+        #           'customer' AS vc,
+        #           a.curr,
+        #           (s.nextdate IS NULL OR s.nextdate > s.enddate)
+        #           AS expired
+        #      FROM recurring s
+        #      JOIN oe a ON (a.id = s.id)
+        #      JOIN entity e ON (a.entity_id = e.id)
+        # LEFT JOIN recurringemail se ON (se.id = s.id)
+        # LEFT JOIN recurringprint sp ON (sp.id = s.id)
+        #     WHERE a.quotation = '0'
+
+        #     UNION
+
+        #    SELECT 'oe' AS module, 'po' AS transaction,
+        #           e.name AS description, a.amount_tc as amount,
+        #                   extract(days from recurring_interval) as days,
+        #         extract(months from recurring_interval) as months,
+        #         extract(years from recurring_interval) as years,
+        #           s.*, se.formname AS recurringemail,
+        #           sp.formname AS recurringprint,
+        #           s.nextdate - current_date AS overdue, 'vendor' AS vc,
+        #           a.curr,
+        #           (s.nextdate IS NULL OR s.nextdate > s.enddate)
+        #           AS expired
+        #      FROM recurring s
+        #      JOIN oe a ON (a.id = s.id)
+        #      JOIN entity e ON (a.entity_id = e.id)
+        # LEFT JOIN recurringemail se ON (se.id = s.id)
+        # LEFT JOIN recurringprint sp ON (sp.id = s.id)
+        #     WHERE a.quotation = '0'
 
     my $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
