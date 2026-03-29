@@ -15,8 +15,10 @@ Removed functionalities
 
 Bugs fixed
 * Overpayment reversals don't have a 'payment' record (#9257)
+* Overpayments don't show on AR/AP invoices and transactions (#2367)
 
 Cleanup & architecture improvements
+* Refactored tracking of AR/AP invoice/transaction balances (#9405)
 * Centralized 'transactions' table, reducing role of ar/ap/gl tables (#9283)
 * Subledger transactions no longer *also* gl transactions (#9235)
 * Removed unused SQL modules (#9279)
