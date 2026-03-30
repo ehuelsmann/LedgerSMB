@@ -194,7 +194,7 @@ COMMENT ON FUNCTION trigger_invoice_prevent_allocation_delete() IS
   maintain correct COGS assignment.
   $$;
 
-create or replace function trigger_open_item_maintenance () returns trigger
+create or replace function trigger_open_item_maintenance() returns trigger
 as $$
 begin
   if exists (select 1
@@ -204,19 +204,23 @@ begin
     if new.open_item_id is null then
       if TG_OP = 'UPDATE' then
         raise exception 'Setting open_item_id to NULL not allowed on open item managed account';
+      elsif exists (select 1
+                      from account_link al
+                     where account_id = new.chart_id
+                       and description = ANY(ARRAY['AR', 'AP',
+                                                   'AR_overpayment',
+                                                   'AP_overpayment']::text[])) then
+        raise exception 'AR/AP (overpayment) items need to be posted with open_item_id on the AR/AP (overpayment) accounts, which account % is not', new.chart_id;
+      elseif exists (select 1
+                       from account_link al
+                      where account_id = new.chart_id) then
+        raise exception 'Open item auto-generation only supported for plain GL accounts, which account % is not', new.chart_id;
       else
-        if not exists (select 1
-                         from account_link al
-                        where account_id = new.chart_id
-                          and description = ANY(ARRAY['AR', 'AP']::text[])) then
-          insert into open_item (item_number, item_type, account_id, opening_entry_id)
-          values (setting_increment('openitemnumber'), 'gl', new.chart_id, new.entry_id)
-          returning id into new.open_item_id;
+        insert into open_item (item_number, item_type, account_id, opening_entry_id)
+        values (setting_increment('openitemnumber'), 'gl', new.chart_id, new.entry_id)
+        returning id into new.open_item_id;
 
-          raise warning 'Created open item % due to insert without open_item_id on open item maneged account', new.open_item_id;
-        else
-          raise exception 'AR/AP items need to be posted with open_item_id on the AR/AP accounts';
-        end if;
+        raise warning 'Created open item % due to insert without open_item_id on open item maneged account', new.open_item_id;
       end if;
     else
       -- verify that the open item matches the line's chart_id
