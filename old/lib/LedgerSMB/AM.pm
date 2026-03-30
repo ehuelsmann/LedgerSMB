@@ -147,7 +147,7 @@ sub recurring_transactions {
             UNION
 
            SELECT 'gl' AS module, 'gl' AS transaction,
-                  a.description, (SELECT SUM(ac.amount_bc)
+                  txn.description, (SELECT SUM(ac.amount_bc)
              FROM acc_trans ac
             WHERE ac.trans_id = a.id
               AND ac.amount_bc > 0) AS amount,
@@ -161,6 +161,7 @@ sub recurring_transactions {
                   (s.nextdate IS NULL OR s.nextdate > s.enddate)
                   AS expired
              FROM recurring s
+             JOIN transactions txn ON s.id = txn.id
              JOIN gl a ON (a.id = s.id)
         LEFT JOIN recurringemail se ON (se.id = s.id)
         LEFT JOIN recurringprint sp ON (sp.id = s.id)
