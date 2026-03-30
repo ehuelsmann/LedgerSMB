@@ -11,5 +11,5 @@ description: |
 select *
   from transactions
          join gl
-             using (id)
+             on transactions.id = gl.id
  where transactions.table_name is distinct from 'gl'
