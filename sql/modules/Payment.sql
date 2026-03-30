@@ -886,31 +886,40 @@ BEGIN
                       array_lower(in_cash_account_id, 1) ..
                       array_upper(in_cash_account_id, 1)
       LOOP
-        -- Insert cash account side of the payment
+        -- Insert the side the allocation is coming from;
+        -- which can be (a) a cash account; or (b) an overpayment account
+        --
+        -- When overpayments are posted, the source account must be posted
+        -- with an open_item_id to attribute the transaction as change in
+        -- the overpayment balance
+        --
         -- Each payment can have its own cash account set through the UI
-        INSERT INTO acc_trans
-               (chart_id, amount_bc, curr, amount_tc, trans_id,
-                transdate, approved, source, memo)
-              VALUES (in_cash_account_id[out_count],
-                      in_amount[out_count]*current_exchangerate*sign,
-                      in_curr,
-                      in_amount[out_count]*sign,
-                      in_transaction_id[out_count],
-                      in_datepaid,
-                      coalesce(in_approved, true),
-                      in_source[out_count],
-                      in_memo[out_count]);
+        DECLARE
+          t_open_item_id int;
+        BEGIN
+          IF (in_ovp_payment_id IS NOT NULL) THEN
+            t_open_item_id := in_ovp_payment_id[out_count];
+          ELSE
+            t_open_item_id := NULL;
+          END IF;
+          INSERT INTO acc_trans
+                 (chart_id, amount_bc, curr, amount_tc, trans_id,
+                  transdate, approved, source, memo, open_item_id)
+                VALUES (in_cash_account_id[out_count],
+                        in_amount[out_count]*current_exchangerate*sign,
+                        in_curr,
+                        in_amount[out_count]*sign,
+                        in_transaction_id[out_count],
+                        in_datepaid,
+                        coalesce(in_approved, true),
+                        in_source[out_count],
+                        in_memo[out_count],
+                        t_open_item_id);
+        END;
+
         -- Link the ledger line to the payment record
         INSERT INTO payment_links
              VALUES (var_payment_id, currval('acc_trans_entry_id_seq'), 1);
-        IF (in_ovp_payment_id IS NOT NULL
-           AND in_ovp_payment_id[out_count] IS NOT NULL) THEN
-          -- mark the current transaction as being the consequence of an overpayment
-          -- (lowering the customer account balance)
-          INSERT INTO payment_links
-                VALUES (in_ovp_payment_id[out_count],
-                        currval('acc_trans_entry_id_seq'), 0);
-       END IF;
       END LOOP;
 
       -- HANDLE THE AR/AP ACCOUNTS
@@ -985,16 +994,13 @@ BEGIN
    --
    -- HANDLE THE OVERPAYMENTS NOW
    IF (array_upper(in_op_cash_account_id, 1) > 0) THEN
-     INSERT INTO transactions (
-       reference, description,
-       transdate, entered_by, approved, trans_type_code, table_name)
-     VALUES (setting_increment('paynumber'),
-             in_gl_description, in_datepaid, var_employee,
-             in_approved, 'op', 'payment')
-     RETURNING id INTO var_txn_id;
-
-       UPDATE payment SET trans_id = var_txn_id
-        WHERE id = var_payment_id;
+       INSERT INTO transactions (
+         reference, description,
+         transdate, entered_by, approved, trans_type_code, table_name)
+       VALUES (setting_increment('paynumber'),
+               in_gl_description, in_datepaid, var_employee,
+               in_approved, 'op', 'payment')
+       RETURNING id INTO var_txn_id;
 
        FOR out_count IN
                         array_lower(in_op_cash_account_id, 1) ..
@@ -1012,9 +1018,6 @@ BEGIN
                      coalesce(in_approved, true),
                      in_op_source[out_count],
                      in_op_memo[out_count]);
-         INSERT INTO payment_links
-              VALUES (var_payment_id, currval('acc_trans_entry_id_seq'), 2);
-
        END LOOP;
 
        -- NOW LETS HANDLE THE OVERPAYMENT ACCOUNTS
@@ -1022,8 +1025,18 @@ BEGIN
                      array_lower(in_op_account_id, 1) ..
                      array_upper(in_op_account_id, 1)
        LOOP
+         INSERT INTO open_item (
+           item_number, item_type, account_id
+         )
+         VALUES ('overpay-' || var_txn_id, 'op', in_op_account_id[out_count]);
+
+         INSERT INTO overpayment (
+           open_item_id, eca_id
+         )
+         VALUES (currval('open_item_id_seq'), in_entity_credit_id);
+
          INSERT INTO acc_trans (chart_id, amount_bc, curr, amount_tc, trans_id,
-                               transdate, approved, source, memo)
+                                transdate, approved, source, memo, open_item_id)
                 VALUES (in_op_account_id[out_count],
                      in_op_amount[out_count]*current_exchangerate*sign*-1,
                      in_curr,
@@ -1032,9 +1045,8 @@ BEGIN
                      in_datepaid,
                      coalesce(in_approved, true),
                      in_op_source[out_count],
-                     in_op_memo[out_count]);
-         INSERT INTO payment_links
-                VALUES (var_payment_id, currval('acc_trans_entry_id_seq'), 2);
+                     in_op_memo[out_count],
+                     currval('open_item_id_seq'));
        END LOOP;
  END IF;
  return var_payment_id;
