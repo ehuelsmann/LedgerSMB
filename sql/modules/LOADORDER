@@ -6,6 +6,7 @@
 #  from 'no' to 'yes' on success.
 aggregates.sql
 triggers.sql
+views.sql
 old.sql
 Settings.sql
 Preferences.sql
