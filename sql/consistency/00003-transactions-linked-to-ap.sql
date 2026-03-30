@@ -12,5 +12,5 @@ description: |
 select *
   from transactions
          join ap
-             using (id)
+             on transactions.id = ap.trans_id
  where transactions.table_name is distinct from 'ap'

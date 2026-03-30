@@ -10,8 +10,8 @@ description: |
 
 select id
   from transactions t
- where not exists (select 1 from ar where ar.id = t.id)
-   and not exists (select 1 from ap where ap.id = t.id)
+ where not exists (select 1 from ar where ar.trans_id = t.id)
+   and not exists (select 1 from ap where ap.trans_id = t.id)
    and not exists (select 1 from gl where gl.id = t.id)
    and not exists (select 1 from mfg_lot where mfg_lot.id = t.id)
    and not exists (select 1 from asset_report where asset_report.id = t.id)

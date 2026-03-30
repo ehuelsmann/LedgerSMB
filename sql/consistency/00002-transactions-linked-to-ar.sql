@@ -11,5 +11,5 @@ description: |
 select *
   from transactions
          join ar
-             using (id)
+             on transactions.id = ar.trans_id
  where transactions.table_name is distinct from 'ar'
