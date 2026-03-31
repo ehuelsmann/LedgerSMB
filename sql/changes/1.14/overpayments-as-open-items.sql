@@ -12,13 +12,13 @@ create table overpayment (
 
 
 comment on table overpayment is
-  $$ $$;
+  $$Extends overpayments open items (item_type = 'op'), storing overpayment specific attributes. $$;
 comment on column overpayment.id is
-  $$ $$;
+  $$Unique identification; may be dropped in the future in favor of 'open_item_id'. $$;
 comment on column overpayment.open_item_id is
-  $$ $$;
+  $$ID of the open item this overpayment is an extension of. $$;
 comment on column overpayment.eca_id is
-  $$ $$;
+  $$ID of the entity credit account for which the open item is tracking the overpayment. $$;
 
 create temporary table overpayment_migration
   as
