@@ -886,31 +886,40 @@ BEGIN
                       array_lower(in_cash_account_id, 1) ..
                       array_upper(in_cash_account_id, 1)
       LOOP
-        -- Insert cash account side of the payment
+        -- Insert the side the allocation is coming from;
+        -- which can be (a) a cash account; or (b) an overpayment account
+        --
+        -- When overpayments are posted, the source account must be posted
+        -- with an open_item_id to attribute the transaction as change in
+        -- the overpayment balance
+        --
         -- Each payment can have its own cash account set through the UI
-        INSERT INTO acc_trans
-               (chart_id, amount_bc, curr, amount_tc, trans_id,
-                transdate, approved, source, memo)
-              VALUES (in_cash_account_id[out_count],
-                      in_amount[out_count]*current_exchangerate*sign,
-                      in_curr,
-                      in_amount[out_count]*sign,
-                      in_transaction_id[out_count],
-                      in_datepaid,
-                      coalesce(in_approved, true),
-                      in_source[out_count],
-                      in_memo[out_count]);
+        DECLARE
+          t_open_item_id int;
+        BEGIN
+          IF (in_ovp_payment_id IS NOT NULL) THEN
+            t_open_item_id := in_ovp_payment_id[out_count];
+          ELSE
+            t_open_item_id := NULL;
+          END IF;
+          INSERT INTO acc_trans
+                 (chart_id, amount_bc, curr, amount_tc, trans_id,
+                  transdate, approved, source, memo, open_item_id)
+                VALUES (in_cash_account_id[out_count],
+                        in_amount[out_count]*current_exchangerate*sign,
+                        in_curr,
+                        in_amount[out_count]*sign,
+                        in_transaction_id[out_count],
+                        in_datepaid,
+                        coalesce(in_approved, true),
+                        in_source[out_count],
+                        in_memo[out_count],
+                        t_open_item_id);
+        END;
+
         -- Link the ledger line to the payment record
         INSERT INTO payment_links
              VALUES (var_payment_id, currval('acc_trans_entry_id_seq'), 1);
-        IF (in_ovp_payment_id IS NOT NULL
-           AND in_ovp_payment_id[out_count] IS NOT NULL) THEN
-          -- mark the current transaction as being the consequence of an overpayment
-          -- (lowering the customer account balance)
-          INSERT INTO payment_links
-                VALUES (in_ovp_payment_id[out_count],
-                        currval('acc_trans_entry_id_seq'), 0);
-       END IF;
       END LOOP;
 
       -- HANDLE THE AR/AP ACCOUNTS
@@ -985,16 +994,13 @@ BEGIN
    --
    -- HANDLE THE OVERPAYMENTS NOW
    IF (array_upper(in_op_cash_account_id, 1) > 0) THEN
-     INSERT INTO transactions (
-       reference, description,
-       transdate, entered_by, approved, trans_type_code, table_name)
-     VALUES (setting_increment('paynumber'),
-             in_gl_description, in_datepaid, var_employee,
-             in_approved, 'op', 'payment')
-     RETURNING id INTO var_txn_id;
-
-       UPDATE payment SET trans_id = var_txn_id
-        WHERE id = var_payment_id;
+       INSERT INTO transactions (
+         reference, description,
+         transdate, entered_by, approved, trans_type_code, table_name)
+       VALUES (setting_increment('paynumber'),
+               in_gl_description, in_datepaid, var_employee,
+               in_approved, 'op', 'payment')
+       RETURNING id INTO var_txn_id;
 
        FOR out_count IN
                         array_lower(in_op_cash_account_id, 1) ..
@@ -1012,9 +1018,6 @@ BEGIN
                      coalesce(in_approved, true),
                      in_op_source[out_count],
                      in_op_memo[out_count]);
-         INSERT INTO payment_links
-              VALUES (var_payment_id, currval('acc_trans_entry_id_seq'), 2);
-
        END LOOP;
 
        -- NOW LETS HANDLE THE OVERPAYMENT ACCOUNTS
@@ -1022,8 +1025,18 @@ BEGIN
                      array_lower(in_op_account_id, 1) ..
                      array_upper(in_op_account_id, 1)
        LOOP
+         INSERT INTO open_item (
+           item_number, item_type, account_id
+         )
+         VALUES ('overpay-' || var_txn_id, 'op', in_op_account_id[out_count]);
+
+         INSERT INTO overpayment (
+           open_item_id, eca_id
+         )
+         VALUES (currval('open_item_id_seq'), in_entity_credit_id);
+
          INSERT INTO acc_trans (chart_id, amount_bc, curr, amount_tc, trans_id,
-                               transdate, approved, source, memo)
+                                transdate, approved, source, memo, open_item_id)
                 VALUES (in_op_account_id[out_count],
                      in_op_amount[out_count]*current_exchangerate*sign*-1,
                      in_curr,
@@ -1032,9 +1045,8 @@ BEGIN
                      in_datepaid,
                      coalesce(in_approved, true),
                      in_op_source[out_count],
-                     in_op_memo[out_count]);
-         INSERT INTO payment_links
-                VALUES (var_payment_id, currval('acc_trans_entry_id_seq'), 2);
+                     in_op_memo[out_count],
+                     currval('open_item_id_seq'));
        END LOOP;
  END IF;
  return var_payment_id;
@@ -1403,24 +1415,46 @@ it is usefull for printing payments and build reports :) $$;
 
 DROP VIEW IF EXISTS overpayments CASCADE;
 CREATE VIEW overpayments AS
-SELECT p.id as payment_id, p.reference as payment_reference, p.payment_class, p.closed as payment_closed,
-       p.payment_date, ac.chart_id, c.accno, c.description as chart_description,
-       sum(ac.amount_bc) * CASE WHEN eca.entity_class = 1 THEN -1 ELSE 1 END
-          as available, cmp.legal_name,
-       eca.id as entity_credit_id, eca.entity_id, eca.discount, eca.meta_number
-FROM payment p
-JOIN payment_links pl ON (pl.payment_id=p.id)
-JOIN acc_trans ac ON (ac.entry_id=pl.entry_id)
-JOIN account c ON (c.id=ac.chart_id)
-JOIN account_link l ON l.account_id = c.id
-JOIN entity_credit_account eca ON (eca.id = p.entity_credit_id)
-JOIN company cmp ON (cmp.entity_id=eca.entity_id)
-WHERE p.trans_id IS NOT NULL
-      AND (pl.type = 2 OR pl.type = 0)
-      AND l.description LIKE '%overpayment'
-GROUP BY p.id, c.accno, p.reference, p.payment_class, p.closed, p.payment_date,
-      ac.chart_id, chart_description,legal_name, eca.id,
-      eca.entity_id, eca.discount, eca.meta_number, eca.entity_class;
+  WITH opening_transactions AS (
+    SELECT open_item_id, trans_id, amount_bc, amount_tc, curr
+      FROM (
+        SELECT open_item_id, trans_id, amount_bc, amount_tc, curr,
+               (row_number() over (partition by open_item_id)) = 1 as opening
+          FROM acc_trans
+         WHERE open_item_id is not null
+      ) x
+     WHERE opening
+  ),
+  open_item_openings AS (
+    SELECT otxn.open_item_id, otxn.amount_bc, otxn.amount_tc, otxn.curr, txn.transdate
+      FROM transactions txn
+             JOIN opening_transactions otxn
+                 ON txn.id = otxn.trans_id
+  )
+  SELECT op.id as overpayment_id, oi.item_number as payment_reference,
+         eca.entity_class as payment_class, oio.transdate as payment_date,
+         oio.amount_bc as opening_balance_bc, oio.amount_tc as opening_balance_tc,
+         oio.curr as curr, oi.account_id, c.accno, c.description as chart_description,
+         sum(ac.amount_bc) * CASE WHEN eca.entity_class = 1 THEN -1 ELSE 1 END
+           as available, cmp.legal_name,
+         eca.id as entity_credit_id, eca.entity_id, eca.discount, eca.meta_number
+    FROM overpayment op
+           JOIN open_item oi
+               ON op.open_item_id = oi.id
+           JOIN open_item_openings oio
+               ON oi.id = oio.open_item_id
+           JOIN acc_trans ac
+               ON ac.open_item_id = oi.id
+           JOIN account c
+               ON oi.account_id = c.id
+           JOIN entity_credit_account eca
+               ON eca.id = op.eca_id
+           JOIN company cmp
+               ON cmp.entity_id = eca.entity_id
+   GROUP BY op.id, oi.item_number, eca.entity_class, oio.transdate,
+            oio.amount_bc, oio.amount_tc, oio.curr,
+            oi.account_id, c.accno, chart_description, legal_name, eca.id,
+            eca.entity_id, eca.discount, eca.meta_number;
 
 CREATE OR REPLACE FUNCTION payment_get_open_overpayment_entities(in_account_class int)
  returns SETOF payment_vc_info AS
@@ -1473,7 +1507,7 @@ returns SETOF payment_overpayments_available_amount AS
 $$
 BEGIN
 RETURN QUERY EXECUTE $sql$
-              SELECT chart_id, accno,   chart_description, available
+              SELECT account_id, accno, chart_description, available
               FROM overpayments
               WHERE payment_class  = $1
               AND entity_credit_id = $2
@@ -1507,19 +1541,14 @@ $$
 
 -- This should never hit an income statement-side account but I have handled it
 -- in case of configuration error. --CT
-SELECT o.payment_id, e.name, o.available, txn.transdate,
-       (select amount_bc * CASE WHEN c.category in ('A', 'E') THEN -1 ELSE 1 END
-          from acc_trans
-         where txn.id = trans_id
-               AND chart_id = o.chart_id ORDER BY entry_id ASC LIMIT 1) as amount
+SELECT o.overpayment_id, e.name, o.available, o.payment_date,
+       opening_balance_bc * CASE WHEN c.category in ('A', 'E') THEN -1 ELSE 1 END as amount
   FROM overpayments o
-  JOIN payment p ON o.payment_id = p.id
-  JOIN transactions txn ON txn.id = p.trans_id
-  JOIN account c ON c.id = o.chart_id
+  JOIN account c ON c.id = o.account_id
   JOIN entity_credit_account eca ON eca.id = o.entity_credit_id
   JOIN entity e ON eca.entity_id = e.id
- WHERE ($1 IS NULL OR $1 <= txn.transdate) AND
-       ($2 IS NULL OR $2 >= txn.transdate) AND
+ WHERE ($1 IS NULL OR $1 <= o.payment_date) AND
+       ($2 IS NULL OR $2 >= o.payment_date) AND
        ($3 IS NULL OR $3 = e.control_code) AND
        ($4 IS NULL OR $4 = eca.meta_number) AND
        ($5 IS NULL OR e.name @@ plainto_tsquery($5));
