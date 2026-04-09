@@ -7,6 +7,13 @@ Description=LedgerSMB Starman
 After=network.target
 
 [Service]
+Type=simple
+
+# Kill the main process first, allowing starman to manage the children
+# if that fails, terminate them all.
+KillMode=mixed
+
+
 WorkingDirectory=WORKING_DIR
 
 # In case you installed dependencies into a 'local::lib'
