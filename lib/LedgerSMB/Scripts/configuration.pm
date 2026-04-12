@@ -1,6 +1,5 @@
 
 use v5.38;
-use Syntax::Operator::In;
 
 package LedgerSMB::Scripts::configuration;
 
@@ -347,7 +346,8 @@ sub sequence_screen {
     }
     $request->{setting_keys} = [
         grep {
-           not ($_->{name} in:eq qw(customernumber vendornumber employeenumber))
+            my $name = $_->{name};
+            not grep { $name eq $_ } qw(customernumber vendornumber employeenumber);
         } $request->{setting_keys}->@*
         ];
     return $request->{_wire}->get('ui')
