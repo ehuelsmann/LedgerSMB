@@ -128,9 +128,9 @@ describe("Adding the new Invoice", () => {
                     },
                     currency: "USD",
                     dates: {
-                        created: "2022-09-01",
-                        due: "2022-10-01",
-                        book: "2022-10-05"
+                        created: new Date("2022-09-01"),
+                        due: new Date("2022-10-01"),
+                        book: new Date("2022-10-05")
                     },
                     "internal-notes": "Internal notes",
                     "invoice-number": "2389434",
@@ -147,7 +147,7 @@ describe("Adding the new Invoice", () => {
                             serialnumber: "1234567890",
                             discount: 12,
                             discount_type: "%",
-                            delivery_date: "2022-10-27",
+                            delivery_date: new Date("2022-10-27"),
                             description: "A description"
                         }
                     ],
@@ -174,7 +174,7 @@ describe("Adding the new Invoice", () => {
                             account: {
                                 accno: "5010"
                             },
-                            date: "2022-11-05",
+                            date: new Date("2022-11-05"),
                             amount: 20,
                             memo: "depot",
                             source: "visa"

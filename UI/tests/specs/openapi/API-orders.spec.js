@@ -123,8 +123,8 @@ describe("Adding the new Order", () => {
                     },
                     currency: "USD",
                     dates: {
-                        order: "2022-09-01",
-                        "required-by": "2022-10-01"
+                        order: new Date("2022-09-01"),
+                        "required-by": new Date("2022-10-01")
                     },
                     "internal-notes": "Internal notes",
                     lines: [
@@ -140,7 +140,7 @@ describe("Adding the new Order", () => {
                             serialnumber: "1234567890",
                             discount: 12,
                             discount_type: "%",
-                            "required-by": "2022-10-27",
+                            "required-by": new Date("2022-10-27"),
                             description: "A description"
                         }
                     ],
