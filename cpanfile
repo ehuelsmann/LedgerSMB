@@ -155,7 +155,6 @@ requires 'Pod::Find';
 requires 'Scope::Guard', '0.10';
 requires 'Session::Storage::Secure';
 requires 'String::Random';
-requires 'Syntax::Operator::In';
 requires 'Template', '2.14';
 requires 'Template::Parser';
 requires 'Template::Provider';
