@@ -407,22 +407,6 @@ sub setup_url_space {
             $psgi_app;
         };
 
-        if ($ENV{PLACK_ENV}
-            and $ENV{PLACK_ENV} ne 'deployment') {
-            my $json = JSON::PP->new->utf8;
-            mount '/status' => sub {
-                return [
-                    HTTP_OK,
-                    [ 'Content-Type' => 'application/json; charset=UTF-8' ],
-                    [ $json->encode({ schema => $wire->get('db')->schema }) ]
-                    ];
-            };
-
-            mount '/kill' => sub {
-                exit 0;
-            };
-        }
-
         mount '/' => sub {
             my $env = shift;
 
