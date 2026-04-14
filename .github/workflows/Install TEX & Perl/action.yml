@@ -69,5 +69,5 @@ runs:
         plackup -E test -Ilib -Iold/lib -Ixt/lib --port 5762 bin/ledgersmb-server.psgi &
         echo $! > starman.pid
         # Dont use 'curl': there will not be a valid response
-        echo "exec 3<>/dev/tcp/lsmb/5762 ; echo -ne \"GET /kill HTTP/1.0\\r\\n\\r\\n\"  >&3 ; cat <&3" > logs/kill-starman.sh
+        echo "exec 3<>/dev/tcp/lsmb/5762 ; echo -ne \"GET /dev/kill HTTP/1.0\\r\\n\\r\\n\"  >&3 ; cat <&3" > logs/kill-starman.sh
       if: ${{ inputs.coverage }}
