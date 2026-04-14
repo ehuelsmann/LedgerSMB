@@ -338,7 +338,7 @@ jobs:
           then
             echo "ERROR: Can't terminate Starman without PID file"
           else
-            bash -x logs/kill-starman.sh
+            kill -SIGTERM $(cat starman.pid) >/dev/null 2>&1
             echo "Waiting for Starman to terminate "
             while kill -0 $(cat starman.pid) >/dev/null 2>&1
             do
@@ -544,7 +544,7 @@ jobs:
           then
             echo "ERROR: Can't terminate Starman without PID file"
           else
-            bash -x logs/kill-starman.sh
+            kill -SIGTERM $(cat starman.pid) >/dev/null 2>&1
             echo "Waiting for Starman to terminate "
             while kill -0 $(cat starman.pid) >/dev/null 2>&1
             do

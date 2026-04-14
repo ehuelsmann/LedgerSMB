@@ -161,12 +161,19 @@ for my $mw ($wire->get( 'extra_middleware' )->@*) {
     $builder->add_middleware( $mw->{name}, $mw->{args}->@* );
 }
 
+sub _inject_wire {
+    my $app = shift;
+    sub { my $env = shift; $env->{wire} = $wire; $app->($env) }
+}
+
+$builder->mount('/' =>
+                LedgerSMB::PSGI::setup_url_space(
+                    wire        => $wire,
+                    development => ($ENV{PLACK_ENV} eq 'development'),
+                ));
+
 # THIS HAS TO BE THE LAST THING IN THE FILE, EXCEPT FOR COMMENTS!
-$builder->to_app(
-    LedgerSMB::PSGI::setup_url_space(
-        wire        => $wire,
-        development => ($ENV{PLACK_ENV} eq 'development'),
-    ));
+_inject_wire($builder->to_app);
 
 __DATA__
 cookie:
