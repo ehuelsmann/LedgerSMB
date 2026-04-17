@@ -1090,7 +1090,7 @@ sub report_details_approve {
     my ($request) = @_;
 
     $request->call_procedure(
-        funcname => 'asset_report__aprove',
+        funcname => 'asset_report__approve',
         args     => [
             $request->@{qw( id expense_acct gain_acct loss_acct cash_acct )}
         ]);
