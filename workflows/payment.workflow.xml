@@ -1,0 +1,10 @@
+<workflow class="LedgerSMB::Workflow">
+  <type>Payment</type>
+  <persister>JournalEntry</persister>
+  <description></description>
+  <state name="INITIAL"/>
+  <state name="SAVED"/>
+  <state name="POSTED"/>
+  <state name="DELETED"/>
+  <state name="REVERSED"/>
+</workflow>
