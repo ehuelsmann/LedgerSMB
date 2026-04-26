@@ -34,6 +34,15 @@ Updated dependencies
 Changelog for 1.13 Series
 Released 2025-10-04
 
+Changelog for 1.13.5
+* Restore ability to run upgrades as non-superuser (#9381)
+* Fix the New (new contact) link on the Order screen (#9409)
+* Fix scrollbar appearance on tabbed UI (e.g. Contacts page) (#9415)
+* Extend GL workflows to support batch approval (#9418)
+* Fix uploaded GL transactions missing assigned workflows (#9418)
+* Fix asset report approval (#9482)
+
+
 Changelog for 1.13.4
 * Fix dates not always shown on old-code screens (#9304)
 * Fix password duration not showing correctly on configuration screen (#9315)
