@@ -449,22 +449,6 @@ BEGIN
                        (select id from voucher where batch_id = in_batch_id)
                );
 
-        WITH deleted_payment_ids AS (
-           DELETE FROM payment_links p
-            WHERE EXISTS (select 1 from acc_trans a
-                           where p.entry_id = a.entry_id
-                                 and a.voucher_id IN (select id from voucher
-                                                       where batch_id = in_batch_id))
-         RETURNING p.payment_id
-        )
-        SELECT array_agg(payment_id) INTO t_payment_ids
-          FROM deleted_payment_ids;
-
-        DELETE FROM payment
-         WHERE id = any(t_payment_ids)
-               AND NOT EXISTS (select 1 from payment_links
-                                where payment_id = id);
-
         DELETE FROM acc_trans WHERE voucher_id IN
                 (select id FROM voucher where batch_id = in_batch_id);
 
@@ -488,6 +472,7 @@ BEGIN
         DELETE FROM ar WHERE trans_id = ANY(t_transaction_ids);
         DELETE FROM ap WHERE trans_id = ANY(t_transaction_ids);
         DELETE FROM gl WHERE id = ANY(t_transaction_ids);
+        DELETE FROM payment WHERE trans_id = ANY(t_transaction_ids);
         DELETE FROM transactions WHERE id = ANY(t_transaction_ids);
 
         RETURN 1;
@@ -515,20 +500,6 @@ BEGIN
                  FROM acc_trans
                WHERE trans_id = voucher_row.trans_id);
 
-        -- Note that this query *looks* duplicated with the next section
-        -- but it's not! Notably, the WHERE clause in the EXISTS subquery
-        -- has a different condition (trans_id vs voucher_id!)
-        WITH deleted_links AS (
-             DELETE FROM payment_links pl WHERE
-                   EXISTS (select 1 from acc_trans a
-                            where pl.entry_id    = a.entry_id
-                                  and a.trans_id = voucher_row.trans_id)
-             RETURNING *
-        )
-        DELETE FROM payment p
-         WHERE id IN (select payment_id from deleted_links)
-                AND NOT EXISTS (select 1 from payment_links pl
-                                 where pl.payment_id = p.id);
         DELETE FROM acc_trans WHERE trans_id = voucher_row.trans_id;
 
         -- deletion of the ar/ap/gl row causes removal of the `transactions`
@@ -537,6 +508,7 @@ BEGIN
         DELETE FROM ar WHERE trans_id = voucher_row.trans_id;
         DELETE FROM ap WHERE trans_id = voucher_row.trans_id;
         DELETE FROM gl WHERE id = voucher_row.trans_id;
+        DELETE FROM payment WHERE trans_id = voucher_row.trans_id;
     ELSE
         -- Delete only the lines in the transaction which are explicitly
         -- linked to the voucher
@@ -544,17 +516,8 @@ BEGIN
                (select entry_id from acc_trans
                  where voucher_id = voucher_row.id);
 
-        WITH deleted_links AS (
-             DELETE FROM payment_links pl WHERE
-                   EXISTS (select 1 from acc_trans a
-                            where pl.entry_id    = a.entry_id
-                                  and a.voucher_id = voucher_row.id)
-             RETURNING *
-        )
         DELETE FROM payment p
-         WHERE id IN (select payment_id from deleted_links)
-                AND NOT EXISTS (select 1 from payment_links pl
-                                 where pl.payment_id = p.id);
+         WHERE trans_id IN (select trans_id from acc_trans where voucher_id = voucher_row.id);
         DELETE FROM acc_trans where voucher_id = voucher_row.id;
         DELETE FROM voucher WHERE id = voucher_row.id;
     END IF;

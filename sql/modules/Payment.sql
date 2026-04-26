@@ -720,9 +720,6 @@ BEGIN
          ELSE false END,
          t_voucher_id, in_payment_date, in_source, entry_id
     FROM bulk_payments_in  where amount_tc <> 0;
-  INSERT INTO payment_links (payment_id, entry_id, type)
-  SELECT payment_id, entry_id, 1 FROM bulk_payments_in
-   WHERE amount_tc <> 0;
 
   -- Insert discount @ current fx rate
   UPDATE bulk_payments_in
@@ -740,9 +737,6 @@ BEGIN
     FROM bulk_payments_in bpi
            JOIN entity_credit_account eca ON bpi.eca_id = eca.id
    WHERE bpi.disc_amount_bc <> 0;
-  INSERT INTO payment_links (payment_id, entry_id, type)
-  SELECT payment_id, entry_id, 1 FROM bulk_payments_in
-   WHERE disc_amount_bc <> 0;
 
   -- Insert AR/AP amount @ orginal rate
   UPDATE bulk_payments_in
@@ -760,8 +754,6 @@ BEGIN
          t_voucher_id, in_payment_date, in_source, entry_id, open_item_id
     FROM bulk_payments_in bpi
            JOIN entity_credit_account eca ON bpi.eca_id = eca.id;
-  INSERT INTO payment_links (payment_id, entry_id, type)
-  SELECT payment_id, entry_id, 1 FROM bulk_payments_in;
 
   -- Insert fx gain/loss effects, if applicable
   UPDATE bulk_payments_in
@@ -778,9 +770,6 @@ BEGIN
          ELSE false END,
          t_voucher_id, in_payment_date, in_source, entry_id
     FROM bulk_payments_in
-   WHERE gain_loss_accno IS NOT NULL;
-  INSERT INTO payment_links (payment_id, entry_id, type)
-  SELECT payment_id, entry_id, 1 FROM bulk_payments_in
    WHERE gain_loss_accno IS NOT NULL;
 
   DROP TABLE bulk_payments_in;
@@ -1033,8 +1022,6 @@ BEGIN
                 coalesce(in_approved, true),
                 in_source[out_count]);
 
-        INSERT INTO payment_links
-        VALUES (var_payment_id, currval('acc_trans_entry_id_seq'), 1);
       END IF;
     END LOOP;
   END IF;
