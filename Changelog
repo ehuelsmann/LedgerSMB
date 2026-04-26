@@ -112,6 +112,15 @@ Updated dependencies
 Changelog for 1.12 Series
 Released 2024-12-14
 
+Changelog for 1.12.18
+* Restore ability to run upgrades as non-superuser (#9381)
+* Fix the New (new contact) link on the Order screen (#9409)
+* Fix scrollbar appearance on tabbed UI (e.g. Contacts page) (#9415)
+* Extend GL workflows to support batch approval (#9418)
+* Fix uploaded GL transactions missing assigned workflows (#9418)
+* Fix asset report approval (#9482)
+
+
 Changelog for 1.12.17
 * Fix migrations for LedgerSMB 1.2 without customers or vendors (#9371, #9377)
 * Fix migrations for SQL Ledger without customers or vendors (#9371, #9377)
