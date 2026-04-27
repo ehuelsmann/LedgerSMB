@@ -58,9 +58,13 @@ commands:
           command: |
             source $BASH_ENV
             export PERL5OPT="$PERL5OPT -MSyntax::Keyword::Try::Deparse"
+            echo "Waiting for starman to listen to our port:"
+            while ! echo -n > /dev/tcp/localhost/5762; do
+              sleep 1
+            done
             if [ "x$COVERAGE" == "x1" ]
             then
-              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" t/ xt/"
+              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" xt/"
             else
               make devtest TESTS='--no-progress --job-count 2 xt/'
             fi
@@ -118,9 +122,12 @@ commands:
           command: |
             source $BASH_ENV
             export PERL5OPT="$PERL5OPT -MSyntax::Keyword::Try::Deparse"
+            while ! echo -n > /dev/tcp/localhost/5762; do
+              sleep 1
+            done
             if [ "x$COVERAGE" == "x1" ]
             then
-              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" t/ xt/"
+              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" t/"
             else
               make devtest TESTS='--no-progress --job-count 2 t/'
             fi
