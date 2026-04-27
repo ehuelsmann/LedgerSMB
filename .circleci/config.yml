@@ -41,6 +41,65 @@ commands:
               make jstest
             fi
 
+  dev-prove:
+    steps:
+      - run:
+          name: Set up coverage
+          command: |
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              echo "JOB_COUNT=4" >> $BASH_ENV
+              echo "STARMAN_DEVEL_COVER_OPTIONS='-MDevel::Cover=$DEVEL_COVER_OPTIONS'" >> $BASH_ENV
+              echo "YATH_DEVEL_COVER_OPTIONS='--cover=$DEVEL_COVER_OPTIONS'" >> $BASH_ENV
+              echo "UITESTS='--coverage *'" >> $BASH_ENV
+            fi
+
+      - run:
+          command: |
+            source $BASH_ENV
+            export PERL5OPT="$PERL5OPT -MSyntax::Keyword::Try::Deparse"
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" t/ xt/"
+            else
+              make devtest TESTS='--no-progress --job-count 2 xt/'
+            fi
+
+      - run:
+          command: |
+            while [ $(pidof starman) ];
+            do
+              kill -SIGTERM `pidof starman`
+              echo -n "."
+              sleep 5
+            done
+            echo " done"
+
+      - run:
+          name: Upload coverage data
+          command: |
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              COVERALLS_PARALLEL=true cover -report coveralls
+              COVERALLS_FLAG_NAME: Perl Tests
+              cover -report text > /tmp/artifact/coverage.txt
+            fi
+
+      - when:
+          condition:
+            equal: [ "$COVERAGE", "1" ]
+          steps:
+            - coveralls/upload:
+                parallel: true
+                flag_name: UI Tests
+                verbose: false
+
+      - when:
+          condition:
+            equal: [ "$COVERAGE", "1" ]
+          steps:
+            - coveralls/upload:
+                parallel_finished: true
 
   prove:
     steps:
@@ -63,7 +122,7 @@ commands:
             then
               make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" t/ xt/"
             else
-              make devtest TESTS='--no-progress --job-count 2 t/ xt/'
+              make devtest TESTS='--no-progress --job-count 2 t/'
             fi
 
       - run:
@@ -336,6 +395,23 @@ jobs:
       - start_proxy
       - jest
 
+  test_dev:
+    <<: *defaults
+    executor:
+      name: test
+      perl: '5.38'
+      postgres: '16'
+      browser: firefox
+      selenium: selenium/node-firefox
+    steps:
+      - prep_env:
+          perl: '5.38'
+      - start_starman
+      - start_proxy
+      - dev-prove
+    environment:
+      COA_TESTING: 1
+
   test_webpack_firefox:
     <<: *defaults
     executor:
@@ -369,6 +445,8 @@ workflows:
   workflow:
     jobs:
       - test_api:
+          filters: *_filters
+      - test_dev:
           filters: *_filters
       - test_webpack_firefox:
           filters: *_filters
