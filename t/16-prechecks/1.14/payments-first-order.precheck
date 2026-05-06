@@ -1,0 +1,27 @@
+{
+    q|Ensure that (single) payments affect only one cash account| => [
+        {
+            failure_data => [
+                [ 'id', 'trans_id', 'count' ],
+                [ 1, 1, 2 ],
+                ],
+            submit_session => [],
+            response => {
+                confirm => 'agree',
+            },
+        }
+    ],
+
+    q|Ensure that (batch) payments affect only one cash account| => [
+        {
+            failure_data => [
+                [ 'id', 'trans_id', 'count' ],
+                [ 1, 1, 2 ],
+                ],
+            submit_session => [],
+            response => {
+                confirm => 'agree',
+            },
+        }
+    ],
+}
