@@ -1,6 +1,8 @@
 <!-- @format -->
 
 <script>
+/* global lsmbConfig */
+
 import { defineComponent, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { createLoginMachine } from "./LoginPage.machines.js";
@@ -11,10 +13,11 @@ export default defineComponent({
     setup(props) {
         const { t } = useI18n({ useScope: "global" });
         let searchParams = new URL(document.location).searchParams;
-        let username = searchParams.get("login") || "";
-        let company = searchParams.get("company") || "";
+        let username = searchParams.get("login") || lsmbConfig.demoUser || "";
+        let company =
+            searchParams.get("company") || lsmbConfig.demoCompany || "";
         let data = {
-            password: ref(""),
+            password: ref(lsmbConfig.demoPassword || ""),
             username: ref(username),
             company: ref(company),
             form: ref(null),
@@ -35,6 +38,7 @@ export default defineComponent({
     },
     mounted() {
         document.body.setAttribute("data-lsmb-done", "true");
+        this.machine.send("input");
     },
     methods: {
         update(e) {
@@ -47,7 +51,7 @@ export default defineComponent({
 
 <template>
     <!-- eslint-disable prettier/prettier -->
-    <form ref="form" name="login" style="max-width: fit-content">
+    <form id="login-form" ref="form" name="login">
         <div id="logindiv">
             <div class="login" align="center">
                 <a href="http://www.ledgersmb.org/" target="_top">
@@ -125,18 +129,19 @@ export default defineComponent({
 </template>
 
 <style scoped>
+#login-form {
+    max-width: fit-content;
+}
 #maindiv {
-    position: relative;
     min-width: max-content;
     height: 15em;
 }
-.maindivContent {
-    z-index: 10;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: fit-content;
-    height: fit-content;
+lsmb-select :deep(#username) {
+    box-sizing: border-box;
+    width: 100%;
+}
+lsmb-select :deep(#username td.dijitButtonContents.dijitStretch.dijitReset) {
+    box-sizing: border-box;
+    width: 100%;
 }
 </style>
