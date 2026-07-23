@@ -31,6 +31,7 @@ my $mock = Test2::Mock->new(
 
 ok lives {
     LedgerSMB::Workflow::Loader->load(
+        container => {}, # normally the config 'Beam::Wire' object
         directories => [ 't/data/workflow-loader/empty/' ],
         );
 }, 'Initialize the workflow loader', $@;
@@ -83,6 +84,7 @@ ok lives {
 $config_callback = undef;
 ok lives {
     LedgerSMB::Workflow::Loader->load(
+        container => {}, # normally the config 'Beam::Wire' object
         directories => [
             't/data/workflow-loader/empty/',
             't/data/workflow-loader/empty-custom/',

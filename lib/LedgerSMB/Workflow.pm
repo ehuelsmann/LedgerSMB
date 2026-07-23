@@ -45,7 +45,7 @@ use DateTime;
 use Log::Any qw($log);
 
 
-my @PROPS = qw( handle );
+my @PROPS = qw( handle wire );
 __PACKAGE__->mk_accessors(@PROPS);
 
 =head1 METHODS
