@@ -48,7 +48,8 @@
     "vue-i18n": "11.4.10",
     "vue-router": "5.3.1"
   },
-  "resolves": {
+  "resolve": {
+    "js-yaml": "^3.15.2",
     "tmp": "^0.2.7"
   },
   "devDependencies": {
